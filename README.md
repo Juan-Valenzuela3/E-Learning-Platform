@@ -350,8 +350,7 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 ## 👥 Autores
 
 **Equipo 7 No Country** - Desarrollo inicial
-- **Juan Valenzuela** - Líder del proyecto y repositorio principal
-- **Santiago Restrepo** - Implementación de sistema de autenticación y gestión de cursos
+
 
 ## 🙏 Agradecimientos
 
