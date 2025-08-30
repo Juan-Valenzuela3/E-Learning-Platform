@@ -1,66 +1,109 @@
-# Archivos de historial de VS Code
-.history/
-
-# Archivos de compilación de Java
+# ===== ARCHIVOS DE COMPILACIÓN JAVA =====
 *.class
 *.jar
 *.war
 *.ear
+*.nar
 
-# Directorios de build
+# ===== DIRECTORIOS DE BUILD =====
 target/
 build/
 out/
+bin/
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
 
-# Archivos de configuración de IDE
+# ===== ARCHIVOS DE IDE =====
 .idea/
 *.iml
 .vscode/
 .settings/
 .project
 .classpath
+.factorypath
+.metadata/
+*.launch
+*.sublime-*
 
-# Archivos de log
+# ===== ARCHIVOS DE LOG =====
 *.log
 logs/
+log/
 
-# Archivos temporales
+# ===== ARCHIVOS TEMPORALES =====
 *.tmp
 *.temp
 *.swp
 *.swo
 *~
+.#*
+\#*#
 
-# Archivos de sistema
+# ===== ARCHIVOS DE SISTEMA =====
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Archivos de configuración local
+# ===== CONFIGURACIÓN LOCAL =====
 application-local.properties
 application-dev.properties
+application-test.properties
+*.local.properties
 
-# Archivos de base de datos
+# ===== BASE DE DATOS =====
 *.db
 *.sqlite
 *.h2.db
+*.h2.mv.db
+*.h2.trace.db
 
-# Archivos de node_modules (si se agrega frontend)
+# ===== NODE.JS (SI SE AGREGA FRONTEND) =====
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.npm
+.eslintcache
 
-# Archivos de cache
+# ===== CACHE Y TEMPORALES =====
 .cache/
 .parcel-cache/
+.temp/
+.tmp/
 
-# Archivos de coverage de tests
+# ===== COVERAGE Y TESTS =====
 coverage/
 .nyc_output/
+.jacoco/
+*.exec
 
-# Archivos de environment
+# ===== ENVIRONMENT =====
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# ===== MAVEN =====
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ===== SPRING BOOT =====
+spring.log
+application.log
+
+# ===== DOCKER =====
+.dockerignore
+docker-compose.override.yml
+
+# ===== BACKUP =====
+*.bak
+*.backup
+*.old
