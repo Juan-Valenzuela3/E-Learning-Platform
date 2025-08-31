@@ -84,10 +84,15 @@ public class SecurityConfig {
                 // Cualquier otra petición debe estar autenticada.
                 .anyRequest().authenticated()
             )
-            // 9. Añade el filtro de JWT *antes* del filtro estándar de autenticación de Spring Security.
+            // 9. Añade el filtro de logging *antes* del filtro JWT para registrar todas las peticiones
+            .addFilterBefore(requestLoggingMiddleware, UsernamePasswordAuthenticationFilter.class)
+            // 10. Añade el filtro de JWT *antes* del filtro estándar de autenticación de Spring Security.
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            // 11. Deshabilita la opción de "frameOptions" para permitir que la consola de H2 se muestre en un iframe.
-            .headers(headers -> headers.frameOptions().disable());
+            // 11. Configura frameOptions para permitir que la consola de H2 se muestre en un iframe.
+            .headers(headers -> headers
+                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                .contentTypeOptions(contentTypeOptions -> contentTypeOptions.disable())
+            );
         
         // 12. Construye y retorna la cadena de filtros de seguridad.
         return http.build();
@@ -95,6 +100,7 @@ public class SecurityConfig {
 
     // 13. Configura el proveedor de autenticación.
     @Bean
+    @SuppressWarnings("deprecation")
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         // Le dice al proveedor qué servicio de detalles de usuario usar.
@@ -138,7 +144,7 @@ public class SecurityConfig {
 /*
  * Resumen del Flujo de Seguridad:
  * * 1. Entrada de la Petición: Una petición HTTP llega a la aplicación.
- * * 2. Filtro de Logging: La petición pasa primero por 'RequestLoggingMiddleware', que registra información de la solicitud (ej. URL, método).
+ * * 2. Filtro de Logging: La petición pasa primero por 'RequestLoggingMiddleware', que registra información de la solicitud (ej. URL, método, IP, User-Agent, headers, tiempo de respuesta).
  * * 3. Filtro de Autenticación JWT: Luego, el 'JwtAuthenticationFilter' intercepta la petición. Este filtro busca un token JWT en la cabecera 'Authorization'.
  * - Si un token válido es encontrado, extrae la identidad del usuario y la establece en el contexto de seguridad de Spring.
  * - Si no hay token o es inválido, la petición continúa sin un usuario autenticado.
