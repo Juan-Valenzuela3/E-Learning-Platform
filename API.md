@@ -1,0 +1,1660 @@
+# API Documentation - E-Learning Platform Backend
+
+## 📋 Información General
+
+**Base URL:** `http://localhost:8080`  
+**Versión:** 1.0  
+**Tipo de Autenticación:** JWT (JSON Web Tokens)  
+**Content-Type:** `application/json`  
+
+## Comando para ejecutar backend en entorno de desarrollo
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+## 🔐 Endpoints de Autenticación
+
+### 1. Login de Usuario
+**Endpoint:** `POST /auth/login`  
+**Descripción:** Autentica usuario y retorna token JWT  
+**Acceso:** Público  
+
+#### Request Body:
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+#### Validaciones:
+- **email:** Requerido, formato email válido, máximo 100 caracteres
+- **password:** Requerido, mínimo 6 caracteres, máximo 100 caracteres
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "type": "Bearer",
+  "userId": 1,
+  "userName": "Juan",
+  "email": "user@example.com",
+  "role": "STUDENT",
+  "isActive": true
+}
+```
+
+#### Response de Error (401 Unauthorized):
+```json
+{
+  "message": "Las credenciales proporcionadas son incorrectas",
+  "error": "INVALID_CREDENTIALS",
+  "status": 401,
+  "timestamp": "2025-01-01T10:00:00",
+  "path": "/auth/login"
+}
+```
+
+#### Response de Usuario Inactivo (403 Forbidden):
+```json
+{
+  "message": "Tu cuenta está temporalmente inactiva",
+  "error": "USER_INACTIVE",
+  "status": 403,
+  "timestamp": "2025-01-01T10:00:00",
+  "path": "/auth/login"
+}
+```
+
+### 2. Validación de Token
+**Endpoint:** `GET /auth/validate?token={jwt_token}`  
+**Descripción:** Valida si un token JWT es válido  
+**Acceso:** Público  
+
+#### Query Parameters:
+- **token** (requerido): Token JWT a validar
+
+#### Response Token Válido (200 OK):
+```json
+{
+  "valid": true,
+  "username": "user@example.com"
+}
+```
+
+#### Response Token Inválido (401 Unauthorized):
+```json
+{
+  "valid": false,
+  "message": "Token inválido o expirado"
+}
+```
+
+## 👥 Endpoints de Usuarios
+
+### 3. Registro de Usuario
+**Endpoint:** `POST /api/users/register`  
+**Descripción:** Registra un nuevo usuario en el sistema  
+**Acceso:** Público  
+
+#### Request Body:
+```json
+{
+  "userName": "Juan",
+  "lastName": "Pérez",
+  "email": "juan.perez@example.com",
+  "password": "password123",
+  "role": "STUDENT"
+}
+```
+
+#### Campos:
+- **userName:** Nombre del usuario (requerido)
+- **lastName:** Apellido del usuario (requerido)
+- **email:** Email único (requerido, formato email)
+- **password:** Contraseña (requerido, se encripta automáticamente)
+- **role:** Rol del usuario - `STUDENT`, `INSTRUCTOR`, `ADMIN`
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "userName": "Juan",
+  "lastName": "Pérez",
+  "email": "juan.perez@example.com",
+  "role": "STUDENT",
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T10:00:00.000+00:00"
+}
+```
+
+#### Nota Importante:
+Si el email ya existe, retorna el usuario existente (200 OK) en lugar de crear uno nuevo.
+
+### 4. Obtener Usuario por ID
+**Endpoint:** `GET /api/users/{id}`  
+**Descripción:** Obtiene la información de un usuario específico por su ID  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID del usuario (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "userName": "Juan",
+  "lastName": "Pérez",
+  "email": "juan.perez@example.com",
+  "role": "STUDENT",
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T10:00:00.000+00:00"
+}
+```
+
+#### Response de Error (404 Not Found):
+```json
+{
+  "message": "Usuario no encontrado con ID: 999",
+  "status": 404,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+### 5. Obtener Usuarios por Rol
+**Endpoint:** `GET /api/users/role/{role}`  
+**Descripción:** Obtiene todos los usuarios que tienen un rol específico  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **role:** Rol del usuario - `STUDENT`, `INSTRUCTOR`, `ADMIN` (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "userName": "Juan",
+    "lastName": "Pérez",
+    "email": "juan.perez@example.com",
+    "role": "STUDENT",
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  },
+  {
+    "id": 2,
+    "userName": "María",
+    "lastName": "García",
+    "email": "maria.garcia@example.com",
+    "role": "STUDENT",
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 6. Obtener Todos los Usuarios
+**Endpoint:** `GET /api/users/all`  
+**Descripción:** Obtiene la lista completa de todos los usuarios del sistema  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "userName": "Juan",
+    "lastName": "Pérez",
+    "email": "juan.perez@example.com",
+    "role": "STUDENT",
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  },
+  {
+    "id": 2,
+    "userName": "María",
+    "lastName": "García",
+    "email": "maria.garcia@example.com",
+    "role": "INSTRUCTOR",
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  },
+  {
+    "id": 3,
+    "userName": "Carlos",
+    "lastName": "López",
+    "email": "carlos.lopez@example.com",
+    "role": "ADMIN",
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 7. Obtener Perfil de Usuario
+**Endpoint:** `GET /api/users/profile`  
+**Descripción:** Obtiene el perfil del usuario autenticado  
+**Historia de Usuario:** "Como usuario quiero ver mi perfil"  
+**Acceso:** STUDENT, INSTRUCTOR, ADMIN  
+**Autenticación:** JWT Required  
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "userName": "Juan",
+  "lastName": "Pérez",
+  "email": "juan.perez@example.com",
+  "role": "STUDENT",
+  "isActive": true,
+  "profileImageUrl": null,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T10:00:00.000+00:00"
+}
+```
+
+#### Response de Error (401 Unauthorized):
+```json
+{
+  "message": "Token ausente, inválido o expirado",
+  "status": 401,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+#### Response de Error (404 Not Found):
+```json
+{
+  "message": "Usuario no encontrado",
+  "status": 404,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+### 8. Actualizar Perfil de Usuario
+**Endpoint:** `PUT /api/users/profile`  
+**Descripción:** Actualiza el perfil del usuario autenticado  
+**Historia de Usuario:** "Como usuario quiero editar mi perfil"  
+**Acceso:** STUDENT, INSTRUCTOR, ADMIN  
+**Autenticación:** JWT Required  
+
+#### Request Body:
+```json
+{
+  "userName": "Juan Carlos",
+  "lastName": "Pérez González",
+  "email": "juan.carlos.perez@example.com",
+  "profileImageUrl": "https://example.com/profile-images/user_123.jpg"
+}
+```
+
+#### Validaciones:
+- **userName:** Requerido, 2-50 caracteres, solo letras y espacios
+- **lastName:** Requerido, 2-50 caracteres, solo letras y espacios
+- **email:** Requerido, formato email válido, máximo 100 caracteres, único
+- **profileImageUrl:** Opcional, máximo 500 caracteres, URL válida de imagen
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "userName": "Juan Carlos",
+  "lastName": "Pérez González",
+  "email": "juan.carlos.perez@example.com",
+  "role": "STUDENT",
+  "isActive": true,
+  "profileImageUrl": "https://example.com/profile-images/user_123.jpg",
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T12:30:00.000+00:00"
+}
+```
+
+#### Response de Error (400 Bad Request):
+```json
+{
+  "message": "El email ya está en uso por otro usuario",
+  "status": 400,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+#### Response de Error (422 Unprocessable Entity):
+```json
+{
+  "message": "Datos de entrada inválidos",
+  "errors": [
+    {
+      "field": "userName",
+      "message": "El nombre debe tener entre 2 y 50 caracteres"
+    },
+    {
+      "field": "email",
+      "message": "El formato del email no es válido"
+    }
+  ],
+  "status": 422,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+## 📚 Endpoints de Cursos
+
+### 9. Crear Curso
+**Endpoint:** `POST /api/courses`  
+**Descripción:** Crea un nuevo curso en la plataforma  
+**Acceso:** INSTRUCTOR, ADMIN  
+**Autenticación:** JWT Required  
+
+#### Request Body:
+```json
+{
+  "title": "Curso de Java Básico",
+  "description": "Aprende Java desde cero con ejemplos prácticos y proyectos reales.",
+  "shortDescription": "Curso introductorio de Java para principiantes",
+  "instructorId": 2,
+  "youtubeUrls": [
+    "https://www.youtube.com/watch?v=abc123",
+    "https://www.youtube.com/watch?v=def456"
+  ],
+  "thumbnailUrl": "https://example.com/images/java-course.jpg",
+  "price": 99.99,
+  "isPremium": true,
+  "isPublished": false,
+  "isActive": true,
+  "estimatedHours": 20
+}
+```
+
+#### Validaciones:
+- **title:** Requerido, máximo 200 caracteres
+- **description:** Requerido, máximo 1000 caracteres
+- **shortDescription:** Opcional, máximo 255 caracteres
+- **instructorId:** Requerido, debe existir
+- **youtubeUrls:** Opcional, formato YouTube válido
+- **thumbnailUrl:** Opcional, URL de imagen válida
+- **price:** Requerido, no negativo, máximo 6 dígitos enteros y 2 decimales
+- **estimatedHours:** Opcional, entre 1 y 1000
+
+#### Response Exitoso (201 Created):
+```json
+{
+  "id": 1,
+  "title": "Curso de Java Básico",
+  "description": "Aprende Java desde cero con ejemplos prácticos y proyectos reales.",
+  "shortDescription": "Curso introductorio de Java para principiantes",
+  "instructor": {
+    "id": 2,
+    "userName": "María",
+    "lastName": "García",
+    "email": "maria.garcia@example.com",
+    "role": "INSTRUCTOR"
+  },
+  "youtubeUrls": [
+    "https://www.youtube.com/watch?v=abc123",
+    "https://www.youtube.com/watch?v=def456"
+  ],
+  "thumbnailUrl": "https://example.com/images/java-course.jpg",
+  "price": 99.99,
+  "isPremium": true,
+  "isPublished": false,
+  "isActive": true,
+  "estimatedHours": 20,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T10:00:00.000+00:00"
+}
+```
+
+### 10. Catálogo Público de Cursos
+**Endpoint:** `GET /api/courses`  
+**Descripción:** Obtiene todos los cursos activos y publicados  
+**Acceso:** Público  
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Curso de Java Básico",
+    "description": "Aprende Java desde cero con ejemplos prácticos.",
+    "shortDescription": "Curso introductorio de Java",
+    "instructor": {
+      "id": 2,
+      "userName": "María",
+      "lastName": "García",
+      "email": "maria.garcia@example.com",
+      "role": "INSTRUCTOR"
+    },
+    "thumbnailUrl": "https://example.com/images/java-course.jpg",
+    "price": 99.99,
+    "isPremium": true,
+    "estimatedHours": 20,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 11. Detalle de Curso
+**Endpoint:** `GET /api/courses/{id}`  
+**Descripción:** Obtiene el detalle completo de un curso específico  
+**Acceso:** Público  
+
+#### Path Parameters:
+- **id:** ID del curso (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "title": "Curso de Java Básico",
+  "description": "Aprende Java desde cero con ejemplos prácticos y proyectos reales.",
+  "shortDescription": "Curso introductorio de Java para principiantes",
+  "instructor": {
+    "id": 2,
+    "userName": "María",
+    "lastName": "García",
+    "email": "maria.garcia@example.com",
+    "role": "INSTRUCTOR"
+  },
+  "youtubeUrls": [
+    "https://www.youtube.com/watch?v=abc123",
+    "https://www.youtube.com/watch?v=def456"
+  ],
+  "thumbnailUrl": "https://example.com/images/java-course.jpg",
+  "price": 99.99,
+  "isPremium": true,
+  "isPublished": true,
+  "isActive": true,
+  "estimatedHours": 20,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T10:00:00.000+00:00"
+}
+```
+
+#### Response de Error (404 Not Found):
+```json
+{
+  "message": "Curso no encontrado con ID: 999",
+  "status": 404,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+### 12. Cursos por Instructor
+**Endpoint:** `GET /api/courses/instructor/{instructorId}`  
+**Descripción:** Obtiene todos los cursos de un instructor específico  
+**Acceso:** INSTRUCTOR (propio), ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **instructorId:** ID del instructor (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Curso de Java Básico",
+    "description": "Aprende Java desde cero",
+    "instructor": {
+      "id": 2,
+      "userName": "María",
+      "lastName": "García"
+    },
+    "price": 99.99,
+    "isPublished": true,
+    "estimatedHours": 20,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 13. Gestión Administrativa de Cursos
+**Endpoint:** `GET /api/courses/admin/active`  
+**Descripción:** Obtiene todos los cursos activos para gestión administrativa  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Curso de Java Básico",
+    "instructor": {
+      "id": 2,
+      "userName": "María",
+      "lastName": "García"
+    },
+    "price": 99.99,
+    "isPremium": true,
+    "isPublished": true,
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 14. Cursos por Categoría
+**Endpoint:** `GET /api/courses/category/{categoryId}`  
+**Descripción:** Obtiene todos los cursos de una categoría específica  
+**Acceso:** Público  
+
+#### Path Parameters:
+- **categoryId:** ID de la categoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Curso de Java Básico",
+    "description": "Aprende Java desde cero",
+    "instructor": {
+      "id": 2,
+      "userName": "María",
+      "lastName": "García"
+    },
+    "price": 99.99,
+    "isPublished": true,
+    "estimatedHours": 20,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 15. Cursos por Subcategoría
+**Endpoint:** `GET /api/courses/subcategory/{subcategoryId}`  
+**Descripción:** Obtiene todos los cursos de una subcategoría específica  
+**Acceso:** Público  
+
+#### Path Parameters:
+- **subcategoryId:** ID de la subcategoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Curso de Java Básico",
+    "description": "Aprende Java desde cero",
+    "instructor": {
+      "id": 2,
+      "userName": "María",
+      "lastName": "García"
+    },
+    "price": 99.99,
+    "isPublished": true,
+    "estimatedHours": 20,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 16. Cursos por Categoría y Subcategoría
+**Endpoint:** `GET /api/courses/category/{categoryId}/subcategory/{subcategoryId}`  
+**Descripción:** Obtiene todos los cursos de una categoría y subcategoría específicas  
+**Acceso:** Público  
+
+#### Path Parameters:
+- **categoryId:** ID de la categoría (requerido)
+- **subcategoryId:** ID de la subcategoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Curso de Java Básico",
+    "description": "Aprende Java desde cero",
+    "instructor": {
+      "id": 2,
+      "userName": "María",
+      "lastName": "García"
+    },
+    "price": 99.99,
+    "isPublished": true,
+    "estimatedHours": 20,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 17. Carga de Imagen de Perfil
+**Endpoint:** `POST /api/users/profile/upload-image`  
+**Descripción:** Sube una imagen de perfil para el usuario autenticado  
+**Historia de Usuario:** "Como usuario quiero cargar mi imagen de perfil"  
+**Acceso:** STUDENT, INSTRUCTOR, ADMIN  
+**Autenticación:** JWT Required  
+
+#### Request Body (multipart/form-data):
+- **file:** Archivo de imagen (requerido)
+
+#### Validaciones:
+- **Tipo de archivo:** JPG, JPEG, PNG, GIF
+- **Tamaño máximo:** 5MB
+- **Dimensiones:** Máximo 2048x2048 píxeles
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "userName": "Juan",
+  "lastName": "Pérez",
+  "email": "juan.perez@example.com",
+  "role": "STUDENT",
+  "isActive": true,
+  "profileImageUrl": "/uploads/profiles/user_1_profile_1234567890.jpg",
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T12:30:00.000+00:00"
+}
+```
+
+#### Response de Error (400 Bad Request):
+```json
+{
+  "message": "Tipo de archivo no permitido. Solo se permiten JPG, JPEG, PNG y GIF",
+  "status": 400,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+#### Response de Error (413 Payload Too Large):
+```json
+{
+  "message": "El archivo es demasiado grande. Tamaño máximo permitido: 5MB",
+  "status": 413,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+## 📂 Endpoints de Categorías
+
+### 18. Obtener Categorías Activas
+**Endpoint:** `GET /api/categories`  
+**Descripción:** Obtiene todas las categorías activas  
+**Acceso:** Público  
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "name": "Programación",
+    "description": "Cursos de programación y desarrollo de software",
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00",
+    "updatedAt": "2025-01-01T10:00:00.000+00:00"
+  },
+  {
+    "id": 2,
+    "name": "Diseño",
+    "description": "Cursos de diseño gráfico y UX/UI",
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00",
+    "updatedAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 19. Obtener Todas las Categorías
+**Endpoint:** `GET /api/categories/all`  
+**Descripción:** Obtiene todas las categorías (incluyendo inactivas)  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "name": "Programación",
+    "description": "Cursos de programación y desarrollo de software",
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00",
+    "updatedAt": "2025-01-01T10:00:00.000+00:00"
+  },
+  {
+    "id": 2,
+    "name": "Diseño",
+    "description": "Cursos de diseño gráfico y UX/UI",
+    "isActive": false,
+    "createdAt": "2025-01-01T10:00:00.000+00:00",
+    "updatedAt": "2025-01-01T11:00:00.000+00:00"
+  }
+]
+```
+
+### 20. Obtener Categoría por ID
+**Endpoint:** `GET /api/categories/{id}`  
+**Descripción:** Obtiene una categoría específica por su ID  
+**Acceso:** Público  
+
+#### Path Parameters:
+- **id:** ID de la categoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "name": "Programación",
+  "description": "Cursos de programación y desarrollo de software",
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T10:00:00.000+00:00"
+}
+```
+
+#### Response de Error (404 Not Found):
+```json
+{
+  "message": "Categoría no encontrada con ID: 999",
+  "status": 404,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+### 21. Buscar Categorías
+**Endpoint:** `GET /api/categories/search?q={term}`  
+**Descripción:** Busca categorías por término de búsqueda  
+**Acceso:** Público  
+
+#### Query Parameters:
+- **q:** Término de búsqueda (opcional)
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "name": "Programación",
+    "description": "Cursos de programación y desarrollo de software",
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 22. Crear Categoría
+**Endpoint:** `POST /api/categories`  
+**Descripción:** Crea una nueva categoría  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Request Body:
+```json
+{
+  "name": "Nueva Categoría",
+  "description": "Descripción de la nueva categoría",
+  "isActive": true
+}
+```
+
+#### Validaciones:
+- **name:** Requerido, máximo 100 caracteres, único
+- **description:** Opcional, máximo 500 caracteres
+- **isActive:** Opcional, boolean, por defecto true
+
+#### Response Exitoso (201 Created):
+```json
+{
+  "id": 3,
+  "name": "Nueva Categoría",
+  "description": "Descripción de la nueva categoría",
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T10:00:00.000+00:00"
+}
+```
+
+### 23. Actualizar Categoría
+**Endpoint:** `PUT /api/categories/{id}`  
+**Descripción:** Actualiza una categoría existente  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la categoría (requerido)
+
+#### Request Body:
+```json
+{
+  "name": "Categoría Actualizada",
+  "description": "Nueva descripción de la categoría",
+  "isActive": true
+}
+```
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "name": "Categoría Actualizada",
+  "description": "Nueva descripción de la categoría",
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T12:00:00.000+00:00"
+}
+```
+
+### 24. Eliminar Categoría (Soft Delete)
+**Endpoint:** `DELETE /api/categories/{id}`  
+**Descripción:** Elimina una categoría (soft delete)  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la categoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "message": "Categoría eliminada exitosamente"
+}
+```
+
+### 25. Eliminar Categoría Permanentemente
+**Endpoint:** `DELETE /api/categories/{id}/permanent`  
+**Descripción:** Elimina una categoría permanentemente de la base de datos  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la categoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "message": "Categoría eliminada permanentemente"
+}
+```
+
+### 26. Activar Categoría
+**Endpoint:** `PUT /api/categories/{id}/activate`  
+**Descripción:** Activa una categoría inactiva  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la categoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "name": "Programación",
+  "description": "Cursos de programación y desarrollo de software",
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T12:00:00.000+00:00"
+}
+```
+
+### 27. Desactivar Categoría
+**Endpoint:** `PUT /api/categories/{id}/deactivate`  
+**Descripción:** Desactiva una categoría activa  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la categoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "name": "Programación",
+  "description": "Cursos de programación y desarrollo de software",
+  "isActive": false,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T12:00:00.000+00:00"
+}
+```
+
+## 🏷️ Endpoints de Subcategorías
+
+### 28. Obtener Subcategorías Activas
+**Endpoint:** `GET /api/subcategories`  
+**Descripción:** Obtiene todas las subcategorías activas  
+**Acceso:** Público  
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "name": "Java",
+    "description": "Cursos de programación en Java",
+    "categoryId": 1,
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00",
+    "updatedAt": "2025-01-01T10:00:00.000+00:00"
+  },
+  {
+    "id": 2,
+    "name": "Python",
+    "description": "Cursos de programación en Python",
+    "categoryId": 1,
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00",
+    "updatedAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 29. Obtener Todas las Subcategorías
+**Endpoint:** `GET /api/subcategories/all`  
+**Descripción:** Obtiene todas las subcategorías (incluyendo inactivas)  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "name": "Java",
+    "description": "Cursos de programación en Java",
+    "categoryId": 1,
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00",
+    "updatedAt": "2025-01-01T10:00:00.000+00:00"
+  },
+  {
+    "id": 2,
+    "name": "Python",
+    "description": "Cursos de programación en Python",
+    "categoryId": 1,
+    "isActive": false,
+    "createdAt": "2025-01-01T10:00:00.000+00:00",
+    "updatedAt": "2025-01-01T11:00:00.000+00:00"
+  }
+]
+```
+
+### 30. Obtener Subcategoría por ID
+**Endpoint:** `GET /api/subcategories/{id}`  
+**Descripción:** Obtiene una subcategoría específica por su ID  
+**Acceso:** Público  
+
+#### Path Parameters:
+- **id:** ID de la subcategoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "name": "Java",
+  "description": "Cursos de programación en Java",
+  "categoryId": 1,
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T10:00:00.000+00:00"
+}
+```
+
+### 31. Obtener Subcategorías por Categoría
+**Endpoint:** `GET /api/subcategories/category/{categoryId}`  
+**Descripción:** Obtiene todas las subcategorías de una categoría específica  
+**Acceso:** Público  
+
+#### Path Parameters:
+- **categoryId:** ID de la categoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "name": "Java",
+    "description": "Cursos de programación en Java",
+    "categoryId": 1,
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  },
+  {
+    "id": 2,
+    "name": "Python",
+    "description": "Cursos de programación en Python",
+    "categoryId": 1,
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 32. Buscar Subcategorías
+**Endpoint:** `GET /api/subcategories/search?q={term}`  
+**Descripción:** Busca subcategorías por término de búsqueda  
+**Acceso:** Público  
+
+#### Query Parameters:
+- **q:** Término de búsqueda (opcional)
+
+#### Response Exitoso (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "name": "Java",
+    "description": "Cursos de programación en Java",
+    "categoryId": 1,
+    "isActive": true,
+    "createdAt": "2025-01-01T10:00:00.000+00:00"
+  }
+]
+```
+
+### 33. Crear Subcategoría
+**Endpoint:** `POST /api/subcategories`  
+**Descripción:** Crea una nueva subcategoría  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Request Body:
+```json
+{
+  "name": "Nueva Subcategoría",
+  "description": "Descripción de la nueva subcategoría",
+  "categoryId": 1,
+  "isActive": true
+}
+```
+
+#### Validaciones:
+- **name:** Requerido, máximo 100 caracteres, único por categoría
+- **description:** Opcional, máximo 500 caracteres
+- **categoryId:** Requerido, debe existir
+- **isActive:** Opcional, boolean, por defecto true
+
+#### Response Exitoso (201 Created):
+```json
+{
+  "id": 3,
+  "name": "Nueva Subcategoría",
+  "description": "Descripción de la nueva subcategoría",
+  "categoryId": 1,
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T10:00:00.000+00:00"
+}
+```
+
+### 34. Actualizar Subcategoría
+**Endpoint:** `PUT /api/subcategories/{id}`  
+**Descripción:** Actualiza una subcategoría existente  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la subcategoría (requerido)
+
+#### Request Body:
+```json
+{
+  "name": "Subcategoría Actualizada",
+  "description": "Nueva descripción de la subcategoría",
+  "categoryId": 1,
+  "isActive": true
+}
+```
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "name": "Subcategoría Actualizada",
+  "description": "Nueva descripción de la subcategoría",
+  "categoryId": 1,
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T12:00:00.000+00:00"
+}
+```
+
+### 35. Eliminar Subcategoría (Soft Delete)
+**Endpoint:** `DELETE /api/subcategories/{id}`  
+**Descripción:** Elimina una subcategoría (soft delete)  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la subcategoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "message": "Subcategoría eliminada exitosamente"
+}
+```
+
+### 36. Eliminar Subcategoría Permanentemente
+**Endpoint:** `DELETE /api/subcategories/{id}/permanent`  
+**Descripción:** Elimina una subcategoría permanentemente de la base de datos  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la subcategoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "message": "Subcategoría eliminada permanentemente"
+}
+```
+
+### 37. Activar Subcategoría
+**Endpoint:** `PUT /api/subcategories/{id}/activate`  
+**Descripción:** Activa una subcategoría inactiva  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la subcategoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "name": "Java",
+  "description": "Cursos de programación en Java",
+  "categoryId": 1,
+  "isActive": true,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T12:00:00.000+00:00"
+}
+```
+
+### 38. Desactivar Subcategoría
+**Endpoint:** `PUT /api/subcategories/{id}/deactivate`  
+**Descripción:** Desactiva una subcategoría activa  
+**Acceso:** ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **id:** ID de la subcategoría (requerido)
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "name": "Java",
+  "description": "Cursos de programación en Java",
+  "categoryId": 1,
+  "isActive": false,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T12:00:00.000+00:00"
+}
+```
+
+## 🔒 Autenticación JWT
+
+### Headers Requeridos para Endpoints Protegidos
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+```
+
+### Configuración de Token
+- **Algoritmo:** HMAC-SHA256
+- **Expiración:** 24 horas (86400000 ms)
+- **Tipo:** Bearer Token
+- **Header:** `Authorization: Bearer <token>`
+
+## 🗂️ Modelos de Datos
+
+### Usuario (User)
+```json
+{
+  "id": "number",
+  "userName": "string",
+  "lastName": "string", 
+  "email": "string (unique)",
+  "password": "string (encrypted)",
+  "role": "STUDENT | INSTRUCTOR | ADMIN",
+  "isActive": "boolean",
+  "profileImageUrl": "string (optional)",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}
+```
+
+### Perfil de Usuario (UserProfileDto)
+```json
+{
+  "id": "number",
+  "userName": "string",
+  "lastName": "string",
+  "email": "string",
+  "role": "STUDENT | INSTRUCTOR | ADMIN",
+  "isActive": "boolean",
+  "profileImageUrl": "string (optional)",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}
+```
+
+### Actualización de Perfil (UpdateProfileDto)
+```json
+{
+  "userName": "string (2-50 chars, letters and spaces only)",
+  "lastName": "string (2-50 chars, letters and spaces only)",
+  "email": "string (email format, max 100 chars, unique)",
+  "profileImageUrl": "string (optional, max 500 chars, valid image URL)"
+}
+```
+
+### Curso (Course)
+```json
+{
+  "id": "number",
+  "title": "string (max 200 chars)",
+  "description": "string (max 1000 chars)",
+  "shortDescription": "string (max 255 chars, optional)",
+  "instructor": {
+    "id": "number",
+    "userName": "string",
+    "lastName": "string",
+    "email": "string",
+    "role": "INSTRUCTOR"
+  },
+  "youtubeUrls": ["string[] (YouTube URLs)"],
+  "thumbnailUrl": "string (image URL, optional)",
+  "price": "decimal (8,2)",
+  "isPremium": "boolean",
+  "isPublished": "boolean",
+  "isActive": "boolean",
+  "estimatedHours": "number (1-1000, optional)",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}
+```
+
+### Categoría (Category)
+```json
+{
+  "id": "number",
+  "name": "string (max 100 chars, unique)",
+  "description": "string (max 500 chars, optional)",
+  "isActive": "boolean",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}
+```
+
+### Subcategoría (Subcategory)
+```json
+{
+  "id": "number",
+  "name": "string (max 100 chars, unique per category)",
+  "description": "string (max 500 chars, optional)",
+  "categoryId": "number (foreign key to Category)",
+  "isActive": "boolean",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}
+```
+
+### Roles Disponibles
+- **STUDENT:** Estudiante de la plataforma
+- **INSTRUCTOR:** Instructor que puede crear cursos
+- **ADMIN:** Administrador con acceso completo
+
+## 🚨 Códigos de Estado HTTP
+
+### Códigos de Éxito
+- **200 OK:** Operación exitosa
+- **201 Created:** Recurso creado exitosamente
+
+### Códigos de Error del Cliente
+- **400 Bad Request:** Datos de entrada inválidos
+- **401 Unauthorized:** Token ausente, inválido o expirado
+- **403 Forbidden:** Usuario inactivo o sin permisos
+- **404 Not Found:** Recurso no encontrado
+- **409 Conflict:** Conflicto de datos (ej: email duplicado)
+
+### Códigos de Error del Servidor
+- **500 Internal Server Error:** Error interno del servidor
+
+## 🔧 Configuración de Desarrollo
+
+### Base de Datos H2 (Desarrollo)
+- **URL:** `http://localhost:8080/h2-console`
+- **JDBC URL:** `jdbc:h2:mem:testdb`
+- **Username:** `sa`
+- **Password:** `password`
+
+### Variables de Entorno
+```properties
+JWT_SECRET_KEY=your-secret-key-here
+JWT_EXPIRATION_TIME=86400000
+```
+
+## 🧪 Ejemplos de Testing
+
+### 1. Prueba de Login (cURL)
+```bash
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "password123"
+  }'
+```
+
+### 2. Prueba de Registro (cURL)
+```bash
+curl -X POST http://localhost:8080/api/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userName": "Juan",
+    "lastName": "Pérez", 
+    "email": "juan.perez@example.com",
+    "password": "password123",
+    "role": "STUDENT"
+  }'
+```
+
+### 3. Obtener Usuario por ID (cURL)
+```bash
+curl -X GET http://localhost:8080/api/users/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### 4. Obtener Usuarios por Rol (cURL)
+```bash
+curl -X GET http://localhost:8080/api/users/role/STUDENT \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### 5. Obtener Todos los Usuarios (cURL)
+```bash
+curl -X GET http://localhost:8080/api/users/all \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### 6. Obtener Perfil de Usuario (cURL)
+```bash
+curl -X GET http://localhost:8080/api/users/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### 7. Actualizar Perfil de Usuario (cURL)
+```bash
+curl -X PUT http://localhost:8080/api/users/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userName": "Juan Carlos",
+    "lastName": "Pérez González",
+    "email": "juan.carlos.perez@example.com",
+    "profileImageUrl": "https://example.com/profile-images/user_123.jpg"
+  }'
+```
+
+### 8. Crear Curso (cURL)
+```bash
+curl -X POST http://localhost:8080/api/courses \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Curso de Java Básico",
+    "description": "Aprende Java desde cero con ejemplos prácticos y proyectos reales.",
+    "shortDescription": "Curso introductorio de Java para principiantes",
+    "instructorId": 2,
+    "youtubeUrls": [
+      "https://www.youtube.com/watch?v=abc123"
+    ],
+    "thumbnailUrl": "https://example.com/images/java-course.jpg",
+    "price": 99.99,
+    "isPremium": true,
+    "isPublished": false,
+    "estimatedHours": 20
+  }'
+```
+
+### 9. Obtener Catálogo de Cursos (cURL)
+```bash
+curl -X GET http://localhost:8080/api/courses \
+  -H "Content-Type: application/json"
+```
+
+### 10. Obtener Detalle de Curso (cURL)
+```bash
+curl -X GET http://localhost:8080/api/courses/1 \
+  -H "Content-Type: application/json"
+```
+
+### 11. Obtener Cursos por Instructor (cURL)
+```bash
+curl -X GET http://localhost:8080/api/courses/instructor/2 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### 12. Acceso a Endpoint Protegido (cURL)
+```bash
+curl -X GET http://localhost:8080/api/protected-endpoint \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### 13. Validación de Token (cURL)
+```bash
+curl -X GET "http://localhost:8080/auth/validate?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### 14. Obtener Categorías (cURL)
+```bash
+curl -X GET http://localhost:8080/api/categories \
+  -H "Content-Type: application/json"
+```
+
+### 15. Obtener Subcategorías (cURL)
+```bash
+curl -X GET http://localhost:8080/api/subcategories \
+  -H "Content-Type: application/json"
+```
+
+### 16. Cursos por Categoría (cURL)
+```bash
+curl -X GET http://localhost:8080/api/courses/category/1 \
+  -H "Content-Type: application/json"
+```
+
+### 17. Cursos por Subcategoría (cURL)
+```bash
+curl -X GET http://localhost:8080/api/courses/subcategory/1 \
+  -H "Content-Type: application/json"
+```
+
+### 18. Crear Categoría (cURL)
+```bash
+curl -X POST http://localhost:8080/api/categories \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Nueva Categoría",
+    "description": "Descripción de la nueva categoría",
+    "isActive": true
+  }'
+```
+
+### 19. Cargar Imagen de Perfil (cURL)
+```bash
+curl -X POST http://localhost:8080/api/users/profile/upload-image \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "file=@/path/to/image.jpg"
+```
+
+## 📱 Integración con Frontend
+
+### Flujo de Autenticación Recomendado
+1. **Login:** Usuario ingresa credenciales
+2. **Almacenar Token:** Guardar JWT en localStorage/sessionStorage
+3. **Requests:** Incluir token en header Authorization
+4. **Validación:** Verificar token antes de operaciones sensibles
+5. **Logout:** Eliminar token del storage
+
+### Ejemplo JavaScript (React)
+```javascript
+// Login
+const login = async (email, password) => {
+  const response = await fetch('http://localhost:8080/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+  
+  const data = await response.json();
+  
+  if (response.ok) {
+    localStorage.setItem('token', data.token);
+    return data;
+  } else {
+    throw new Error(data.message);
+  }
+};
+
+// Request autenticado
+const fetchProtectedData = async () => {
+  const token = localStorage.getItem('token');
+  
+  const response = await fetch('http://localhost:8080/api/protected-endpoint', {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  return response.json();
+};
+```
+
+## 🛡️ Seguridad y Validaciones
+
+### Validaciones de Backend
+- **Email:** Formato válido, único en sistema
+- **Password:** Mínimo 6 caracteres, encriptación BCrypt
+- **Token JWT:** Validación de firma y expiración
+- **CORS:** Configurado para aceptar todos los orígenes (desarrollo)
+
+### Recomendaciones de Seguridad
+- **HTTPS:** Usar en producción
+- **Token Storage:** Evitar localStorage en producción, usar httpOnly cookies
+- **Rate Limiting:** Implementar límites de requests
+- **Validation:** Validar siempre datos de entrada
+- **Error Handling:** No exponer información sensible en errores
+
+## 🔄 Estados de Endpoints
+
+### Endpoints Públicos (No requieren autenticación)
+- `POST /auth/login` - Login de usuario
+- `GET /auth/validate` - Validación de token
+- `POST /api/users/register` - Registro de usuario
+- `GET /api/courses` - Catálogo público de cursos
+- `GET /api/courses/{id}` - Detalle del curso
+- `GET /api/courses/category/{categoryId}` - Cursos por categoría
+- `GET /api/courses/subcategory/{subcategoryId}` - Cursos por subcategoría
+- `GET /api/courses/category/{categoryId}/subcategory/{subcategoryId}` - Cursos por categoría y subcategoría
+- `GET /api/categories` - Categorías activas
+- `GET /api/categories/{id}` - Categoría por ID
+- `GET /api/categories/search` - Buscar categorías
+- `GET /api/subcategories` - Subcategorías activas
+- `GET /api/subcategories/{id}` - Subcategoría por ID
+- `GET /api/subcategories/category/{categoryId}` - Subcategorías por categoría
+- `GET /api/subcategories/search` - Buscar subcategorías
+- `GET /uploads/profiles/**` - Imágenes de perfil
+- `GET /h2-console/**` - Consola H2 (solo desarrollo)
+- `GET /actuator/health` - Health check
+
+### Endpoints Protegidos (Requieren JWT)
+
+#### Solo ADMIN
+- `GET /api/users/{id}` - Obtener usuario por ID
+- `GET /api/users/role/{role}` - Obtener usuarios por rol
+- `GET /api/users/all` - Obtener todos los usuarios
+- `GET /api/courses/admin/active` - Gestión administrativa de cursos
+- `GET /api/categories/all` - Obtener todas las categorías (incluyendo inactivas)
+- `POST /api/categories` - Crear categoría
+- `PUT /api/categories/{id}` - Actualizar categoría
+- `DELETE /api/categories/{id}` - Eliminar categoría (soft delete)
+- `DELETE /api/categories/{id}/permanent` - Eliminar categoría permanentemente
+- `PUT /api/categories/{id}/activate` - Activar categoría
+- `PUT /api/categories/{id}/deactivate` - Desactivar categoría
+- `GET /api/subcategories/all` - Obtener todas las subcategorías (incluyendo inactivas)
+- `POST /api/subcategories` - Crear subcategoría
+- `PUT /api/subcategories/{id}` - Actualizar subcategoría
+- `DELETE /api/subcategories/{id}` - Eliminar subcategoría (soft delete)
+- `DELETE /api/subcategories/{id}/permanent` - Eliminar subcategoría permanentemente
+- `PUT /api/subcategories/{id}/activate` - Activar subcategoría
+- `PUT /api/subcategories/{id}/deactivate` - Desactivar subcategoría
+
+#### INSTRUCTOR y ADMIN
+- `POST /api/courses` - Crear curso
+
+#### INSTRUCTOR (propio) y ADMIN
+- `GET /api/courses/instructor/{instructorId}` - Cursos por instructor
+
+#### Todos los usuarios autenticados (STUDENT, INSTRUCTOR, ADMIN)
+- `GET /api/users/profile` - Obtener perfil propio
+- `PUT /api/users/profile` - Actualizar perfil propio
+- `POST /api/users/profile/upload-image` - Cargar imagen de perfil
+- Todos los demás endpoints bajo `/api/**`
+- Cualquier endpoint no listado como público
+
+## 📊 Monitoreo y Logging
+
+### Health Check
+**Endpoint:** `GET /actuator/health`  
+**Descripción:** Verifica el estado del servidor  
+**Acceso:** Público  
+
+#### Response:
+```json
+{
+  "status": "UP"
+}
+```
+
+### Logs Disponibles
+- **Login attempts:** Intentos de autenticación
+- **Token validation:** Validación de tokens
+- **Security events:** Eventos de seguridad
+- **Error tracking:** Seguimiento de errores
+
+## 🚀 Despliegue
+
+### Entornos
+- **Desarrollo:** H2 Database, CORS abierto
+- **Producción:** MySQL Database, CORS restringido
+
+### Variables de Producción
+```properties
+# Database
+SPRING_DATASOURCE_URL=jdbc:mysql://host:port/database
+SPRING_DATASOURCE_USERNAME=username
+SPRING_DATASOURCE_PASSWORD=password
+
+# JWT
+JWT_SECRET_KEY=production-secret-key-256-bits
+JWT_EXPIRATION_TIME=86400000
+
+# CORS
+CORS_ALLOWED_ORIGINS=https://yourdomain.com
+```
+
+---
+
+*Documentación de API actualizada: Septiembre 2025*  
+*Versión: 1.0*  
+*Backend: Java 21 + Spring Boot 3.x*  
+*Mantenida por: E-Learning Platform Team*

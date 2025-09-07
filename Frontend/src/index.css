@@ -1,0 +1,813 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variables CSS de Figma */
+:root {
+  /* Colores de marca de Figma */
+  --color-azure-11: #111827;
+  --color-azure-27: #374151;
+  --color-azure-34: #4b5563;
+  --color-azure-65: #9ca3af;
+  --color-black-solid: #000000;
+  --color-grey-13: #222222;
+  --color-grey-20: #333333;
+  --color-grey-33: #555555;
+  --color-grey-40: #666666;
+  --color-grey-46: #6b7280;
+  --color-grey-47: #777777;
+  --color-grey-67: #aaaaaa;
+  --color-grey-7: #111111;
+  --color-grey-87: #dddddd;
+  --color-grey-91: #e5e7eb;
+  --color-grey-93: #eeeeee;
+  --color-grey-96: #f3f4f6;
+  --color-grey-98: #f9f9f9;
+  --color-orange-48: #f4b400;
+  --color-red-50: #d62839;
+  --color-red-51: #dc2626;
+  --color-red-56: #e63946;
+  --color-red-56-10: #e639461a;
+  --color-red-60: #ef4444;
+  --color-red-82: #fca5a5;
+  --color-red-89: #fecaca;
+  --color-spring-green-36: #16a34a;
+  --color-white-solid: #ffffff;
+  --color-yellow-53: #facc15;
+
+  /* Variables semánticas basadas en Figma */
+  --color-primary-50: var(--color-red-50);
+  --color-primary-100: var(--color-red-51);
+  --color-primary-200: var(--color-red-56);
+  --color-primary-300: var(--color-red-60);
+  --color-primary-400: var(--color-red-82);
+  --color-primary-500: var(--color-red-60);
+  --color-primary-600: var(--color-red-51);
+  --color-primary-700: var(--color-red-50);
+  --color-primary-800: var(--color-red-50);
+  --color-primary-900: var(--color-red-50);
+
+  --color-neutral-50: var(--color-grey-98);
+  --color-neutral-100: var(--color-grey-96);
+  --color-neutral-200: var(--color-grey-91);
+  --color-neutral-300: var(--color-grey-87);
+  --color-neutral-400: var(--color-grey-67);
+  --color-neutral-500: var(--color-grey-46);
+  --color-neutral-600: var(--color-grey-40);
+  --color-neutral-700: var(--color-grey-33);
+  --color-neutral-800: var(--color-grey-20);
+  --color-neutral-900: var(--color-grey-13);
+
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: var(--color-spring-green-36);
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: var(--color-orange-48);
+  --color-warning-500: var(--color-yellow-53);
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
+
+  --color-brand-primary: var(--color-red-60);
+  --color-brand-secondary: var(--color-red-51);
+  --color-brand-accent: var(--color-orange-48);
+  --color-brand-highlight: var(--color-yellow-53);
+
+  --color-background-primary: var(--color-white-solid);
+  --color-background-secondary: var(--color-grey-98);
+  --color-background-tertiary: var(--color-grey-96);
+  --color-background-dark: var(--color-grey-7);
+
+  --color-text-primary: var(--color-grey-7);
+  --color-text-secondary: var(--color-grey-20);
+  --color-text-tertiary: var(--color-grey-40);
+  --color-text-muted: var(--color-grey-67);
+  --color-text-inverse: var(--color-white-solid);
+
+  --color-border-light: var(--color-grey-91);
+  --color-border-medium: var(--color-grey-87);
+  --color-border-dark: var(--color-grey-67);
+}
+
+/* ===== CLASES DE FONDO ORGANIZADAS ===== */
+
+/* Colores primarios (rojos de Figma) */
+.bg-primary-50 {
+  background-color: var(--color-primary-50);
+}
+.bg-primary-100 {
+  background-color: var(--color-primary-100);
+}
+.bg-primary-200 {
+  background-color: var(--color-primary-200);
+}
+.bg-primary-300 {
+  background-color: var(--color-primary-300);
+}
+.bg-primary-400 {
+  background-color: var(--color-primary-400);
+}
+.bg-primary-500 {
+  background-color: var(--color-primary-500);
+}
+.bg-primary-600 {
+  background-color: var(--color-primary-600);
+}
+.bg-primary-700 {
+  background-color: var(--color-primary-700);
+}
+.bg-primary-800 {
+  background-color: var(--color-primary-800);
+}
+.bg-primary-900 {
+  background-color: var(--color-primary-900);
+}
+
+/* Colores neutrales (grises de Figma) */
+.bg-neutral-50 {
+  background-color: var(--color-neutral-50);
+}
+.bg-neutral-100 {
+  background-color: var(--color-neutral-100);
+}
+.bg-neutral-200 {
+  background-color: var(--color-neutral-200);
+}
+.bg-neutral-300 {
+  background-color: var(--color-neutral-300);
+}
+.bg-neutral-400 {
+  background-color: var(--color-neutral-400);
+}
+.bg-neutral-500 {
+  background-color: var(--color-neutral-500);
+}
+.bg-neutral-600 {
+  background-color: var(--color-neutral-600);
+}
+.bg-neutral-700 {
+  background-color: var(--color-neutral-700);
+}
+.bg-neutral-800 {
+  background-color: var(--color-neutral-800);
+}
+.bg-neutral-900 {
+  background-color: var(--color-neutral-900);
+}
+
+/* Colores de éxito (verdes) */
+.bg-success-50 {
+  background-color: var(--color-success-50);
+}
+.bg-success-100 {
+  background-color: var(--color-success-100);
+}
+.bg-success-200 {
+  background-color: var(--color-success-200);
+}
+.bg-success-300 {
+  background-color: var(--color-success-300);
+}
+.bg-success-400 {
+  background-color: var(--color-success-400);
+}
+.bg-success-500 {
+  background-color: var(--color-success-500);
+}
+.bg-success-600 {
+  background-color: var(--color-success-600);
+}
+.bg-success-700 {
+  background-color: var(--color-success-700);
+}
+.bg-success-800 {
+  background-color: var(--color-success-800);
+}
+.bg-success-900 {
+  background-color: var(--color-success-900);
+}
+
+/* Colores de advertencia (amarillos de Figma) */
+.bg-warning-50 {
+  background-color: var(--color-warning-50);
+}
+.bg-warning-100 {
+  background-color: var(--color-warning-100);
+}
+.bg-warning-200 {
+  background-color: var(--color-warning-200);
+}
+.bg-warning-300 {
+  background-color: var(--color-warning-300);
+}
+.bg-warning-400 {
+  background-color: var(--color-warning-400);
+}
+.bg-warning-500 {
+  background-color: var(--color-warning-500);
+}
+.bg-warning-600 {
+  background-color: var(--color-warning-600);
+}
+.bg-warning-700 {
+  background-color: var(--color-warning-700);
+}
+.bg-warning-800 {
+  background-color: var(--color-warning-800);
+}
+.bg-warning-900 {
+  background-color: var(--color-warning-900);
+}
+
+/* Colores de información (azules) */
+.bg-info-50 {
+  background-color: var(--color-info-50);
+}
+.bg-info-100 {
+  background-color: var(--color-info-100);
+}
+.bg-info-200 {
+  background-color: var(--color-info-200);
+}
+.bg-info-300 {
+  background-color: var(--color-info-300);
+}
+.bg-info-400 {
+  background-color: var(--color-info-400);
+}
+.bg-info-500 {
+  background-color: var(--color-info-500);
+}
+.bg-info-600 {
+  background-color: var(--color-info-600);
+}
+.bg-info-700 {
+  background-color: var(--color-info-700);
+}
+.bg-info-800 {
+  background-color: var(--color-info-800);
+}
+.bg-info-900 {
+  background-color: var(--color-info-900);
+}
+
+/* Colores de marca (de Figma) */
+.bg-brand-primary {
+  background-color: var(--color-brand-primary);
+}
+.bg-brand-secondary {
+  background-color: var(--color-brand-secondary);
+}
+.bg-brand-accent {
+  background-color: var(--color-brand-accent);
+}
+.bg-brand-highlight {
+  background-color: var(--color-brand-highlight);
+}
+
+/* Colores de fondo del sistema (de Figma) */
+.bg-background-primary {
+  background-color: var(--color-background-primary);
+}
+.bg-background-secondary {
+  background-color: var(--color-background-secondary);
+}
+.bg-background-tertiary {
+  background-color: var(--color-background-tertiary);
+}
+.bg-background-dark {
+  background-color: var(--color-background-dark);
+}
+
+/* Colores semánticos (alias para compatibilidad usando Figma) */
+.bg-red-50 {
+  background-color: var(--color-red-50);
+}
+.bg-red-100 {
+  background-color: var(--color-red-51);
+}
+.bg-red-200 {
+  background-color: var(--color-red-56);
+}
+.bg-red-300 {
+  background-color: var(--color-red-60);
+}
+.bg-red-400 {
+  background-color: var(--color-red-82);
+}
+.bg-red-500 {
+  background-color: var(--color-red-60);
+}
+.bg-red-600 {
+  background-color: var(--color-red-51);
+}
+.bg-red-700 {
+  background-color: var(--color-red-50);
+}
+.bg-red-800 {
+  background-color: var(--color-red-50);
+}
+.bg-red-900 {
+  background-color: var(--color-red-50);
+}
+
+.bg-gray-50 {
+  background-color: var(--color-grey-98);
+}
+.bg-gray-100 {
+  background-color: var(--color-grey-96);
+}
+.bg-gray-200 {
+  background-color: var(--color-grey-91);
+}
+.bg-gray-300 {
+  background-color: var(--color-grey-87);
+}
+.bg-gray-400 {
+  background-color: var(--color-grey-67);
+}
+.bg-gray-500 {
+  background-color: var(--color-grey-46);
+}
+.bg-gray-600 {
+  background-color: var(--color-grey-40);
+}
+.bg-gray-700 {
+  background-color: var(--color-grey-33);
+}
+.bg-gray-800 {
+  background-color: var(--color-grey-20);
+}
+.bg-gray-900 {
+  background-color: var(--color-grey-13);
+}
+
+.bg-green-50 {
+  background-color: var(--color-success-50);
+}
+.bg-green-100 {
+  background-color: var(--color-success-100);
+}
+.bg-green-200 {
+  background-color: var(--color-success-200);
+}
+.bg-green-300 {
+  background-color: var(--color-success-300);
+}
+.bg-green-400 {
+  background-color: var(--color-success-400);
+}
+.bg-green-500 {
+  background-color: var(--color-spring-green-36);
+}
+.bg-green-600 {
+  background-color: var(--color-success-600);
+}
+.bg-green-700 {
+  background-color: var(--color-success-700);
+}
+.bg-green-800 {
+  background-color: var(--color-success-800);
+}
+.bg-green-900 {
+  background-color: var(--color-success-900);
+}
+
+.bg-yellow-50 {
+  background-color: var(--color-warning-50);
+}
+.bg-yellow-100 {
+  background-color: var(--color-warning-100);
+}
+.bg-yellow-200 {
+  background-color: var(--color-warning-200);
+}
+.bg-yellow-300 {
+  background-color: var(--color-warning-300);
+}
+.bg-yellow-400 {
+  background-color: var(--color-orange-48);
+}
+.bg-yellow-500 {
+  background-color: var(--color-yellow-53);
+}
+.bg-yellow-600 {
+  background-color: var(--color-warning-600);
+}
+.bg-yellow-700 {
+  background-color: var(--color-warning-700);
+}
+.bg-yellow-800 {
+  background-color: var(--color-warning-800);
+}
+.bg-yellow-900 {
+  background-color: var(--color-warning-900);
+}
+
+.bg-blue-50 {
+  background-color: var(--color-info-50);
+}
+.bg-blue-100 {
+  background-color: var(--color-info-100);
+}
+.bg-blue-200 {
+  background-color: var(--color-info-200);
+}
+.bg-blue-300 {
+  background-color: var(--color-info-300);
+}
+.bg-blue-400 {
+  background-color: var(--color-info-400);
+}
+.bg-blue-500 {
+  background-color: var(--color-info-500);
+}
+.bg-blue-600 {
+  background-color: var(--color-info-600);
+}
+.bg-blue-700 {
+  background-color: var(--color-info-700);
+}
+.bg-blue-800 {
+  background-color: var(--color-info-800);
+}
+.bg-blue-900 {
+  background-color: var(--color-info-900);
+}
+
+/* Colores básicos (de Figma) */
+.bg-white {
+  background-color: var(--color-white-solid);
+}
+.bg-black {
+  background-color: var(--color-black-solid);
+}
+
+/* Colores específicos de Figma */
+.bg-azure-11 {
+  background-color: var(--color-azure-11);
+}
+.bg-azure-27 {
+  background-color: var(--color-azure-27);
+}
+.bg-azure-34 {
+  background-color: var(--color-azure-34);
+}
+.bg-azure-65 {
+  background-color: var(--color-azure-65);
+}
+.bg-grey-7 {
+  background-color: var(--color-grey-7);
+}
+.bg-grey-13 {
+  background-color: var(--color-grey-13);
+}
+.bg-grey-20 {
+  background-color: var(--color-grey-20);
+}
+.bg-grey-33 {
+  background-color: var(--color-grey-33);
+}
+.bg-grey-40 {
+  background-color: var(--color-grey-40);
+}
+.bg-grey-46 {
+  background-color: var(--color-grey-46);
+}
+.bg-grey-47 {
+  background-color: var(--color-grey-47);
+}
+.bg-grey-67 {
+  background-color: var(--color-grey-67);
+}
+.bg-grey-87 {
+  background-color: var(--color-grey-87);
+}
+.bg-grey-91 {
+  background-color: var(--color-grey-91);
+}
+.bg-grey-93 {
+  background-color: var(--color-grey-93);
+}
+.bg-grey-96 {
+  background-color: var(--color-grey-96);
+}
+.bg-grey-98 {
+  background-color: var(--color-grey-98);
+}
+.bg-orange-48 {
+  background-color: var(--color-orange-48);
+}
+.bg-yellow-53 {
+  background-color: var(--color-yellow-53);
+}
+.bg-spring-green-36 {
+  background-color: var(--color-spring-green-36);
+}
+
+/* Gradientes personalizados usando colores de Figma */
+.bg-hero-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--color-grey-98) 0%,
+    var(--color-white-solid) 50%,
+    var(--color-grey-96) 100%
+  );
+}
+
+.bg-cta-gradient {
+  background: linear-gradient(
+    90deg,
+    var(--color-grey-13) 0%,
+    var(--color-grey-7) 50%,
+    var(--color-grey-13) 100%
+  );
+}
+
+/* Estados de hover para fondos usando Figma */
+.hover\:bg-primary-600:hover {
+  background-color: var(--color-red-51);
+}
+.hover\:bg-primary-700:hover {
+  background-color: var(--color-red-50);
+}
+.hover\:bg-red-600:hover {
+  background-color: var(--color-red-51);
+}
+.hover\:bg-red-700:hover {
+  background-color: var(--color-red-50);
+}
+.hover\:bg-white:hover {
+  background-color: var(--color-white-solid);
+}
+.hover\:bg-gray-100:hover {
+  background-color: var(--color-grey-96);
+}
+.hover\:bg-gray-200:hover {
+  background-color: var(--color-grey-91);
+}
+
+/* ===== CLASES DE TEXTO ORGANIZADAS ===== */
+
+/* Colores de texto primarios (de Figma) */
+.text-primary-500 {
+  color: var(--color-red-60);
+}
+.text-primary-600 {
+  color: var(--color-red-51);
+}
+.text-primary-700 {
+  color: var(--color-red-50);
+}
+
+/* Colores de texto neutrales (de Figma) */
+.text-neutral-50 {
+  color: var(--color-grey-98);
+}
+.text-neutral-100 {
+  color: var(--color-grey-96);
+}
+.text-neutral-200 {
+  color: var(--color-grey-91);
+}
+.text-neutral-300 {
+  color: var(--color-grey-87);
+}
+.text-neutral-400 {
+  color: var(--color-grey-67);
+}
+.text-neutral-500 {
+  color: var(--color-grey-46);
+}
+.text-neutral-600 {
+  color: var(--color-grey-40);
+}
+.text-neutral-700 {
+  color: var(--color-grey-33);
+}
+.text-neutral-800 {
+  color: var(--color-grey-20);
+}
+.text-neutral-900 {
+  color: var(--color-grey-13);
+}
+
+/* Colores de texto de éxito */
+.text-success-500 {
+  color: var(--color-spring-green-36);
+}
+.text-success-600 {
+  color: var(--color-success-600);
+}
+
+/* Colores de texto de advertencia (de Figma) */
+.text-warning-500 {
+  color: var(--color-yellow-53);
+}
+
+/* Colores de texto de información */
+.text-info-400 {
+  color: var(--color-info-400);
+}
+
+/* Colores de texto de marca (de Figma) */
+.text-brand-primary {
+  color: var(--color-red-60);
+}
+.text-brand-secondary {
+  color: var(--color-red-51);
+}
+.text-brand-accent {
+  color: var(--color-orange-48);
+}
+.text-brand-highlight {
+  color: var(--color-yellow-53);
+}
+
+/* Colores de texto del sistema (de Figma) */
+.text-text-primary {
+  color: var(--color-grey-7);
+}
+.text-text-secondary {
+  color: var(--color-grey-20);
+}
+.text-text-tertiary {
+  color: var(--color-grey-40);
+}
+.text-text-muted {
+  color: var(--color-grey-67);
+}
+.text-text-inverse {
+  color: var(--color-white-solid);
+}
+
+/* Colores semánticos para texto (de Figma) */
+.text-red-500 {
+  color: var(--color-red-60);
+}
+.text-red-600 {
+  color: var(--color-red-51);
+}
+.text-red-100 {
+  color: var(--color-red-51);
+}
+
+.text-gray-50 {
+  color: var(--color-grey-98);
+}
+.text-gray-100 {
+  color: var(--color-grey-96);
+}
+.text-gray-200 {
+  color: var(--color-grey-91);
+}
+.text-gray-300 {
+  color: var(--color-grey-87);
+}
+.text-gray-400 {
+  color: var(--color-grey-67);
+}
+.text-gray-500 {
+  color: var(--color-grey-46);
+}
+.text-gray-600 {
+  color: var(--color-grey-40);
+}
+.text-gray-700 {
+  color: var(--color-grey-33);
+}
+.text-gray-800 {
+  color: var(--color-grey-20);
+}
+.text-gray-900 {
+  color: var(--color-grey-13);
+}
+
+.text-green-400 {
+  color: var(--color-success-400);
+}
+.text-green-500 {
+  color: var(--color-spring-green-36);
+}
+.text-green-600 {
+  color: var(--color-success-600);
+}
+
+.text-yellow-400 {
+  color: var(--color-orange-48);
+}
+.text-yellow-500 {
+  color: var(--color-yellow-53);
+}
+
+.text-blue-400 {
+  color: var(--color-info-400);
+}
+
+.text-white {
+  color: var(--color-white-solid);
+}
+.text-black {
+  color: var(--color-black-solid);
+}
+
+/* ===== CLASES DE BORDE ORGANIZADAS ===== */
+
+/* Bordes neutrales (de Figma) */
+.border-neutral-100 {
+  border-color: var(--color-grey-96);
+}
+.border-neutral-200 {
+  border-color: var(--color-grey-91);
+}
+.border-neutral-300 {
+  border-color: var(--color-grey-87);
+}
+.border-neutral-800 {
+  border-color: var(--color-grey-20);
+}
+
+/* Bordes primarios (de Figma) */
+.border-primary-500 {
+  border-color: var(--color-red-60);
+}
+
+/* Bordes del sistema (de Figma) */
+.border-border-light {
+  border-color: var(--color-grey-91);
+}
+.border-border-medium {
+  border-color: var(--color-grey-87);
+}
+
+/* Bordes semánticos (de Figma) */
+.border-gray-100 {
+  border-color: var(--color-grey-96);
+}
+.border-gray-200 {
+  border-color: var(--color-grey-91);
+}
+.border-gray-300 {
+  border-color: var(--color-grey-87);
+}
+.border-gray-800 {
+  border-color: var(--color-grey-20);
+}
+.border-red-500 {
+  border-color: var(--color-red-60);
+}
+
+/* ===== ESTADOS DE HOVER ORGANIZADOS ===== */
+
+/* Hover para texto (de Figma) */
+.hover\:text-primary-500:hover {
+  color: var(--color-red-60);
+}
+.hover\:text-red-500:hover {
+  color: var(--color-red-60);
+}
+.hover\:text-gray-900:hover {
+  color: var(--color-grey-13);
+}
+
+/* Hover para bordes (de Figma) */
+.hover\:border-primary-500:hover {
+  border-color: var(--color-red-60);
+}
+.hover\:border-red-500:hover {
+  border-color: var(--color-red-60);
+}
+
+/* ===== SOMBRAS PERSONALIZADAS ===== */
+.shadow-brand {
+  box-shadow: 0 10px 25px -3px rgba(239, 68, 68, 0.1),
+    0 4px 6px -2px rgba(239, 68, 68, 0.05);
+}
+
+.shadow-brand-lg {
+  box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.1),
+    0 10px 10px -5px rgba(239, 68, 68, 0.04);
+}
