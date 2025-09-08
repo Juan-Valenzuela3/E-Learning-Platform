@@ -152,10 +152,9 @@ public class SubcategoryController {
     }
 
     /**
-     * Elimina permanentemente una subcategoría - Solo para administradores
+     * Elimina permanentemente una subcategoría
      */
     @DeleteMapping("/{id}/permanent")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> permanentDeleteSubcategory(@PathVariable Long id) {
         try {
             subcategoryService.permanentDeleteSubcategory(id);
@@ -169,10 +168,9 @@ public class SubcategoryController {
     }
 
     /**
-     * Activa una subcategoría - Solo para administradores
+     * Activa una subcategoría
      */
     @PutMapping("/{id}/activate")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> activateSubcategory(@PathVariable Long id) {
         try {
             Subcategory subcategory = subcategoryService.activateSubcategory(id);
@@ -186,10 +184,9 @@ public class SubcategoryController {
     }
 
     /**
-     * Desactiva una subcategoría - Solo para administradores
+     * Desactiva una subcategoría
      */
     @PutMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deactivateSubcategory(@PathVariable Long id) {
         try {
             Subcategory subcategory = subcategoryService.deactivateSubcategory(id);

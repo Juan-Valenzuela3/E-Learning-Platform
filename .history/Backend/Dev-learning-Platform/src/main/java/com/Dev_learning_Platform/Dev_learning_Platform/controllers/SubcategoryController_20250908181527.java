@@ -186,10 +186,9 @@ public class SubcategoryController {
     }
 
     /**
-     * Desactiva una subcategoría - Solo para administradores
+     * Desactiva una subcategoría
      */
     @PutMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deactivateSubcategory(@PathVariable Long id) {
         try {
             Subcategory subcategory = subcategoryService.deactivateSubcategory(id);

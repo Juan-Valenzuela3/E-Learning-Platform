@@ -118,10 +118,9 @@ public class SubcategoryController {
     }
 
     /**
-     * Actualiza una subcategoría existente - Solo para administradores
+     * Actualiza una subcategoría existente
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateSubcategory(@PathVariable Long id, @RequestBody Subcategory subcategoryDetails) {
         try {
             Subcategory updatedSubcategory = subcategoryService.updateSubcategory(id, subcategoryDetails);
@@ -135,10 +134,9 @@ public class SubcategoryController {
     }
 
     /**
-     * Elimina una subcategoría (soft delete) - Solo para administradores
+     * Elimina una subcategoría (soft delete)
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteSubcategory(@PathVariable Long id) {
         try {
             subcategoryService.deleteSubcategory(id);
@@ -152,10 +150,9 @@ public class SubcategoryController {
     }
 
     /**
-     * Elimina permanentemente una subcategoría - Solo para administradores
+     * Elimina permanentemente una subcategoría
      */
     @DeleteMapping("/{id}/permanent")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> permanentDeleteSubcategory(@PathVariable Long id) {
         try {
             subcategoryService.permanentDeleteSubcategory(id);
@@ -169,10 +166,9 @@ public class SubcategoryController {
     }
 
     /**
-     * Activa una subcategoría - Solo para administradores
+     * Activa una subcategoría
      */
     @PutMapping("/{id}/activate")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> activateSubcategory(@PathVariable Long id) {
         try {
             Subcategory subcategory = subcategoryService.activateSubcategory(id);
@@ -186,10 +182,9 @@ public class SubcategoryController {
     }
 
     /**
-     * Desactiva una subcategoría - Solo para administradores
+     * Desactiva una subcategoría
      */
     @PutMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deactivateSubcategory(@PathVariable Long id) {
         try {
             Subcategory subcategory = subcategoryService.deactivateSubcategory(id);
