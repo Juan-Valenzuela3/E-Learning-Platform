@@ -45,19 +45,16 @@ public class Course {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "instructor_id", nullable = false)
-    @JsonBackReference("instructor-courses")
     private User instructor;
 
     // Relación con la categoría principal
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonBackReference("category-courses")
     private Category category;
 
     // Relación con la subcategoría de tecnología
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subcategory_id", nullable = false)
-    @JsonBackReference("subcategory-courses")
     private Subcategory subcategory;
 
     @JdbcTypeCode(SqlTypes.JSON)
