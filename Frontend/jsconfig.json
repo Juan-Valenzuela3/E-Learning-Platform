@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/features/*": ["src/features/*"],
+      "@/components/*": ["src/components/*"],
+      "@/ui/*": ["src/ui/*"],
+      "@/shared/*": ["src/shared/*"],
+      "@/core/*": ["src/core/*"],
+      "@/interfaces/*": ["src/interfaces/*"],
+    },
+    "checkJs": false,
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "exclude": ["node_modules", "dist"],
+  "typeAcquisition": {
+    "enable": false
+  }
+}
