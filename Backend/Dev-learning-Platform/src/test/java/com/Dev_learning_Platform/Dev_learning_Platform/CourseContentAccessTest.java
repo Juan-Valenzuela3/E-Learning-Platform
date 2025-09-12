@@ -1,32 +1,36 @@
 package com.Dev_learning_Platform.Dev_learning_Platform;
 
+import com.Dev_learning_Platform.Dev_learning_Platform.controllers.CourseController;
 import com.Dev_learning_Platform.Dev_learning_Platform.middlewares.JwtAuthenticationFilter;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Course;
-import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.CourseService;
+import com.Dev_learning_Platform.Dev_learning_Platform.services.EnrollmentService;
+import com.Dev_learning_Platform.Dev_learning_Platform.services.UserService;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
 
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -34,30 +38,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests para PB-009 acceso a contenido del curso SIN depender de CourseSecurityService.
+ * Tests para PB-009: Acceso al contenido del curso.
  * OJO: Este test asume que existe el endpoint GET /api/courses/{id}/content.
  * Si aún no existe, estas pruebas podrían devolver 404.
  */
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(CourseController.class) // 1. Enfocamos el test en el controlador correcto
 @ActiveProfiles("test")
-@TestPropertySource(properties = {
-        // evitar conexión a DB real durante el test
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
-        // placeholders JWT
-        "jwt.secret.key=dummy-for-tests",
-        "jwt.expiration.time=86400000"
-})
+@EnableMethodSecurity // 2. Habilitamos la seguridad a nivel de método para @PreAuthorize
 class CourseContentAccessTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter; // neutraliza filtro JWT
+    private CourseService courseService;
 
     @MockBean
-    private CourseService courseService;
+    private EnrollmentService enrollmentService;
+
+    @MockBean
+    private UserService userService;
+
+    // Con @WebMvcTest, el filtro JWT no se aplica por defecto, pero mockearlo
+    // es una buena práctica para evitar sorpresas si la configuración cambia.
+    @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private final Long courseId = 1L;
     private final Long studentId = 10L;
@@ -74,8 +78,7 @@ class CourseContentAccessTest {
                 "https://youtube.com/watch?v=video2"
         ));
 
-        // Ajusta al método real que uses para devolver el contenido
-        when(courseService.findById(anyLong())).thenReturn(courseWithContent);
+        when(courseService.findById(courseId)).thenReturn(courseWithContent);
         // Si tienes getCourseContent(id):  when(courseService.getCourseContent(courseId)).thenReturn(courseWithContent);
     }
 
@@ -85,22 +88,29 @@ class CourseContentAccessTest {
     }
 
     @Test
-    void non_enrolled_student_is_forbidden_403() throws Exception {
-        setupMockUser(studentId, "student@example.com", "STUDENT");
+    @DisplayName("Estudiante NO inscrito no puede ver contenido (403 Forbidden)")
+    void nonEnrolledStudent_isForbidden() throws Exception {
+        // Arrange: Simulamos un estudiante autenticado
+        String studentEmail = "student@example.com";
+        setupMockUser(studentId, studentEmail, "STUDENT");
+        // Arrange: Simulamos que el método isStudentEnrolled (que usa el ID) devuelve 'false'
+        when(enrollmentService.isStudentEnrolled(anyLong(), anyLong())).thenReturn(false);
+
+        // Act & Assert
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
-               .andExpect(result -> {
-                   int s = result.getResponse().getStatus();
-                   if (s != 403) {
-                       throw new AssertionError("Esperaba 403 para estudiante no inscrito, fue " + s);
-                   }
-               });
+               .andExpect(status().isForbidden());
     }
 
     @Test
-    void enrolled_student_can_access_200() throws Exception {
-        setupMockUser(studentId, "student@example.com", "STUDENT");
-        // Aquí no simulamos inscripción por falta de CourseSecurityService.
-        // Si tu endpoint aún no valida inscripción, este test podría no pasar.
+    @DisplayName("Estudiante INSCRITO puede ver contenido (200 OK)")
+    void enrolledStudent_canAccessContent() throws Exception {
+        // Arrange: Simulamos un estudiante autenticado
+        String studentEmail = "student@example.com";
+        setupMockUser(studentId, studentEmail, "STUDENT");
+        // Arrange: Simulamos que el método isStudentEnrolled (que usa el ID) devuelve 'true'
+        when(enrollmentService.isStudentEnrolled(anyLong(), anyLong())).thenReturn(true);
+
+        // Act & Assert
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
                .andExpect(status().isOk())
                .andExpect(jsonPath("$.title", is("Curso de React Avanzado")))
@@ -108,7 +118,8 @@ class CourseContentAccessTest {
     }
 
     @Test
-    void instructor_can_access_200() throws Exception {
+    @DisplayName("Instructor puede ver contenido (200 OK)")
+    void instructor_canAccessContent() throws Exception {
         setupMockUser(instructorId, "instructor@example.com", "INSTRUCTOR");
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
                .andExpect(status().isOk())
@@ -116,7 +127,8 @@ class CourseContentAccessTest {
     }
 
     @Test
-    void admin_can_access_200() throws Exception {
+    @DisplayName("Admin puede ver contenido (200 OK)")
+    void admin_canAccessContent() throws Exception {
         setupMockUser(adminId, "admin@example.com", "ADMIN");
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
                .andExpect(status().isOk())
@@ -124,28 +136,32 @@ class CourseContentAccessTest {
     }
 
     @Test
-    void anonymous_is_401_or_403() throws Exception {
+    @DisplayName("Usuario anónimo no puede ver contenido (401 Unauthorized)")
+    void anonymous_isForbidden() throws Exception {
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
-               .andExpect(result -> {
-                   int s = result.getResponse().getStatus();
-                   if (!(s == 401 || s == 403)) {
-                       throw new AssertionError("Esperaba 401 o 403 para anónimo, fue " + s);
-                   }
-               });
+               .andExpect(status().isUnauthorized()); // 401 es la respuesta correcta para usuarios no autenticados
     }
 
     // ---------- helper ----------
     private void setupMockUser(Long userId, String email, String role) {
-        User principal = new User();
-        principal.setId(userId);
-        principal.setEmail(email);
-        principal.setRole(User.Role.valueOf(role));
+        // Usamos UserDetails que es lo que Spring Security maneja internamente
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(email) // El "username" para Spring Security es el email
+                .password("password")
+                .authorities("ROLE_" + role)
+                .build();
+
+        // ESTE ES EL MOCK QUE FALTABA:
+        // Simulamos que cuando se busque un usuario por su email, se devuelva un objeto User con su ID.
+        User appUser = new User();
+        appUser.setId(userId);
+        when(userService.findByEmail(any(String.class))).thenReturn(appUser);
 
         SecurityContext ctx = SecurityContextHolder.createEmptyContext();
         ctx.setAuthentication(new UsernamePasswordAuthenticationToken(
-                principal,
-                "x",
-                List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                userDetails, // El principal es UserDetails
+                null,
+                userDetails.getAuthorities()
         ));
         SecurityContextHolder.setContext(ctx);
     }
