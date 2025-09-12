@@ -8,11 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * DTO para respuesta de autenticación exitosa.
- * Contiene el token JWT y información básica del usuario.
- * No expone datos sensibles como la contraseña.
- */
+
 @Getter
 @Setter
 @NoArgsConstructor

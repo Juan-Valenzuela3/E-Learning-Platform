@@ -1,26 +1,43 @@
 package com.Dev_learning_Platform.Dev_learning_Platform;
 
-import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CourseCreateDto;
-import com.Dev_learning_Platform.Dev_learning_Platform.models.Course;
-import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
-import com.Dev_learning_Platform.Dev_learning_Platform.repositories.CourseRepository;
-import com.Dev_learning_Platform.Dev_learning_Platform.services.CourseService;
-import com.Dev_learning_Platform.Dev_learning_Platform.services.UserService;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CourseCreateDto;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Category;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Course;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Subcategory;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
+import com.Dev_learning_Platform.Dev_learning_Platform.repositories.CourseRepository;
+import com.Dev_learning_Platform.Dev_learning_Platform.repositories.EnrollmentRepository;
+import com.Dev_learning_Platform.Dev_learning_Platform.services.CategoryService;
+import com.Dev_learning_Platform.Dev_learning_Platform.services.CourseService;
+import com.Dev_learning_Platform.Dev_learning_Platform.services.SubcategoryService;
+import com.Dev_learning_Platform.Dev_learning_Platform.services.UserService;
+
+/**
+ * Test unitario para CourseService usando solo Mockito.
+ */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class CourseServiceTest {
 
     @Mock
@@ -29,16 +46,28 @@ class CourseServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private CategoryService categoryService;
+
+    @Mock
+    private SubcategoryService subcategoryService;
+
+    @Mock
+    private EnrollmentRepository enrollmentRepository;
+
     @InjectMocks
     private CourseService courseService;
 
     // ---------- Helpers ----------
+    
     private CourseCreateDto sampleDto(Long instructorId) {
         CourseCreateDto dto = new CourseCreateDto();
         dto.setTitle("Curso de Spring");
-        dto.setDescription("Descripción larga…");
+        dto.setDescription("Descripción larga del curso de Spring Boot");
         dto.setShortDescription("Descripción corta");
         dto.setInstructorId(instructorId);
+        dto.setCategoryId(1L); // Categoría "Programación"
+        dto.setSubcategoryId(1L); // Subcategoría "Java"
         dto.setYoutubeUrls(List.of("https://www.youtube.com/watch?v=abc12345_-Z"));
         dto.setThumbnailUrl("https://cdn.example.com/thumb.png");
         dto.setPrice(new BigDecimal("49.99"));
@@ -57,7 +86,27 @@ class CourseServiceTest {
         u.setUserName("Name");
         u.setLastName("Last");
         u.setPassword("x"); // no se usa en test
+        u.setActive(true);
         return u;
+    }
+
+    private Category makeCategory(Long id, String name) {
+        Category category = new Category();
+        category.setId(id);
+        category.setName(name);
+        category.setDescription("Descripción de " + name);
+        category.setIsActive(true);
+        return category;
+    }
+
+    private Subcategory makeSubcategory(Long id, String name, Category category) {
+        Subcategory subcategory = new Subcategory();
+        subcategory.setId(id);
+        subcategory.setName(name);
+        subcategory.setDescription("Descripción de " + name);
+        subcategory.setCategory(category);
+        subcategory.setIsActive(true);
+        return subcategory;
     }
 
     // ---------- Tests ----------
@@ -66,10 +115,19 @@ class CourseServiceTest {
     void createCourse_mapsDto_and_saves_withInstructor() {
         // arrange
         Long instructorId = 10L;
+        Long categoryId = 1L;
+        Long subcategoryId = 1L;
+        
         CourseCreateDto dto = sampleDto(instructorId);
         User instructor = makeUser(instructorId, User.Role.INSTRUCTOR);
+        Category category = makeCategory(categoryId, "Programación");
+        Subcategory subcategory = makeSubcategory(subcategoryId, "Java", category);
 
+        // Configurar mocks
         when(userService.findById(instructorId)).thenReturn(instructor);
+        when(categoryService.getCategoryById(categoryId)).thenReturn(Optional.of(category));
+        when(subcategoryService.getSubcategoryById(subcategoryId)).thenReturn(Optional.of(subcategory));
+        
         // simulamos que el repo asigna ID al guardar
         when(courseRepository.save(any(Course.class))).thenAnswer(inv -> {
             Course c = inv.getArgument(0);
@@ -84,9 +142,11 @@ class CourseServiceTest {
         assertNotNull(saved.getId());
         assertEquals(100L, saved.getId());
         assertEquals("Curso de Spring", saved.getTitle());
-        assertEquals("Descripción larga…", saved.getDescription());
+        assertEquals("Descripción larga del curso de Spring Boot", saved.getDescription());
         assertEquals("Descripción corta", saved.getShortDescription());
         assertEquals(instructor, saved.getInstructor());
+        assertEquals(category, saved.getCategory());
+        assertEquals(subcategory, saved.getSubcategory());
         assertEquals(new BigDecimal("49.99"), saved.getPrice());
         assertEquals(Boolean.TRUE, saved.getIsPublished());
         assertEquals(Boolean.TRUE, saved.getIsActive());
@@ -99,6 +159,68 @@ class CourseServiceTest {
         assertEquals(dto.getTitle(), toSave.getTitle());
         assertEquals(dto.getThumbnailUrl(), toSave.getThumbnailUrl());
         assertEquals(dto.getYoutubeUrls(), toSave.getYoutubeUrls());
+        
+        // Verificar que se llamaron los servicios necesarios
+        verify(userService).findById(instructorId);
+        verify(categoryService).getCategoryById(categoryId);
+        verify(subcategoryService).getSubcategoryById(subcategoryId);
+    }
+
+    @Test
+    void createCourse_categoryNotFound_throwsException() {
+        // arrange
+        Long instructorId = 10L;
+        Long categoryId = 999L; // Categoría que no existe
+        
+        CourseCreateDto dto = sampleDto(instructorId);
+        dto.setCategoryId(categoryId); // Importante: cambiar el categoryId en el DTO
+        
+        User instructor = makeUser(instructorId, User.Role.INSTRUCTOR);
+
+        when(userService.findById(instructorId)).thenReturn(instructor);
+        when(categoryService.getCategoryById(categoryId)).thenReturn(Optional.empty());
+
+        // act & assert
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> courseService.createCourse(dto)
+        );
+        
+        assertTrue(ex.getMessage().contains("Categoría no encontrada"));
+        verify(userService).findById(instructorId);
+        verify(categoryService).getCategoryById(categoryId);
+    }
+
+    @Test
+    void createCourse_subcategoryNotBelongToCategory_throwsException() {
+        // arrange
+        Long instructorId = 10L;
+        Long categoryId = 1L;
+        Long subcategoryId = 2L;
+        
+        CourseCreateDto dto = sampleDto(instructorId);
+        dto.setCategoryId(categoryId);
+        dto.setSubcategoryId(subcategoryId);
+        
+        User instructor = makeUser(instructorId, User.Role.INSTRUCTOR);
+        Category category = makeCategory(categoryId, "Programación");
+        Category differentCategory = makeCategory(999L, "Diseño"); // Categoría diferente
+        Subcategory subcategory = makeSubcategory(subcategoryId, "Photoshop", differentCategory);
+
+        when(userService.findById(instructorId)).thenReturn(instructor);
+        when(categoryService.getCategoryById(categoryId)).thenReturn(Optional.of(category));
+        when(subcategoryService.getSubcategoryById(subcategoryId)).thenReturn(Optional.of(subcategory));
+
+        // act & assert
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> courseService.createCourse(dto)
+        );
+        
+        assertTrue(ex.getMessage().contains("La subcategoría no pertenece a la categoría"));
+        verify(userService).findById(instructorId);
+        verify(categoryService).getCategoryById(categoryId);
+        verify(subcategoryService).getSubcategoryById(subcategoryId);
     }
 
     @Test

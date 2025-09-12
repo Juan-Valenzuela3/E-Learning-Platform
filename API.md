@@ -537,6 +537,147 @@ Si el email ya existe, retorna el usuario existente (200 OK) en lugar de crear u
 ]
 ```
 
+### 14. Actualizar Curso
+**Endpoint:** `PUT /api/courses/{courseId}`  
+**Descripción:** Actualiza un curso existente. Solo el instructor propietario o un administrador puede editar el curso  
+**Historia de Usuario:** "Como instructor quiero editar mis cursos"  
+**Acceso:** INSTRUCTOR (propietario), ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **courseId:** ID del curso a actualizar (requerido)
+
+#### Request Body:
+```json
+{
+  "title": "Curso de Java Avanzado",
+  "description": "Aprende conceptos avanzados de Java con ejemplos prácticos y proyectos complejos.",
+  "shortDescription": "Curso avanzado de Java para desarrolladores",
+  "instructorId": 2,
+  "categoryId": 1,
+  "subcategoryId": 3,
+  "youtubeUrls": [
+    "https://www.youtube.com/watch?v=xyz789",
+    "https://www.youtube.com/watch?v=abc456"
+  ],
+  "thumbnailUrl": "https://example.com/images/java-advanced-course.jpg",
+  "price": 149.99,
+  "isPremium": true,
+  "isPublished": true,
+  "isActive": true,
+  "estimatedHours": 35
+}
+```
+
+#### Validaciones:
+- **title:** Requerido, máximo 200 caracteres
+- **description:** Requerido, máximo 1000 caracteres
+- **shortDescription:** Opcional, máximo 255 caracteres
+- **instructorId:** Requerido, debe existir
+- **categoryId:** Requerido, debe existir
+- **subcategoryId:** Requerido, debe existir y pertenecer a la categoría
+- **youtubeUrls:** Opcional, formato YouTube válido
+- **thumbnailUrl:** Opcional, URL de imagen válida
+- **price:** Requerido, no negativo, máximo 6 dígitos enteros y 2 decimales
+- **estimatedHours:** Opcional, entre 1 y 1000
+
+#### Response Exitoso (200 OK):
+```json
+{
+  "id": 1,
+  "title": "Curso de Java Avanzado",
+  "description": "Aprende conceptos avanzados de Java con ejemplos prácticos y proyectos complejos.",
+  "shortDescription": "Curso avanzado de Java para desarrolladores",
+  "instructor": {
+    "id": 2,
+    "userName": "María",
+    "lastName": "García",
+    "email": "maria.garcia@example.com",
+    "role": "INSTRUCTOR"
+  },
+  "category": {
+    "id": 1,
+    "name": "Programación"
+  },
+  "subcategory": {
+    "id": 3,
+    "name": "Backend"
+  },
+  "youtubeUrls": [
+    "https://www.youtube.com/watch?v=xyz789",
+    "https://www.youtube.com/watch?v=abc456"
+  ],
+  "thumbnailUrl": "https://example.com/images/java-advanced-course.jpg",
+  "price": 149.99,
+  "isPremium": true,
+  "isPublished": true,
+  "isActive": true,
+  "estimatedHours": 35,
+  "createdAt": "2025-01-01T10:00:00.000+00:00",
+  "updatedAt": "2025-01-01T15:30:00.000+00:00"
+}
+```
+
+#### Response de Error (403 Forbidden):
+```json
+{
+  "message": "No tienes permisos para editar este curso",
+  "error": "ACCESS_DENIED",
+  "status": 403,
+  "timestamp": "2025-01-01T10:00:00",
+  "path": "/api/courses/1"
+}
+```
+
+#### Response de Error (404 Not Found):
+```json
+{
+  "message": "Curso no encontrado con ID: 999",
+  "status": 404,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+### 15. Eliminar Curso
+**Endpoint:** `DELETE /api/courses/{courseId}`  
+**Descripción:** Desactiva un curso y todas sus inscripciones asociadas (soft delete). Solo el instructor propietario o un administrador puede eliminar el curso  
+**Historia de Usuario:** "Como instructor quiero eliminar mis cursos"  
+**Acceso:** INSTRUCTOR (propietario), ADMIN  
+**Autenticación:** JWT Required  
+
+#### Path Parameters:
+- **courseId:** ID del curso a eliminar (requerido)
+
+#### Response Exitoso (204 No Content):
+```
+Sin contenido en el cuerpo de la respuesta
+```
+
+#### Response de Error (403 Forbidden):
+```json
+{
+  "message": "No tienes permisos para eliminar este curso",
+  "error": "ACCESS_DENIED",
+  "status": 403,
+  "timestamp": "2025-01-01T10:00:00",
+  "path": "/api/courses/1"
+}
+```
+
+#### Response de Error (404 Not Found):
+```json
+{
+  "message": "Curso no encontrado con ID: 999",
+  "status": 404,
+  "timestamp": "2025-01-01T10:00:00"
+}
+```
+
+#### Nota Importante:
+- El curso se marca como inactivo (`isActive = false`) en lugar de eliminarse físicamente
+- Todas las inscripciones asociadas al curso cambian su estado a `DROPPED`
+- Esta operación es irreversible sin intervención administrativa
+
 ## 🔒 Autenticación JWT
 
 ### Headers Requeridos para Endpoints Protegidos
@@ -654,7 +795,10 @@ Content-Type: application/json
 JWT_SECRET_KEY=your-secret-key-here
 JWT_EXPIRATION_TIME=86400000
 ```
-
+############################################
+                TESTING
+############################################
+               
 ## 🧪 Ejemplos de Testing
 
 ### 1. Prueba de Login (cURL)
@@ -770,6 +914,38 @@ curl -X GET http://localhost:8080/api/protected-endpoint \
 ### 13. Validación de Token (cURL)
 ```bash
 curl -X GET "http://localhost:8080/auth/validate?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### 14. Actualizar Curso (cURL)
+```bash
+curl -X PUT http://localhost:8080/api/courses/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Curso de Java Avanzado",
+    "description": "Aprende conceptos avanzados de Java con ejemplos prácticos y proyectos complejos.",
+    "shortDescription": "Curso avanzado de Java para desarrolladores",
+    "instructorId": 2,
+    "categoryId": 1,
+    "subcategoryId": 3,
+    "youtubeUrls": [
+      "https://www.youtube.com/watch?v=xyz789",
+      "https://www.youtube.com/watch?v=abc456"
+    ],
+    "thumbnailUrl": "https://example.com/images/java-advanced-course.jpg",
+    "price": 149.99,
+    "isPremium": true,
+    "isPublished": true,
+    "isActive": true,
+    "estimatedHours": 35
+  }'
+```
+
+### 15. Eliminar Curso (cURL)
+```bash
+curl -X DELETE http://localhost:8080/api/courses/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json"
 ```
 
 ## 📱 Integración con Frontend

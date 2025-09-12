@@ -8,11 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * DTO para solicitud de autenticación de usuario.
- * Contiene las credenciales necesarias para el login.
- * Aplica validaciones de entrada siguiendo Bean Validation.
- */
+
 @Getter
 @Setter
 @NoArgsConstructor

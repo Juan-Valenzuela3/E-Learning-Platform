@@ -10,9 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Category;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Subcategory;
 
-/**
- * Servicio para inicializar datos por defecto de categorías y subcategorías
- */
+
 @Service
 public class DataInitializationService implements CommandLineRunner {
 
@@ -28,26 +26,20 @@ public class DataInitializationService implements CommandLineRunner {
         initializeDefaultCategories();
     }
 
-    /**
-     * Inicializa las categorías y subcategorías por defecto
-     */
     private void initializeDefaultCategories() {
-        // Crear categoría Frontend
+
         Category frontend = createCategoryIfNotExists("Frontend", 
             "Desarrollo de interfaces de usuario y experiencias web", 
             "fas fa-laptop-code", "#3B82F6", 1);
 
-        // Crear categoría Backend
         Category backend = createCategoryIfNotExists("Backend", 
             "Desarrollo de servidores, APIs y lógica de negocio", 
             "fas fa-server", "#10B981", 2);
 
-        // Crear categoría Data Science
         Category dataScience = createCategoryIfNotExists("Data Science", 
             "Análisis de datos, machine learning y estadística", 
             "fas fa-chart-line", "#F59E0B", 3);
 
-        // Crear categoría IA
         Category ai = createCategoryIfNotExists("Inteligencia Artificial", 
             "Machine Learning, Deep Learning y algoritmos inteligentes", 
             "fas fa-robot", "#8B5CF6", 4);
@@ -135,9 +127,6 @@ public class DataInitializationService implements CommandLineRunner {
             "fas fa-comments", "#00BCD4", 10, ai);
     }
 
-    /**
-     * Crea una categoría si no existe
-     */
     private Category createCategoryIfNotExists(String name, String description, String icon, String color, Integer sortOrder) {
         Optional<Category> existingCategory = categoryService.getCategoryByName(name);
         if (existingCategory.isPresent()) {
@@ -155,9 +144,6 @@ public class DataInitializationService implements CommandLineRunner {
         return categoryService.createCategory(category);
     }
 
-    /**
-     * Crea una subcategoría si no existe
-     */
     private Subcategory createSubcategoryIfNotExists(String name, String description, String icon, String color, Integer sortOrder, Category category) {
         Optional<Subcategory> existingSubcategory = subcategoryService.getSubcategoryByNameAndCategoryId(name, category.getId());
         if (existingSubcategory.isPresent()) {

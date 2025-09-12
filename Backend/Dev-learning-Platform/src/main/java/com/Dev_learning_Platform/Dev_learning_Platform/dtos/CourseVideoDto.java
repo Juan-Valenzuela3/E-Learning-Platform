@@ -7,10 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * DTO para crear y actualizar videos de cursos.
- * Contiene la información necesaria para gestionar videos de YouTube.
- */
+
 @Getter
 @Setter
 public class CourseVideoDto {

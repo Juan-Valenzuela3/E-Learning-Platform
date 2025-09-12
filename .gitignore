@@ -21,3 +21,6 @@ Thumbs.db
 .env.production.local
 
 .github/instructions/Profile.instructions.md
+
+depuración.md
+test_vm.sh

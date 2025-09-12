@@ -1,16 +1,21 @@
 package com.Dev_learning_Platform.Dev_learning_Platform.services;
 
-import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CourseCreateDto;
-import com.Dev_learning_Platform.Dev_learning_Platform.models.Category;
-import com.Dev_learning_Platform.Dev_learning_Platform.models.Course;
-import com.Dev_learning_Platform.Dev_learning_Platform.models.Subcategory;
-import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
-import com.Dev_learning_Platform.Dev_learning_Platform.repositories.CourseRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CourseCreateDto;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Category;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Course;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Enrollment;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Subcategory;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
+import com.Dev_learning_Platform.Dev_learning_Platform.repositories.CourseRepository;
+import com.Dev_learning_Platform.Dev_learning_Platform.repositories.EnrollmentRepository;
+
+import lombok.RequiredArgsConstructor;
 
 
 @Service
@@ -22,6 +27,7 @@ public class CourseService {
     private final UserService userService;
     private final CategoryService categoryService;
     private final SubcategoryService subcategoryService;
+    private final EnrollmentRepository enrollmentRepository;
 
    
     @Transactional
@@ -63,27 +69,18 @@ public class CourseService {
         return courseRepository.findByIsActive(true);
     }
 
-    /**
-     * Obtiene cursos por categoría
-     */
     public List<Course> getCoursesByCategory(Long categoryId) {
         Category category = categoryService.getCategoryById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + categoryId));
         return courseRepository.findByCategoryAndIsActiveAndIsPublished(category, true, true);
     }
 
-    /**
-     * Obtiene cursos por subcategoría
-     */
     public List<Course> getCoursesBySubcategory(Long subcategoryId) {
         Subcategory subcategory = subcategoryService.getSubcategoryById(subcategoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Subcategoría no encontrada con ID: " + subcategoryId));
         return courseRepository.findBySubcategoryAndIsActiveAndIsPublished(subcategory, true, true);
     }
 
-    /**
-     * Obtiene cursos por categoría y subcategoría
-     */
     public List<Course> getCoursesByCategoryAndSubcategory(Long categoryId, Long subcategoryId) {
         Category category = categoryService.getCategoryById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + categoryId));
@@ -122,5 +119,65 @@ public class CourseService {
         course.setEstimatedHours(dto.getEstimatedHours());
         
         return course;
+    }
+
+    public Course updateCourse(Long courseId, CourseCreateDto courseDto) {
+        Course existingCourse = findById(courseId);
+
+        User authenticatedUser = userService.getAuthenticatedUser();
+        boolean isAdmin = authenticatedUser.getRole() == User.Role.ADMIN;
+        boolean isOwner = existingCourse.getInstructor().getId().equals(authenticatedUser.getId());
+        if (!isAdmin && !isOwner) {
+            throw new AccessDeniedException("No tienes permisos para editar este curso.");
+        }
+
+        User instructor = userService.findById(courseDto.getInstructorId());
+        Category category = categoryService.getCategoryById(courseDto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + courseDto.getCategoryId()));
+        Subcategory subcategory = subcategoryService.getSubcategoryById(courseDto.getSubcategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Subcategoría no encontrada con ID: " + courseDto.getSubcategoryId()));
+        if (!subcategory.getCategory().getId().equals(category.getId())) {
+            throw new IllegalArgumentException("La subcategoría no pertenece a la categoría especificada");
+        }
+
+        // Actualizar los campos del curso existente
+        existingCourse.setTitle(courseDto.getTitle());
+        existingCourse.setDescription(courseDto.getDescription());
+        existingCourse.setShortDescription(courseDto.getShortDescription());
+        existingCourse.setInstructor(instructor);
+        existingCourse.setCategory(category);
+        existingCourse.setSubcategory(subcategory);
+        existingCourse.setYoutubeUrls(courseDto.getYoutubeUrls());
+        existingCourse.setThumbnailUrl(courseDto.getThumbnailUrl());
+        existingCourse.setPrice(courseDto.getPrice());
+        existingCourse.setIsPremium(courseDto.getIsPremium());
+        existingCourse.setIsPublished(courseDto.getIsPublished());
+        existingCourse.setIsActive(courseDto.getIsActive());
+        existingCourse.setEstimatedHours(courseDto.getEstimatedHours());
+
+        return courseRepository.save(existingCourse);
+    }
+
+    @Transactional
+    public void deleteCourse(Long courseId) {
+        Course existingCourse = findById(courseId);
+
+        User authenticatedUser = userService.getAuthenticatedUser();
+        boolean isAdmin = authenticatedUser.getRole() == User.Role.ADMIN;
+        boolean isOwner = existingCourse.getInstructor().getId().equals(authenticatedUser.getId());
+        if (!isAdmin && !isOwner) {
+            throw new AccessDeniedException("No tienes permisos para eliminar este curso.");
+        }
+
+        // Desactivar el curso
+        existingCourse.setIsActive(false);
+        courseRepository.save(existingCourse);
+
+        // Desactivar inscripciones asociadas
+        List<Enrollment> enrollments = enrollmentRepository.findByCourse(existingCourse);
+        for (Enrollment enrollment : enrollments) {
+            enrollment.setStatus(Enrollment.EnrollmentStatus.SUSPENDED);
+            enrollmentRepository.save(enrollment);
+        }
     }
 }

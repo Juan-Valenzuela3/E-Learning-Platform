@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.Dev_learning_Platform.Dev_learning_Platform.dtos.ErrorResponseDto;
 import com.Dev_learning_Platform.Dev_learning_Platform.dtos.UserRegisterDto;
 import com.Dev_learning_Platform.Dev_learning_Platform.dtos.profile.UpdateProfileDto;
 import com.Dev_learning_Platform.Dev_learning_Platform.dtos.profile.UserProfileDto;
@@ -38,16 +39,33 @@ public class UserController {
     private final FileUploadService fileUploadService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody UserRegisterDto user) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegisterDto userDto) {
+        log.info("Intentando registrar usuario con email: {}", userDto.getEmail());
         
-        User existingUser = userService.findByEmail(user.getEmail());
-        if (existingUser != null) {
-            
-            return ResponseEntity.badRequest().build(); // Usuario ya existe
-        }
+        try {
+            // Verificar si el email ya existe
+            User existingUser = userService.findByEmail(userDto.getEmail());
+            if (existingUser != null) {
+                log.warn("Email ya registrado: {}", userDto.getEmail());
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ErrorResponseDto.simple("EMAIL_ALREADY_EXISTS", 
+                          "El email ya está registrado en el sistema",
+                          "/api/users/register"));
+            }
 
-        User newUser = userService.saveUser(UserRegisterDto.toEntity(user));
-        return ResponseEntity.ok(newUser);
+            // Crear y guardar nuevo usuario
+            User newUser = userService.saveUser(UserRegisterDto.toEntity(userDto));
+            log.info("Usuario registrado exitosamente con ID: {}", newUser.getId());
+            
+            return ResponseEntity.ok(newUser);
+            
+        } catch (Exception e) {
+            log.error("Error al registrar usuario: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponseDto.simple("REGISTRATION_ERROR", 
+                      "Error interno del servidor al registrar usuario",
+                      "/api/users/register"));
+        }
     }
 
     @GetMapping("/{id}")
@@ -119,16 +137,13 @@ public class UserController {
             if (currentUser == null) {
                 return ResponseEntity.notFound().build();
             }
-            
-            // Eliminar imagen anterior si existe
+
             if (currentUser.getProfileImageUrl() != null) {
                 fileUploadService.deleteProfileImage(currentUser.getProfileImageUrl());
             }
-            
-            // Subir nueva imagen
+
             String imageUrl = fileUploadService.uploadProfileImage(file, currentUser.getId());
-            
-            // Actualizar usuario con nueva URL
+
             User updatedUser = userService.updateProfileImage(currentUser.getId(), imageUrl);
             UserProfileDto profileDto = UserProfileDto.fromEntity(updatedUser);
             

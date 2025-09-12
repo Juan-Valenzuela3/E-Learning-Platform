@@ -14,18 +14,7 @@ import com.Dev_learning_Platform.Dev_learning_Platform.models.CourseVideo;
 @Repository
 public interface CourseVideoRepository extends JpaRepository<CourseVideo, Long> {
     
-    /**
-     * Obtiene todos los videos de un curso ordenados por índice de orden.
-     */
     List<CourseVideo> findByCourseIdOrderByOrderIndexAsc(Long courseId);
-    
-    /**
-     * Obtiene todos los videos activos de un curso ordenados por índice.
-     */
     List<CourseVideo> findByCourseIdAndIsActiveOrderByOrderIndexAsc(Long courseId, Boolean isActive);
-    
-    /**
-     * Obtiene todos los videos de un curso.
-     */
     List<CourseVideo> findByCourseId(Long courseId);
 }

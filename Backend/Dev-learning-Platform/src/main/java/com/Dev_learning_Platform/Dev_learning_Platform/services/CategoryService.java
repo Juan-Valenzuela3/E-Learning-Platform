@@ -10,9 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Category;
 import com.Dev_learning_Platform.Dev_learning_Platform.repositories.CategoryRepository;
 
-/**
- * Servicio para manejar la lógica de negocio de las categorías
- */
+
 @Service
 @Transactional
 public class CategoryService {
@@ -20,41 +18,26 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    /**
-     * Obtiene todas las categorías activas ordenadas
-     */
     @Transactional(readOnly = true)
     public List<Category> getAllActiveCategories() {
         return categoryRepository.findAllActiveOrdered();
     }
 
-    /**
-     * Obtiene todas las categorías (activas e inactivas)
-     */
     @Transactional(readOnly = true)
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }
 
-    /**
-     * Obtiene una categoría por ID
-     */
     @Transactional(readOnly = true)
     public Optional<Category> getCategoryById(Long id) {
         return categoryRepository.findById(id);
     }
 
-    /**
-     * Obtiene una categoría por nombre
-     */
     @Transactional(readOnly = true)
     public Optional<Category> getCategoryByName(String name) {
         return categoryRepository.findByName(name);
     }
 
-    /**
-     * Busca categorías por término de búsqueda
-     */
     @Transactional(readOnly = true)
     public List<Category> searchCategories(String searchTerm) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
@@ -63,9 +46,6 @@ public class CategoryService {
         return categoryRepository.findActiveByNameContaining(searchTerm.trim());
     }
 
-    /**
-     * Crea una nueva categoría
-     */
     public Category createCategory(Category category) {
         // Validar que el nombre no esté vacío
         if (category.getName() == null || category.getName().trim().isEmpty()) {
@@ -89,9 +69,6 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    /**
-     * Actualiza una categoría existente
-     */
     public Category updateCategory(Long id, Category categoryDetails) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + id));
@@ -127,9 +104,6 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    /**
-     * Elimina una categoría (soft delete - marca como inactiva)
-     */
     public void deleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + id));
@@ -145,9 +119,6 @@ public class CategoryService {
         categoryRepository.save(category);
     }
 
-    /**
-     * Elimina permanentemente una categoría
-     */
     public void permanentDeleteCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + id));
@@ -161,9 +132,6 @@ public class CategoryService {
         categoryRepository.delete(category);
     }
 
-    /**
-     * Activa una categoría
-     */
     public Category activateCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + id));
@@ -172,9 +140,6 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    /**
-     * Desactiva una categoría
-     */
     public Category deactivateCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + id));

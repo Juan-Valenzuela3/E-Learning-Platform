@@ -2,6 +2,9 @@ package com.Dev_learning_Platform.Dev_learning_Platform.services;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +44,6 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    // Obtiene usuario filtrados por rol, solo para uso administrativo
     public List<User> getUsersByRole(User.Role role) {
         return userRepository.findByRole(role);
     }
@@ -84,5 +86,15 @@ public class UserService {
         log.info("Imagen de perfil actualizada exitosamente");
         
         return savedUser;
+    }
+
+    public User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UsernameNotFoundException("No hay usuario autenticado.");
+        }
+        String username = authentication.getName();
+        return userRepository.findByUserName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
     }
 }

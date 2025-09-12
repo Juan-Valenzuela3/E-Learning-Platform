@@ -21,9 +21,7 @@ import com.Dev_learning_Platform.Dev_learning_Platform.models.Enrollment;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Enrollment.EnrollmentStatus;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.EnrollmentService;
 
-/**
- * Controlador REST para manejar operaciones de inscripciones
- */
+
 @RestController
 @RequestMapping("/api/enrollments")
 public class EnrollmentController {
@@ -34,9 +32,6 @@ public class EnrollmentController {
     @Autowired
     private com.Dev_learning_Platform.Dev_learning_Platform.services.UserService userService;
 
-    /**
-     * Inscribe un estudiante a un curso
-     */
     @PostMapping
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<?> enrollInCourse(@RequestBody EnrollmentRequest request, Authentication authentication) {
@@ -54,9 +49,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Obtiene las inscripciones del estudiante autenticado
-     */
     @GetMapping("/my-courses")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<List<Enrollment>> getMyEnrollments(Authentication authentication) {
@@ -69,9 +61,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Obtiene todas las inscripciones de un estudiante (incluyendo completadas)
-     */
     @GetMapping("/my-courses/all")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<List<Enrollment>> getAllMyEnrollments(Authentication authentication) {
@@ -84,9 +73,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Obtiene las inscripciones completadas del estudiante
-     */
     @GetMapping("/my-courses/completed")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<List<Enrollment>> getMyCompletedEnrollments(Authentication authentication) {
@@ -99,9 +85,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Obtiene una inscripción específica
-     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('STUDENT') or hasRole('INSTRUCTOR') or hasRole('ADMIN')")
     public ResponseEntity<Enrollment> getEnrollmentById(@PathVariable Long id) {
@@ -117,9 +100,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Verifica si el estudiante está inscrito en un curso
-     */
     @GetMapping("/check/{courseId}")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<EnrollmentStatusResponse> checkEnrollment(@PathVariable Long courseId, Authentication authentication) {
@@ -145,9 +125,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Actualiza el progreso de una inscripción
-     */
     @PutMapping("/{id}/progress")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<?> updateProgress(@PathVariable Long id, @RequestBody ProgressUpdateRequest request, Authentication authentication) {
@@ -175,9 +152,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Marca un curso como completado
-     */
     @PutMapping("/{id}/complete")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<?> markAsCompleted(@PathVariable Long id, Authentication authentication) {
@@ -205,9 +179,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Desinscribe al estudiante de un curso
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<?> unenrollFromCourse(@PathVariable Long id, Authentication authentication) {
@@ -235,9 +206,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Obtiene las inscripciones de un curso (solo para instructores y admins)
-     */
     @GetMapping("/course/{courseId}")
     @PreAuthorize("hasRole('INSTRUCTOR') or hasRole('ADMIN')")
     public ResponseEntity<List<Enrollment>> getCourseEnrollments(@PathVariable Long courseId) {
@@ -249,9 +217,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Obtiene estadísticas de inscripciones (solo para admins)
-     */
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Object[]>> getEnrollmentStats() {
@@ -263,9 +228,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Obtiene inscripciones recientes (solo para admins)
-     */
     @GetMapping("/recent")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Enrollment>> getRecentEnrollments() {
@@ -277,9 +239,6 @@ public class EnrollmentController {
         }
     }
 
-    /**
-     * Obtiene el ID del usuario autenticado
-     */
     private Long getCurrentUserId(Authentication authentication) {
         if (authentication != null && authentication.getPrincipal() != null) {
             // Obtener el email del usuario autenticado

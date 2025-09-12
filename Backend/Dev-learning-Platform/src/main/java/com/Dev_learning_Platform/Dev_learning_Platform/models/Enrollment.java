@@ -64,9 +64,6 @@ public class Enrollment {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    /**
-     * Estados posibles de una inscripción
-     */
     public enum EnrollmentStatus {
         ACTIVE,     // Inscrito activamente
         COMPLETED,  // Curso completado
@@ -89,32 +86,20 @@ public class Enrollment {
         updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Verifica si la inscripción está activa
-     */
     public boolean isActive() {
         return status == EnrollmentStatus.ACTIVE;
     }
 
-    /**
-     * Verifica si el curso está completado
-     */
     public boolean isCompleted() {
         return status == EnrollmentStatus.COMPLETED;
     }
 
-    /**
-     * Marca el curso como completado
-     */
     public void markAsCompleted() {
         this.status = EnrollmentStatus.COMPLETED;
         this.completedAt = LocalDateTime.now();
         this.progressPercentage = 100;
     }
 
-    /**
-     * Actualiza el progreso del curso
-     */
     public void updateProgress(Integer percentage) {
         if (percentage < 0) percentage = 0;
         if (percentage > 100) percentage = 100;

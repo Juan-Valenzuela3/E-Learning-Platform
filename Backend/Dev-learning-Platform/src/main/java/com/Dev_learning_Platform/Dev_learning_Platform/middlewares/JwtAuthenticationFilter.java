@@ -47,7 +47,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 2. Extraer token del header
         jwt = authHeader.substring(7); // Remover "Bearer " prefix
         
         try {
@@ -80,7 +79,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.warn("Error al procesar token JWT: {}", e.getMessage());
         }
 
-        // 8. Continuar con la cadena de filtros
         filterChain.doFilter(request, response);
     }
 }

@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CourseVideoDto;
@@ -23,21 +22,14 @@ import com.Dev_learning_Platform.Dev_learning_Platform.services.CourseVideoServi
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Controlador REST para manejar videos de YouTube en los cursos.
- * Proporciona endpoints para agregar, editar y gestionar videos.
- */
+
 @RestController
 @RequestMapping("/api/course-videos")
 @RequiredArgsConstructor
 public class CourseVideoController {
     
     private final CourseVideoService courseVideoService;
-    
-    /**
-     * Agrega un nuevo video a un curso.
-     * Solo los instructores del curso pueden agregar videos.
-     */
+
     @PostMapping
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<CourseVideo> addVideoToCourse(@RequestBody CourseVideoDto videoDto) {
@@ -56,10 +48,6 @@ public class CourseVideoController {
         }
     }
     
-    /**
-     * Obtiene todos los videos de un curso.
-     * Los estudiantes deben estar inscritos para ver los videos.
-     */
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<CourseVideo>> getVideosByCourse(@PathVariable Long courseId) {
         try {
@@ -79,9 +67,6 @@ public class CourseVideoController {
         }
     }
     
-    /**
-     * Obtiene un video específico por su ID.
-     */
     @GetMapping("/{videoId}")
     public ResponseEntity<CourseVideo> getVideoById(@PathVariable Long videoId) {
         try {
@@ -94,10 +79,6 @@ public class CourseVideoController {
         }
     }
     
-    /**
-     * Actualiza un video existente.
-     * Solo los instructores del curso pueden editar videos.
-     */
     @PutMapping("/{videoId}")
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<CourseVideo> updateVideo(@PathVariable Long videoId, @RequestBody CourseVideoDto videoDto) {
@@ -115,11 +96,7 @@ public class CourseVideoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-    /**
-     * Elimina un video (lo marca como inactivo).
-     * Solo los instructores del curso pueden eliminar videos.
-     */
+
     @DeleteMapping("/{videoId}")
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<Void> deleteVideo(@PathVariable Long videoId) {
@@ -137,11 +114,7 @@ public class CourseVideoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-    /**
-     * Reordena los videos de un curso.
-     * Solo los instructores del curso pueden reordenar videos.
-     */
+
     @PutMapping("/course/{courseId}/reorder")
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<Void> reorderVideos(@PathVariable Long courseId, @RequestBody List<Long> videoIds) {
@@ -157,10 +130,7 @@ public class CourseVideoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
-    /**
-     * Verifica si un usuario puede gestionar videos de un curso.
-     */
+
     @GetMapping("/course/{courseId}/can-manage")
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<Boolean> canManageVideos(@PathVariable Long courseId) {

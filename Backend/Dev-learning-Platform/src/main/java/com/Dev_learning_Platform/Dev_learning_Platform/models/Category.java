@@ -56,12 +56,10 @@ public class Category {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Relación con subcategorías
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference("category-subcategories")
     private List<Subcategory> subcategories;
 
-    // Relación con cursos
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference("category-courses")
     private List<Course> courses;

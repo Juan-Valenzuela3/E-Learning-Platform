@@ -33,10 +33,6 @@ public class Securityconfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Configuración principal con filtro JWT integrado.
-     * Aplica validación de tokens en endpoints protegidos.
-     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

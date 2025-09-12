@@ -5,9 +5,11 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,14 +48,12 @@ public class CourseController {
         return ResponseEntity.ok(course);
     }
 
-
     @GetMapping("/instructor/{instructorId}")
     @PreAuthorize("hasRole('ADMIN') or (hasRole('INSTRUCTOR') and #instructorId == authentication.principal.id)")
     public ResponseEntity<List<Course>> getCoursesByInstructor(@PathVariable Long instructorId) {
         List<Course> courses = courseService.getCoursesByInstructor(instructorId);
         return ResponseEntity.ok(courses);
     }
-
 
     @GetMapping("/admin/active")
     @PreAuthorize("hasRole('ADMIN')")
@@ -62,9 +62,6 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
-    /**
-     * Obtiene cursos por categoría
-     */
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<Course>> getCoursesByCategory(@PathVariable Long categoryId) {
         try {
@@ -77,9 +74,6 @@ public class CourseController {
         }
     }
 
-    /**
-     * Obtiene cursos por subcategoría
-     */
     @GetMapping("/subcategory/{subcategoryId}")
     public ResponseEntity<List<Course>> getCoursesBySubcategory(@PathVariable Long subcategoryId) {
         try {
@@ -92,9 +86,6 @@ public class CourseController {
         }
     }
 
-    /**
-     * Obtiene cursos por categoría y subcategoría
-     */
     @GetMapping("/category/{categoryId}/subcategory/{subcategoryId}")
     public ResponseEntity<List<Course>> getCoursesByCategoryAndSubcategory(
             @PathVariable Long categoryId, 
@@ -107,5 +98,21 @@ public class CourseController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @PutMapping("/{courseId}")
+    @PreAuthorize("hasRole('INSTRUCTOR') or hasRole('ADMIN')")
+    public ResponseEntity<Course> updateCourse(
+            @PathVariable Long courseId,
+            @Valid @RequestBody CourseCreateDto courseDto) {
+        Course updatedCourse = courseService.updateCourse(courseId, courseDto);
+        return ResponseEntity.ok(updatedCourse);
+    }
+
+    @DeleteMapping("/{courseId}")
+    @PreAuthorize("hasRole('INSTRUCTOR') or hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteCourse(@PathVariable Long courseId) {
+        courseService.deleteCourse(courseId);
+        return ResponseEntity.noContent().build();
     }
 }

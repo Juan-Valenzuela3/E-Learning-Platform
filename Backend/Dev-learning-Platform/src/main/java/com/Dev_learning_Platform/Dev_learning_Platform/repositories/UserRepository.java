@@ -1,6 +1,7 @@
 package com.Dev_learning_Platform.Dev_learning_Platform.repositories;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,4 +13,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     User findByEmail(String email);
     List<User> findByRole(User.Role role);
     Boolean existsByEmail(String email);
+    Optional<User> findByUserName(String userName);
 }

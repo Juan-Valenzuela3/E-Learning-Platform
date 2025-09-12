@@ -14,10 +14,7 @@ import com.Dev_learning_Platform.Dev_learning_Platform.repositories.CourseVideoR
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Servicio para manejar videos de YouTube en los cursos.
- * Proporciona funcionalidades para agregar, editar y gestionar videos.
- */
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,10 +25,6 @@ public class CourseVideoService {
     private final EnrollmentService enrollmentService;
     private final UserService userService;
 
-    /**
-     * Agrega un nuevo video a un curso.
-     * Solo los instructores del curso pueden agregar videos.
-     */
     @Transactional
     public CourseVideo addVideoToCourse(CourseVideoDto videoDto, Long instructorId) {
         Course course = courseService.findById(videoDto.getCourseId());
@@ -65,17 +58,15 @@ public class CourseVideoService {
     }
 
     public List<CourseVideo> getVideosByCourse(Long courseId, Long studentId) {
-        // Si hay un estudiante autenticado, verificar que esté inscrito
+
         if (studentId != null) {
             User user = userService.findById(studentId);
             
-            // Si es instructor del curso, permitir acceso
             Course course = courseService.findById(courseId);
             if (course.getInstructor().getId().equals(studentId)) {
                 return courseVideoRepository.findByCourseIdAndIsActiveOrderByOrderIndexAsc(courseId, true);
             }
-            
-            // Si es estudiante, verificar que esté inscrito
+
             if (user.getRole() == User.Role.STUDENT) {
                 if (!enrollmentService.isStudentEnrolled(studentId, courseId)) {
                     throw new SecurityException("Debes estar inscrito en el curso para acceder a los videos");
@@ -95,10 +86,6 @@ public class CourseVideoService {
                 .orElseThrow(() -> new IllegalArgumentException("Video no encontrado con ID: " + videoId));
     }
 
-    /**
-     * Actualiza un video existente.
-     * Solo los instructores del curso pueden editar videos.
-     */
     @Transactional
     public CourseVideo updateVideo(Long videoId, CourseVideoDto videoDto, Long instructorId) {
         CourseVideo existingVideo = getVideoById(videoId);

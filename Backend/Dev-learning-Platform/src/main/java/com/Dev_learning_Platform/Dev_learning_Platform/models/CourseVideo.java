@@ -54,9 +54,6 @@ public class CourseVideo {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
     
-    /**
-     * Extrae el ID del video de YouTube desde la URL.
-     */
     public static String extractVideoId(String youtubeUrl) {
         if (youtubeUrl == null || youtubeUrl.trim().isEmpty()) {
             return null;

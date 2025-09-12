@@ -8,7 +8,7 @@ import lombok.Setter;
 
 /**
  * DTO para respuesta de validación de token JWT.
- * Elimina la necesidad de strings JSON manuales (Clean Code).
+ * Elimina la necesidad de strings JSON manuales.
  */
 @Getter
 @Setter

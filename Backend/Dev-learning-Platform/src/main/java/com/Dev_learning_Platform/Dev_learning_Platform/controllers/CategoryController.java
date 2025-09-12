@@ -20,9 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Category;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.CategoryService;
 
-/**
- * Controlador REST para manejar operaciones de categorías
- */
+
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {
@@ -30,9 +28,6 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    /**
-     * Obtiene todas las categorías activas
-     */
     @GetMapping
     public ResponseEntity<List<Category>> getAllActiveCategories() {
         try {
@@ -43,9 +38,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Obtiene todas las categorías (incluyendo inactivas) - Solo para administradores
-     */
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Category>> getAllCategories() {
@@ -57,9 +49,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Obtiene una categoría por ID
-     */
     @GetMapping("/{id}")
     public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
         try {
@@ -74,9 +63,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Busca categorías por término de búsqueda
-     */
     @GetMapping("/search")
     public ResponseEntity<List<Category>> searchCategories(@RequestParam(required = false) String q) {
         try {
@@ -87,9 +73,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Crea una nueva categoría - Solo para administradores
-     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createCategory(@RequestBody Category category) {
@@ -104,9 +87,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Actualiza una categoría existente - Solo para administradores
-     */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody Category categoryDetails) {
@@ -121,9 +101,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Elimina una categoría (soft delete) - Solo para administradores
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
@@ -138,9 +115,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Elimina permanentemente una categoría - Solo para administradores
-     */
     @DeleteMapping("/{id}/permanent")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> permanentDeleteCategory(@PathVariable Long id) {
@@ -155,9 +129,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Activa una categoría - Solo para administradores
-     */
     @PutMapping("/{id}/activate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> activateCategory(@PathVariable Long id) {
@@ -172,9 +143,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Desactiva una categoría - Solo para administradores
-     */
     @PutMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deactivateCategory(@PathVariable Long id) {
@@ -189,9 +157,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Clase para respuestas de error
-     */
     public static class ErrorResponse {
         private String message;
 
@@ -208,9 +173,6 @@ public class CategoryController {
         }
     }
 
-    /**
-     * Clase para respuestas de éxito
-     */
     public static class SuccessResponse {
         private String message;
 

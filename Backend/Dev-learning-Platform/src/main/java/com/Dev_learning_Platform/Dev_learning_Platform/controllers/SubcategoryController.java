@@ -20,9 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Subcategory;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.SubcategoryService;
 
-/**
- * Controlador REST para manejar operaciones de subcategorías
- */
+
 @RestController
 @RequestMapping("/api/subcategories")
 public class SubcategoryController {
@@ -30,9 +28,6 @@ public class SubcategoryController {
     @Autowired
     private SubcategoryService subcategoryService;
 
-    /**
-     * Obtiene todas las subcategorías activas
-     */
     @GetMapping
     public ResponseEntity<List<Subcategory>> getAllActiveSubcategories() {
         try {
@@ -43,9 +38,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Obtiene todas las subcategorías (incluyendo inactivas) - Solo para administradores
-     */
     @GetMapping("/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Subcategory>> getAllSubcategories() {
@@ -57,9 +49,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Obtiene una subcategoría por ID
-     */
     @GetMapping("/{id}")
     public ResponseEntity<Subcategory> getSubcategoryById(@PathVariable Long id) {
         try {
@@ -74,9 +63,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Obtiene todas las subcategorías de una categoría específica
-     */
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<Subcategory>> getSubcategoriesByCategoryId(@PathVariable Long categoryId) {
         try {
@@ -87,9 +73,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Busca subcategorías por término de búsqueda
-     */
     @GetMapping("/search")
     public ResponseEntity<List<Subcategory>> searchSubcategories(@RequestParam(required = false) String q) {
         try {
@@ -100,9 +83,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Crea una nueva subcategoría - Solo para administradores
-     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createSubcategory(@RequestBody Subcategory subcategory) {
@@ -117,9 +97,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Actualiza una subcategoría existente - Solo para administradores
-     */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateSubcategory(@PathVariable Long id, @RequestBody Subcategory subcategoryDetails) {
@@ -134,9 +111,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Elimina una subcategoría (soft delete) - Solo para administradores
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteSubcategory(@PathVariable Long id) {
@@ -151,9 +125,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Elimina permanentemente una subcategoría - Solo para administradores
-     */
     @DeleteMapping("/{id}/permanent")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> permanentDeleteSubcategory(@PathVariable Long id) {
@@ -168,9 +139,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Activa una subcategoría - Solo para administradores
-     */
     @PutMapping("/{id}/activate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> activateSubcategory(@PathVariable Long id) {
@@ -185,9 +153,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Desactiva una subcategoría - Solo para administradores
-     */
     @PutMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deactivateSubcategory(@PathVariable Long id) {
@@ -202,9 +167,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Clase para respuestas de error
-     */
     public static class ErrorResponse {
         private String message;
 
@@ -221,9 +183,6 @@ public class SubcategoryController {
         }
     }
 
-    /**
-     * Clase para respuestas de éxito
-     */
     public static class SuccessResponse {
         private String message;
 
