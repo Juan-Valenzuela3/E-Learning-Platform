@@ -20,10 +20,20 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
     
-    - name: Build with Maven
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    
+    - name: Run Tests
+      env:
+        JWT_SECRET_KEY: testSecretKeyForCITestingPurposesOnly123456789
+        JWT_EXPIRATION_TIME: 86400000
       run: |
         cd Backend/Dev-learning-Platform
-        ./mvnw test -Dspring.profiles.active=dev
+        ./mvnw clean test -Dspring.profiles.active=test -q -Dlogging.level.org.springframework.boot.autoconfigure=OFF
     
     - name: Deploy to OCI VM
       if: success()
@@ -40,68 +50,31 @@ jobs:
           echo "=== Iniciando deployment ==="
           cd /home/opc/Git-Repository/E-Learning-Platform/Backend/Dev-learning-Platform
           
-          echo "=== Verificando Java ==="
-          java -version
-          
           echo "=== Haciendo git pull ==="
           git pull origin main
           
           echo "=== Ejecutando tests en producción ==="
-          ./mvnw test -Dspring.profiles.active=prod
+          ./mvnw test -Dspring.profiles.active=prod -q
           
           if [ $? -eq 0 ]; then
             echo "=== Tests exitosos, construyendo aplicación ==="
-            ./mvnw clean package -Dspring.profiles.active=prod -DskipTests
+            ./mvnw clean package -Dspring.profiles.active=prod -DskipTests -q
             
-            echo "=== Deteniendo servicio anterior ==="
-            sudo systemctl stop elearning-backend || echo "Servicio no estaba corriendo"
+            echo "=== Reiniciando servicio ==="
+            sudo systemctl restart elearning-backend
             
-            echo "=== Iniciando nuevo servicio ==="
-            sudo systemctl start elearning-backend
-            
-            echo "=== Esperando que el servicio inicie ==="
-            sleep 10
-            
-            echo "=== Verificando estado del servicio ==="
-            # Esperar un poco más para que systemd tenga tiempo de intentar el start
-            sleep 5
+            echo "=== Verificando despliegue ==="
+            sleep 15
             
             if sudo systemctl is-active --quiet elearning-backend; then
-              echo "✅ Despliegue exitoso - Servicio activo"
-              sudo systemctl status elearning-backend --no-pager -l
-              
-              # Health check opcional
-              echo "=== Verificando health endpoint ==="
-              sleep 10
+              echo "✅ Despliegue exitoso"
               curl -f http://localhost:8080/actuator/health || echo "Health check no disponible"
-              
             else
-              echo "❌ Error: El servicio no se inició correctamente"
-              echo "=== Estado detallado del servicio ==="
-              sudo systemctl status elearning-backend --no-pager -l
-              
-              echo "=== Últimos 50 logs del servicio ==="
-              sudo journalctl -u elearning-backend --no-pager -l -n 50
-              
-              echo "=== Verificando si el JAR existe ==="
-              ls -la target/Dev-learning-Platform-0.0.1-SNAPSHOT.jar
-              
-              echo "=== Verificando permisos ==="
-              ls -la target/
-              
-              echo "=== Verificando Java ==="
-              java -version
-              which java
-              
-              echo "=== Intentando ejecutar JAR manualmente para debugging ==="
-              timeout 30s java -jar target/Dev-learning-Platform-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod || echo "Ejecución manual falló"
-              
+              echo "❌ Error en el despliegue"
+              sudo journalctl -u elearning-backend --no-pager -l -n 20
               exit 1
             fi
-            
           else
-            echo "❌ Error en los tests, no se despliega"
+            echo "❌ Error en los tests"
             exit 1
           fi
-          
-          echo "=== Deployment completado exitosamente ==="

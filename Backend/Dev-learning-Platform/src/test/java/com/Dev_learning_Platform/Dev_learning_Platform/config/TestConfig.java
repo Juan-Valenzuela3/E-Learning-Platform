@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
+import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
 
 /**
@@ -25,4 +26,14 @@ public class TestConfig {
     public ObjectStorageClient mockObjectStorageClient() {
         return Mockito.mock(ObjectStorageClient.class);
     }
+
+    /**
+     * Bean mock para AuthenticationDetailsProvider en tests.
+     */
+    @Bean
+    @Primary
+    public AuthenticationDetailsProvider mockAuthenticationDetailsProvider() {
+        return Mockito.mock(AuthenticationDetailsProvider.class);
+    }
+
 }
