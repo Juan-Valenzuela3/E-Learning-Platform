@@ -1,24 +1,27 @@
 package com.Dev_learning_Platform.Dev_learning_Platform;
 
-import com.Dev_learning_Platform.Dev_learning_Platform.controllers.UserProfileController;
+import com.Dev_learning_Platform.Dev_learning_Platform.config.TestConfig;
 import com.Dev_learning_Platform.Dev_learning_Platform.dtos.profile.UpdateProfileDto;
 import com.Dev_learning_Platform.Dev_learning_Platform.middlewares.JwtAuthenticationFilter;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
+import com.Dev_learning_Platform.Dev_learning_Platform.services.DataInitializationService;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -29,10 +32,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(UserProfileController.class)
-@ActiveProfiles("test")
+@SpringBootTest
+@AutoConfigureMockMvc
+@TestPropertySource(locations = "classpath:application-test.properties", properties = {
+    "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @EnableMethodSecurity
 @DisplayName("Pruebas para Perfil de Usuario (PB-004)")
+@Import(TestConfig.class)
 class UserProfileControllerTest {
 
     private final Long studentId = 1L;
@@ -46,6 +53,9 @@ class UserProfileControllerTest {
 
     @MockBean
     private UserService userService;
+
+    @MockBean
+    private DataInitializationService dataInitializationService;
 
     @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
