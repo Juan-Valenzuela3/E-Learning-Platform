@@ -1,5 +1,6 @@
 package com.Dev_learning_Platform.Dev_learning_Platform;
 
+import com.Dev_learning_Platform.Dev_learning_Platform.controllers.EnrollmentController;
 import com.Dev_learning_Platform.Dev_learning_Platform.middlewares.JwtAuthenticationFilter;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Enrollment;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
@@ -10,15 +11,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
@@ -28,18 +28,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@TestPropertySource(locations = "classpath:application-test.properties", properties = {
-    "oci.objectstorage.namespace=dummy-namespace",
-    "oci.objectstorage.bucket-name=dummy-bucket",
-    "oci.objectstorage.region=dummy-region",
-    "oci.objectstorage.public-url-base=https://dummy.com/",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
-})
+@WebMvcTest(EnrollmentController.class)
+@ActiveProfiles("test")
 @EnableMethodSecurity
 @DisplayName("Pruebas para Desinscripción de Cursos (PB-014)")
 class EnrollmentControllerTest {
+
+    private final Long studentId = 1L;
+    private final Long anotherStudentId = 2L;
+    private final Long instructorId = 3L;
+    private final Long enrollmentId = 100L;
+    private final Long nonExistentEnrollmentId = 999L;
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,16 +50,7 @@ class EnrollmentControllerTest {
     private UserService userService;
 
     @MockBean
-    private DataInitializationService dataInitializationService;
-
-    @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    private final Long studentId = 1L;
-    private final Long anotherStudentId = 2L;
-    private final Long instructorId = 3L;
-    private final Long enrollmentId = 100L;
-    private final Long nonExistentEnrollmentId = 999L;
 
     private void setupMockUser(Long userId, String role) {
         String email = role.toLowerCase() + userId + "@example.com";

@@ -3,6 +3,7 @@ package com.Dev_learning_Platform.Dev_learning_Platform;
 import com.Dev_learning_Platform.Dev_learning_Platform.controllers.CourseController;
 import com.Dev_learning_Platform.Dev_learning_Platform.middlewares.JwtAuthenticationFilter;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Course;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.CourseService;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.EnrollmentService;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.UserService;
@@ -24,14 +25,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
 
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,11 +44,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CourseController.class) // 1. Enfocamos el test en el controlador correcto
 @ActiveProfiles("test")
 @EnableMethodSecurity // 2. Habilitamos la seguridad a nivel de método para @PreAuthorize
-class CourseContentAccessTest {
+public class CourseContentAccessTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    // 3. Declaramos las dependencias del controlador como @MockBean a nivel de clase.
+    // Spring reemplazará los beans reales con estos mocks en el contexto de prueba.
     @MockBean
     private CourseService courseService;
 
@@ -59,9 +60,8 @@ class CourseContentAccessTest {
     @MockBean
     private UserService userService;
 
-    // Con @WebMvcTest, el filtro JWT no se aplica por defecto, pero mockearlo
-    // es una buena práctica para evitar sorpresas si la configuración cambia.
-    @MockBean private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter; // Necesario para evitar errores de seguridad
 
     private final Long courseId = 1L;
     private final Long studentId = 10L;
@@ -94,7 +94,7 @@ class CourseContentAccessTest {
         String studentEmail = "student@example.com";
         setupMockUser(studentId, studentEmail, "STUDENT");
         // Arrange: Simulamos que el método isStudentEnrolled (que usa el ID) devuelve 'false'
-        when(enrollmentService.isStudentEnrolled(anyLong(), anyLong())).thenReturn(false);
+        when(enrollmentService.isStudentEnrolled(eq(studentId), eq(courseId))).thenReturn(false);
 
         // Act & Assert
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
@@ -108,7 +108,7 @@ class CourseContentAccessTest {
         String studentEmail = "student@example.com";
         setupMockUser(studentId, studentEmail, "STUDENT");
         // Arrange: Simulamos que el método isStudentEnrolled (que usa el ID) devuelve 'true'
-        when(enrollmentService.isStudentEnrolled(anyLong(), anyLong())).thenReturn(true);
+        when(enrollmentService.isStudentEnrolled(eq(studentId), eq(courseId))).thenReturn(true);
 
         // Act & Assert
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
@@ -155,7 +155,7 @@ class CourseContentAccessTest {
         // Simulamos que cuando se busque un usuario por su email, se devuelva un objeto User con su ID.
         User appUser = new User();
         appUser.setId(userId);
-        when(userService.findByEmail(any(String.class))).thenReturn(appUser);
+        when(userService.findByEmail(email)).thenReturn(appUser);
 
         SecurityContext ctx = SecurityContextHolder.createEmptyContext();
         ctx.setAuthentication(new UsernamePasswordAuthenticationToken(

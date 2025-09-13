@@ -26,7 +26,6 @@ import com.Dev_learning_Platform.Dev_learning_Platform.services.auth.JwtService;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@SuppressWarnings("removal") // Para suprimir warnings de @MockBean deprecated
 class AuthControllerTest {
 
     @Autowired
@@ -46,15 +45,14 @@ class AuthControllerTest {
 
     @Test
     void loginSuccess() throws Exception {
-        // Preparar datos de prueba
         UserDetails userDetails = User.builder()
                 .username("test@example.com")
                 .password("password")
                 .roles("USER")
                 .build();
 
-        com.Dev_learning_Platform.Dev_learning_Platform.models.User user = 
-            new com.Dev_learning_Platform.Dev_learning_Platform.models.User();
+        com.Dev_learning_Platform.Dev_learning_Platform.models.User user =
+                new com.Dev_learning_Platform.Dev_learning_Platform.models.User();
         user.setId(1L);
         user.setUserName("Test User");
         user.setEmail("test@example.com");
