@@ -1,0 +1,146 @@
+/*
+  Las directivas de Tailwind son esenciales y deben ir al principio del archivo.
+  Estas líneas le indican a PostCSS dónde inyectar el código de Tailwind
+  para las capas 'base', 'componentes' y 'utilidades'.
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  La capa 'base' es el lugar ideal para definir estilos globales,
+  variables CSS y reglas que afecten a todo el documento.
+*/
+@layer base {
+  /*
+    El selector ':root' define variables CSS accesibles en toda la aplicación.
+    He organizado tus variables de Figma y las variables de sistema para un
+    manejo más claro de los temas claro y oscuro.
+  */
+  :root {
+    /* --- Variables de color de marca de Figma --- */
+    --color-azure-11: #111827;
+    --color-black-solid: #000000;
+    --color-grey-13: #222222;
+    --color-grey-20: #333333;
+    --color-grey-33: #555555;
+    --color-grey-40: #666666;
+    --color-grey-46: #6b7280;
+    --color-grey-67: #aaaaaa;
+    --color-grey-7: #111111;
+    --color-grey-87: #dddddd;
+    --color-grey-91: #e5e7eb;
+    --color-grey-96: #f3f4f6;
+    --color-grey-98: #f9f9f9;
+    --color-orange-48: #f4b400;
+    --color-red-50: #d62839;
+    --color-red-51: #dc2626;
+    --color-red-56: #e63946;
+    --color-red-60: #ef4444;
+    --color-red-82: #fca5a5;
+    --color-spring-green-36: #16a34a;
+    --color-white-solid: #ffffff;
+    --color-yellow-53: #facc15;
+
+    /* --- Variables semánticas para la paleta de colores --- */
+    --color-primary-50: var(--color-red-50);
+    --color-primary-100: var(--color-red-51);
+    --color-primary-200: var(--color-red-56);
+    --color-primary-300: var(--color-red-60);
+    --color-primary-400: var(--color-red-82);
+    --color-primary-500: var(--color-red-60);
+    --color-primary-600: var(--color-red-51);
+    --color-primary-700: var(--color-red-50);
+    --color-primary-800: var(--color-red-50);
+    --color-primary-900: var(--color-red-50);
+
+    --color-neutral-50: var(--color-grey-98);
+    --color-neutral-100: var(--color-grey-96);
+    --color-neutral-200: var(--color-grey-91);
+    --color-neutral-300: var(--color-grey-87);
+    --color-neutral-400: var(--color-grey-67);
+    --color-neutral-500: var(--color-grey-46);
+    --color-neutral-600: var(--color-grey-40);
+    --color-neutral-700: var(--color-grey-33);
+    --color-neutral-800: var(--color-grey-20);
+    --color-neutral-900: var(--color-grey-13);
+
+    --color-success-50: #f0fdf4;
+    --color-success-100: #dcfce7;
+    --color-success-200: #bbf7d0;
+    --color-success-300: #86efac;
+    --color-success-400: #4ade80;
+    --color-success-500: var(--color-spring-green-36);
+    --color-success-600: #16a34a;
+    --color-success-700: #15803d;
+    --color-success-800: #166534;
+    --color-success-900: #14532d;
+
+    --color-warning-50: #fffbeb;
+    --color-warning-100: #fef3c7;
+    --color-warning-200: #fde68a;
+    --color-warning-300: #fcd34d;
+    --color-warning-400: var(--color-orange-48);
+    --color-warning-500: var(--color-yellow-53);
+    --color-warning-600: #d97706;
+    --color-warning-700: #b45309;
+    --color-warning-800: #92400e;
+    --color-warning-900: #78350f;
+
+    --color-info-50: #eff6ff;
+    --color-info-100: #dbeafe;
+    --color-info-200: #bfdbfe;
+    --color-info-300: #93c5fd;
+    --color-info-400: #60a5fa;
+    --color-info-500: #3b82f6;
+    --color-info-600: #2563eb;
+    --color-info-700: #1d4ed8;
+    --color-info-800: #1e40af;
+    --color-info-900: #1e3a8a;
+
+    --color-brand-primary: var(--color-red-60);
+    --color-brand-secondary: var(--color-red-51);
+    --color-brand-accent: var(--color-orange-48);
+    --color-brand-highlight: var(--color-yellow-53);
+
+    /* Variables de tema del sistema */
+    --color-background-primary: var(--color-white-solid);
+    --color-background-secondary: var(--color-grey-98);
+    --color-background-tertiary: var(--color-grey-96);
+    --color-background-dark: var(--color-grey-7);
+
+    --color-text-primary: var(--color-grey-7);
+    --color-text-secondary: var(--color-grey-20);
+    --color-text-tertiary: var(--color-grey-40);
+    --color-text-muted: var(--color-grey-67);
+    --color-text-inverse: var(--color-white-solid);
+
+    --color-border-light: var(--color-grey-91);
+    --color-border-medium: var(--color-grey-87);
+
+    /* Variables de color de la plantilla (para compatibilidad) */
+    --background: var(--color-background-primary);
+    --foreground: var(--color-text-primary);
+  }
+
+  /*
+    Reglas globales. Aplicamos las clases base a los elementos principales
+    para establecer los estilos por defecto de la aplicación.
+  */
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/*
+  La capa 'components' es para definir clases reutilizables.
+  Estas clases se aplican a los elementos HTML usando la directiva `@apply`.
+*/
+@layer components {
+  /*
+    Define el componente '.border-border' para un borde estándar.
+  */
+  .border-border {
+    @apply border border-solid border-neutral-200;
+  }
+}
