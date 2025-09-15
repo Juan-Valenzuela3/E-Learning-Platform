@@ -10,19 +10,14 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Implementación mock de OciStorageService para tests.
- * Se activa solo en el perfil de test cuando OCI está deshabilitado.
+ * Implementación mock independiente para tests.
+ * No extiende OciStorageService para evitar problemas de dependencias.
  */
 @Slf4j
 @Service
 @Profile("test")
-public class MockOciStorageService extends OciStorageService {
+public class MockOciStorageService {
 
-    public MockOciStorageService() {
-        super(null, null);
-    }
-
-    @Override
     public String uploadProfileImage(MultipartFile file, Long userId) throws IOException {
         log.info("MOCK: Simulando subida de imagen para usuario: {}", userId);
         
@@ -38,12 +33,10 @@ public class MockOciStorageService extends OciStorageService {
         return mockUrl;
     }
 
-    @Override
     public void deleteProfileImage(String imageUrl) {
         log.info("MOCK: Simulando eliminación de imagen: {}", imageUrl);
     }
 
-    @Override
     public boolean isAvailable() {
         return true;
     }

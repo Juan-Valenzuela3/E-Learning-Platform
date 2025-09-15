@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+/*
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/table';
-import { Search, Download, Filter, Calendar, FileText, CheckCircle, XCircle, Clock, ArrowUpDown } from 'lucide-react';
+import { Search, Download, Filter, Calendar, FileText, CheckCircle, XCircle, Clock, ArrowUpDown, RefreshCw, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { mockPaymentService } from '../../../interfaces/api/__mocks__/mockPaymentService';
+import { useAuth } from '../../../contexts/AuthContext';
 
 // Mock data for payment history
 const paymentHistory = [
@@ -58,43 +62,84 @@ const paymentHistory = [
 
 const statusVariants = {
   completed: { text: 'Completado', bg: 'bg-green-100 text-green-800', icon: CheckCircle },
-  refunded: { text: 'Reembolsado', bg: 'bg-blue-100 text-blue-800', icon: Clock },
+  refunded: { text: 'Reembolsado', bg: 'bg-red-100 text-red-800', icon: Clock },
   pending: { text: 'Pendiente', bg: 'bg-yellow-100 text-yellow-800', icon: Clock },
   failed: { text: 'Fallido', bg: 'bg-red-100 text-red-800', icon: XCircle },
 };
 
 export default function PaymentHistory() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+  const [payments, setPayments] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [pagination, setPagination] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const handleSort = (key) => {
     setSortConfig(prev => ({
       key,
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
     }));
+    setCurrentPage(1);
+    loadPayments();
   };
 
-  const filteredPayments = paymentHistory
-    .filter(payment => {
-      const matchesSearch = payment.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filter === 'all' || payment.status === filter;
-      return matchesSearch && matchesFilter;
-    })
-    .sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
+  // Cargar datos de pagos
+  const loadPayments = async () => {
+    if (!user?.email) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const filters = {
+        status: filter,
+        search: searchTerm,
+        dateFrom,
+        dateTo,
+        sortBy: sortConfig.key,
+        sortDirection: sortConfig.direction,
+        page: currentPage,
+        limit: itemsPerPage
+      };
+      
+      const result = await mockPaymentService.getPaymentHistory(user.email, filters);
+      
+      if (result.success) {
+        setPayments(result.data.payments);
+        setSummary(result.data.summary);
+        setPagination(result.data.pagination);
+      } else {
+        setError(result.error || 'Error al cargar el historial de pagos');
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
+    } catch (err) {
+      setError('Error de conexión. Por favor, intenta de nuevo.');
+      console.error('Error loading payments:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const totalSpent = paymentHistory
-    .filter(payment => payment.status === 'completed')
-    .reduce((sum, payment) => sum + payment.amount, 0);
+  // Efectos
+  useEffect(() => {
+    loadPayments();
+  }, [user, currentPage]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      loadPayments();
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, filter, dateFrom, dateTo]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -104,9 +149,23 @@ export default function PaymentHistory() {
           <p className="text-gray-600">Revisa tus transacciones y facturas</p>
         </div>
         <div className="mt-4 md:mt-0 flex space-x-2">
-          <Button variant="outline" className="flex items-center">
+          <Button 
+            variant="outline" 
+            className="flex items-center"
+            onClick={handleExport}
+            disabled={loading}
+          >
             <Download className="h-4 w-4 mr-2" />
             Exportar
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex items-center"
+            onClick={loadPayments}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Actualizar
           </Button>
         </div>
       </div>
@@ -115,20 +174,24 @@ export default function PaymentHistory() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="text-sm">Total Gastado</CardDescription>
-            <CardTitle className="text-2xl">${totalSpent.toFixed(2)}</CardTitle>
+            <CardTitle className="text-2xl">
+              {loading ? '...' : `$${summary?.totalSpent?.toFixed(2) || '0.00'}`}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-green-600">+5.2% respecto al mes pasado</p>
+            <p className="text-xs text-green-600">Pagos completados</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription className="text-sm">Cursos Comprados</CardDescription>
-            <CardTitle className="text-2xl">{paymentHistory.filter(p => p.status === 'completed').length}</CardTitle>
+            <CardDescription className="text-sm">Transacciones</CardDescription>
+            <CardTitle className="text-2xl">
+              {loading ? '...' : summary?.totalTransactions || 0}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-green-600">+2 cursos este mes</p>
+            <p className="text-xs text-blue-600">Total de transacciones</p>
           </CardContent>
         </Card>
         
@@ -136,7 +199,7 @@ export default function PaymentHistory() {
           <CardHeader className="pb-2">
             <CardDescription className="text-sm">Pendientes</CardDescription>
             <CardTitle className="text-2xl">
-              {paymentHistory.filter(p => p.status === 'pending').length}
+              {loading ? '...' : summary?.pendingTransactions || 0}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -148,11 +211,11 @@ export default function PaymentHistory() {
           <CardHeader className="pb-2">
             <CardDescription className="text-sm">Reembolsos</CardDescription>
             <CardTitle className="text-2xl">
-              {paymentHistory.filter(p => p.status === 'refunded').length}
+              {loading ? '...' : summary?.refundedTransactions || 0}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-blue-600">Ver detalles</p>
+            <p className="text-xs text-red-600">Ver detalles</p>
           </CardContent>
         </Card>
       </div>
@@ -171,10 +234,28 @@ export default function PaymentHistory() {
             </div>
             <div className="flex space-x-2">
               <div className="relative">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="bg-white border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="Fecha desde"
+                />
+              </div>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="bg-white border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="Fecha hasta"
+                />
+              </div>
+              <div className="relative">
                 <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
-                  className="appearance-none bg-white border rounded-md pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="appearance-none bg-white border rounded-md pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 >
                   <option value="all">Todos los estados</option>
                   <option value="completed">Completados</option>
@@ -217,8 +298,26 @@ export default function PaymentHistory() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPayments.length > 0 ? (
-                  filteredPayments.map((payment) => {
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="flex items-center justify-center">
+                        <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                        Cargando transacciones...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="flex items-center justify-center text-red-600">
+                        <AlertCircle className="h-4 w-4 mr-2" />
+                        {error}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : payments.length > 0 ? (
+                  payments.map((payment) => {
                     const StatusIcon = statusVariants[payment.status].icon;
                     return (
                       <TableRow key={payment.id}>
@@ -236,10 +335,29 @@ export default function PaymentHistory() {
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="h-8">
-                            <FileText className="h-4 w-4 mr-1" />
-                            Factura
-                          </Button>
+                          <div className="flex space-x-1 justify-end">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8"
+                              onClick={() => handleDownloadInvoice(payment.id)}
+                              disabled={!payment.invoiceUrl}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              Factura
+                            </Button>
+                            {payment.receiptUrl && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8"
+                                onClick={() => handleDownloadReceipt(payment.id)}
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                Recibo
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -255,7 +373,111 @@ export default function PaymentHistory() {
             </Table>
           </div>
         </CardContent>
+        
+        {/* Paginación */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t">
+            <div className="text-sm text-gray-500">
+              Mostrando {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} a {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} de {pagination.totalItems} transacciones
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={!pagination.hasPrevPage || loading}
+              >
+                Anterior
+              </Button>
+              <span className="flex items-center px-3 py-1 text-sm">
+                Página {pagination.currentPage} de {pagination.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                disabled={!pagination.hasNextPage || loading}
+              >
+                Siguiente
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );
+
+  // Funciones de manejo
+  async function handleDownloadInvoice(paymentId) {
+    try {
+      const result = await mockPaymentService.downloadInvoice(user.email, paymentId);
+      if (result.success) {
+        // Simular descarga
+        const link = document.createElement('a');
+        link.href = result.data.url;
+        link.download = result.data.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Mostrar notificación de éxito
+        alert('Factura descargada exitosamente');
+      } else {
+        alert(result.error || 'Error al descargar la factura');
+      }
+    } catch (error) {
+      alert('Error de conexión al descargar la factura');
+    }
+  }
+
+  async function handleDownloadReceipt(paymentId) {
+    try {
+      const result = await mockPaymentService.downloadReceipt(user.email, paymentId);
+      if (result.success) {
+        // Simular descarga
+        const link = document.createElement('a');
+        link.href = result.data.url;
+        link.download = result.data.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert('Recibo descargado exitosamente');
+      } else {
+        alert(result.error || 'Error al descargar el recibo');
+      }
+    } catch (error) {
+      alert('Error de conexión al descargar el recibo');
+    }
+  }
+
+  async function handleExport() {
+    try {
+      const filters = {
+        status: filter,
+        search: searchTerm,
+        dateFrom,
+        dateTo
+      };
+      
+      const result = await mockPaymentService.exportPaymentHistory(user.email, 'csv', filters);
+      if (result.success) {
+        // Simular descarga
+        const link = document.createElement('a');
+        link.href = result.data.url;
+        link.download = result.data.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert('Historial exportado exitosamente');
+      } else {
+        alert(result.error || 'Error al exportar el historial');
+      }
+    } catch (error) {
+      alert('Error de conexión al exportar el historial');
+    }
+  }
 }
+
+*/

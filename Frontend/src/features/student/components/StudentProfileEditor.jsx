@@ -1,17 +1,17 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/ui/card';
-import { Button } from '@/ui/button';
-import { Input } from '@/ui/input';
+import { Button } from '@/ui/Button';
+import { Input } from '@/ui/Input';
 import { Label } from '@/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
-import { Pencil, Save, X } from 'lucide-react';
-import { AuthContext } from '@/contexts/AuthContext';
-import { EyeOff, Eye } from 'lucide-react';
+import { Pencil, Save, X, User, Mail, Briefcase, RefreshCw, AlertCircle, EyeOff, Eye } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 // Componente para editar el perfil con rol de estudiante
 export default function StudentProfileEditor() {
   // aqui estamos utilizando un contexto de autenticacion para obtener los datos del usuario autenticado
-  const { fetchProfile, updateProfile, role } = useContext(AuthContext);
+  const { user, updateProfile } = useAuth();
 
   //Aqui estamos utilizando el useState para los estado de los componentes
   const [userData, setUserData] = useState({
@@ -32,29 +32,55 @@ export default function StudentProfileEditor() {
 
 
   //Utilizamos un useEffect para poder cargar los datos del usuario autenticado
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const profile = await fetchProfile();
-        setUserData({
-          userName: profile.name || '',
-          lastName: profile.lastname || '',
-          email: profile.email || '',
-          password: profile.password || '',
-          occupation: profile.occupation || '',
-          avatar: profile.avatar || '',
-        });
-        setInitialData(profile);
-      } catch (e) {
-        setBanner({ type: 'error', message: e?.response?.data?.message || 'No se pudo cargar el perfil' });
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
 
-  }, []);
+  const loadProfile = async () => {
+    console.log("Loading profile for user:", user);
+  
+    if (!user) {
+      console.log("No user found in context");
+      setBanner({ type: "error", message: "No hay usuario autenticado" });
+      setLoading(false);
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      setBanner({ type: "", message: "" }); // Limpiar errores previos
+  
+      const response = await api.get("/users/profile");
+      console.log("Profile loaded from service:", response.data);
+  
+      // Mapeamos los datos de la API a nuestro state
+      const profileData = {
+        id: response.data.id,
+        userName: response.data.userName,
+        lastName: response.data.lastName,
+        email: response.data.email,
+        role: response.data.role,
+        isActive: response.data.isActive,
+      };
+  
+      setProfile(profileData);
+      console.log("Mapped profile data:", profileData);
+  
+      // Si tienes otros states relacionados
+      setUserData(profileData);
+      setInitialData(profileData);
+  
+    } catch (e) {
+      console.error("Error loading profile:", e);
+      setBanner({
+        type: "error",
+        message:
+          e?.response?.data?.message ||
+          "No se pudo cargar el perfil. Verifica que estés autenticado correctamente.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+    
 
   //Se agregan una funcion de para manejar los cambios en los formularios
 
@@ -68,10 +94,10 @@ export default function StudentProfileEditor() {
   const validate = () => {
     const newErr = {};
     if (!userData.userName.trim()) newErr.userName = 'El nombre es obligatorio';
-    if (!userData.email.trim()) newErr.email = 'El correo es obligatorio';
-    if (!userData.password.trim()) newErr.password = 'La contraseña es obligatoria';
     if (!userData.lastName.trim()) newErr.lastName = 'El apellido es obligatorio';
+    if (!userData.email.trim()) newErr.email = 'El correo es obligatorio';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) newErr.email = 'Correo inválido';
+    // La contraseña es opcional para actualización
     setErrors(newErr);
     return Object.keys(newErr).length === 0;
   };
@@ -82,30 +108,32 @@ export default function StudentProfileEditor() {
       setBanner({ type: 'error', message: 'Corrige los errores del formulario' });
       return;
     }
+
+    setSaving(true);
+    setBanner({ type: '', message: '' });
+
     try {
-      setSaving(true);
-      const updated = await updateProfile({
-        userName: userData.userName,
-        email: userData.email,
+      const updateData = {
+        name: userData.userName,
         lastName: userData.lastName,
-        password: userData.password,
+        email: userData.email,
         occupation: userData.occupation,
         avatar: userData.avatar,
-      });
-      setUserData({
-        userName: updated.userName,
-        email: updated.email,
-        lastName: updated.lastName,
-        password: updated.password,
-        occupation: updated.occupation || '',
-        avatar: updated.avatar || '',
-      });
-      setInitialData(updated);
+      };
+
+      // Solo incluir contraseña si se proporcionó una nueva
+      if (userData.password && userData.password.trim()) {
+        updateData.password = userData.password;
+      }
+
+      // Actualizar perfil usando el contexto para que se refleje en el sidebar
+      await updateProfile(updateData);
+      setInitialData(userData);
       setIsEditing(false);
       setBanner({ type: 'success', message: 'Perfil actualizado correctamente' });
-    } catch (err) {
-      const msg = err?.response?.data?.message || 'No se pudo actualizar el perfil';
-      setBanner({ type: 'error', message: msg });
+    } catch (e) {
+      console.error('Error updating profile:', e);
+      setBanner({ type: 'error', message: e?.response?.data?.message || 'Error al actualizar el perfil' });
     } finally {
       setSaving(false);
     }
@@ -137,19 +165,19 @@ export default function StudentProfileEditor() {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=0D8ABC&color=fff&font-size=0.3&length=2`;
   }
 
-  const titleByRole = role === 'teacher' ? 'Perfil del Instructor' : 'Perfil del Estudiante';
+  const titleByRole = user?.role === 'teacher' ? 'Perfil del Instructor' : 'Perfil del Estudiante';
   const subtitleByRole = isEditing ? 'Actualiza tu información personal' : 'Detalles de tu cuenta';
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] p-4">
       <Card className="w-full max-w-2xl shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-t-lg">
+        <CardHeader className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-t-lg">
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-2xl font-bold">
                 {loading ? 'Cargando…' : (isEditing ? 'Editar Perfil' : titleByRole)}
               </CardTitle>
-              <CardDescription className="text-blue-100">
+              <CardDescription className="text-red-100">
                 {subtitleByRole}
               </CardDescription>
             </div>
@@ -173,18 +201,26 @@ export default function StudentProfileEditor() {
           )}
 
           {loading ? (
-            <div className="text-center text-gray-600">Cargando perfil…</div>
+            <div className="flex flex-col items-center justify-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin text-red-500 mb-4" />
+              <p className="text-gray-600">Cargando perfil...</p>
+            </div>
+          ) : !user ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <AlertCircle className="h-8 w-8 text-red-500 mb-4" />
+              <p className="text-gray-600">No hay usuario autenticado</p>
+            </div>
           ) : (
             <>
               <div className="flex flex-col items-center mb-8">
                 <div className="relative group">
-                  <Avatar className="h-32 w-32 border-4 border-blue-100 shadow-lg">
+                  <Avatar className="h-32 w-32 border-4 border-red-100 shadow-lg">
                     <AvatarImage 
                     src={userData.avatar || getFallbackAvatar(userData.userName)}
                     alt={userData.userName}
                     onError={(e) => {e.target.src = getFallbackAvatar(userData.userName)}}
                     />
-                    <AvatarFallback className="text-3xl bg-blue-100 text-blue-600">
+                    <AvatarFallback className="text-3xl bg-red-100 text-red-600">
                       {getInitials(userData.userName || 'U')}
                     </AvatarFallback>
                   </Avatar>
@@ -204,24 +240,42 @@ export default function StudentProfileEditor() {
                     </div>
                   )}
                 </div>
-                <h2 className="mt-4 text-xl font-semibold text-gray-900">{userData.userName}</h2>
-                <h2 className="mt-4 text-xl font-semibold text-gray-900">{userData.lastName}</h2>
-                <p className="text-gray-200 bg-blue-700/50 px-2 py-0.5 rounded text-xs mt-1 capitalize">{role}</p>
-                <p className="text-gray-600">{userData.occupation}</p>
+                <h2 className="mt-4 text-xl font-semibold text-gray-900">
+                  {userData.userName} {userData.lastName}
+                </h2>
+                <p className="text-white bg-red-500 px-3 py-1 rounded-full text-sm mt-2 capitalize font-medium">
+                  {user?.role || 'Estudiante'}
+                </p>
+                <p className="text-gray-600 mt-1">{userData.occupation || 'Sin ocupación especificada'}</p>
 
               </div>
 
               {!isEditing ? (
                 <div className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-500">Correo Electrónico</h4>
-                      <p className="mt-1 text-gray-900 break-all">{userData.email}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-red-500">
+                      <div className="flex items-center mb-2">
+                        <Mail className="h-4 w-4 text-red-500 mr-2" />
+                        <h4 className="text-sm font-medium text-gray-700">Correo Electrónico</h4>
+                      </div>
+                      <p className="text-gray-900 break-all">{userData.email || 'No especificado'}</p>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-500">Ocupación</h4>
-                      <p className="mt-1 text-gray-900">{userData.occupation || '—'}</p>
+                    <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-red-500">
+                      <div className="flex items-center mb-2">
+                        <Briefcase className="h-4 w-4 text-red-500 mr-2" />
+                        <h4 className="text-sm font-medium text-gray-700">Ocupación</h4>
+                      </div>
+                      <p className="text-gray-900">{userData.occupation || 'No especificada'}</p>
                     </div>
+                  </div>
+                  <div className="flex justify-center pt-4">
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-6 py-2"
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Editar Información
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -316,7 +370,7 @@ export default function StudentProfileEditor() {
                     </Button>
                     <Button
                       type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 flex items-center disabled:opacity-60"
+                      className="bg-red-500 hover:bg-red-600 flex items-center disabled:opacity-60"
                       disabled={saving}
                     >
                       <Save className="h-4 w-4 mr-2" />

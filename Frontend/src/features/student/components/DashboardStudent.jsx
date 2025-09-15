@@ -2,11 +2,11 @@
 
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/ui/card";
-import { Button } from "@/ui/button";
+import { Button } from "@/ui/Button";
 import { Progress } from "@/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
 import { Badge } from "@/ui/badge";
-import { Input } from "@/ui/input";
+import { Input } from "@/ui/Input";
 import { Tabs, TabsList, TabsTrigger } from "@/ui/tabs";
 import { Skeleton } from "@/ui/skeleton";
 import { Search, BookOpen, Star, Star as StarFilled, Clock, Bell, ChevronRight } from "lucide-react";
@@ -80,7 +80,7 @@ export default function DashboardStudent() {
   // mostras el nombre del usuario autenticado 
   const {user}= useAuth();
 
-  console.log('Usuario actual QUE SE ESTA MOSTRANDO EN EL DASHBOARD:', user);
+  //console.log('Usuario actual QUE SE ESTA MOSTRANDO EN EL DASHBOARD:', user);
 
   // Local: toggle favorite for enrolled courses
   const handleToggleFavoriteEnrolled = (courseId) => {
@@ -112,7 +112,7 @@ export default function DashboardStudent() {
       {/* Header redesigned */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Bienvenido {user?.userName} <span className="text-blue-600">👋</span></h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Bienvenido {user?.name} {user?.lastName} <span className="text-red-500">👋</span></h1>
           <p className="text-gray-600">{formattedDate}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -167,7 +167,7 @@ export default function DashboardStudent() {
                   <TabsTrigger value="favorites">Favoritos</TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Button asChild variant="link" className="text-blue-600">
+              <Button asChild variant="link" className="text-red-500">
                 <Link to="/mis-cursos" className="flex items-center">Ver todo <ChevronRight className="h-4 w-4 ml-1" /></Link>
               </Button>
             </CardHeader>
@@ -224,7 +224,7 @@ export default function DashboardStudent() {
                               {course.progress === 100 ? (
                                 <Badge className="bg-green-100 text-green-800 border-green-200">Completado</Badge>
                               ) : (
-                                <Badge className="bg-blue-100 text-blue-800 border-blue-200">En curso</Badge>
+                                <Badge className="bg-red-100 text-red-800 border-red-200">En curso</Badge>
                               )}
                               {typeof course.rating === 'number' && (
                                 <span className="text-xs text-yellow-700 flex items-center gap-1">

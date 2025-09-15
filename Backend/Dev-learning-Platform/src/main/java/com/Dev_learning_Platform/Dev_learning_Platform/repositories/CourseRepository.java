@@ -1,5 +1,6 @@
 package com.Dev_learning_Platform.Dev_learning_Platform.repositories;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,4 +39,13 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     
     @Query("SELECT c FROM Course c WHERE c.category = :category AND c.subcategory = :subcategory AND c.isActive = true AND c.isPublished = true ORDER BY c.createdAt DESC")
     List<Course> findByCategoryAndSubcategoryOrderByCreatedAtDesc(Category category, Subcategory subcategory);
+    
+    // Métodos para estadísticas administrativas
+    long countByIsPublished(boolean isPublished);
+    long countByIsPremium(boolean isPremium);
+    long countByIsActive(boolean isActive);
+    long countByCreatedAtAfter(LocalDateTime dateTime);
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    List<Course> findByIsPremium(boolean isPremium);
+    List<Course> findByCategory(Category category);
 }

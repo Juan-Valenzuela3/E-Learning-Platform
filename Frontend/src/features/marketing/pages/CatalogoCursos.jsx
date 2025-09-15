@@ -1,289 +1,205 @@
-import React, { useState } from "react";
-import {
-  Search,
-  Filter,
-  Star,
-  Clock,
-  Users,
-  BookOpen,
-  ArrowLeft,
-  ChevronDown,
-  ChevronUp,
-  Play,
-  Award
-} from "lucide-react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Star, Clock, Users, ArrowLeft, X, Loader2, AlertCircle, BookOpen } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import courseService from '@/services/courseService';
 
-export default function CatalogoCursos() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("todos");
-  const [selectedLevel, setSelectedLevel] = useState("todos");
-
+const CatalogoCursos = () => {
+  // Estados para filtros y búsqueda
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('todos');
+  const [selectedLevel, setSelectedLevel] = useState('todos');
   const [expandedCourse, setExpandedCourse] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  // Estados para la carga de datos
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [cursos, setCursos] = useState([]);
+  const [categories, setCategories] = useState([{ id: 'todos', name: 'Cargando categorías...' }]);
+  const [levels, setLevels] = useState([{ id: 'todos', name: 'Cargando niveles...' }]);
+  
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
-  const categories = [
-    { id: "todos", name: "Todos los cursos" },
-    { id: "frontend", name: "Frontend Development" },
-    { id: "backend", name: "Backend Development" },
-    { id: "fullstack", name: "Full Stack Development" },
-    { id: "mobile", name: "Mobile Development" },
-    { id: "data", name: "Data Science & AI" },
-    { id: "design", name: "UI/UX Design" },
-    { id: "devops", name: "DevOps & Cloud" },
-  ];
+  // Función para cargar cursos con los filtros actuales
+  const fetchCourses = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Construir objeto de filtros para la API
+      const filters = {
+        search: searchTerm || undefined,
+        category: selectedCategory !== 'todos' ? selectedCategory : undefined,
+        level: selectedLevel !== 'todos' ? selectedLevel : undefined,
+      };
+      
+      const cursosData = await courseService.getCourses(filters);
+      setCursos(cursosData);
+    } catch (err) {
+      console.error('Error al cargar los cursos:', err);
+      setError('No se pudieron cargar los cursos. Por favor, inténtalo de nuevo más tarde.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchTerm, selectedCategory, selectedLevel]);
 
-  const levels = [
-    { id: "todos", name: "Todos los niveles" },
-    { id: "principiante", name: "Principiante" },
-    { id: "intermedio", name: "Intermedio" },
-    { id: "avanzado", name: "Avanzado" },
-  ];
+  // Cargar datos iniciales
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Cargar categorías y niveles en paralelo
+        const [categoriesData, levelsData] = await Promise.all([
+          courseService.getCategories(),
+          courseService.getLevels()
+        ]);
+        
+        setCategories([{ id: 'todos', name: 'Todos los cursos' }, ...categoriesData]);
+        setLevels([{ id: 'todos', name: 'Todos los niveles' }, ...levelsData]);
+        
+        // Cargar cursos con los filtros iniciales
+        await fetchCourses();
+      } catch (err) {
+        console.error('Error al cargar los datos iniciales:', err);
+        setError('No se pudieron cargar los datos. Por favor, inténtalo de nuevo más tarde.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchInitialData();
+  }, [fetchCourses]);
 
-  const cursos = [
-    {
-      id: 1,
-      title: "Full Stack con React",
-      instructor: "Carlos Mendoza",
-      category: "frontend",
-      level: "intermedio",
-      rating: 4.8,
-      students: 1247,
-      duration: "45h",
-      price: 89.99,
-      originalPrice: 129.99,
-      image:
-        "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=250&fit=crop",
-      tags: ["React", "JavaScript", "Hooks", "Redux"],
-      description:
-        "Aprende React desde los fundamentos hasta técnicas avanzadas. Construye aplicaciones modernas y escalables.",
+  // Efecto para recargar cursos cuando cambian los filtros
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCourses();
+    }, 500); // Debounce para evitar múltiples peticiones rápidas
+    
+    return () => clearTimeout(timer);
+  }, [fetchCourses]);
 
-      categoryColor: "",
+  // Manejar la suscripción a un curso
+  const handleSubscribe = (courseId, e) => {
+    e?.stopPropagation();
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    // Lógica para suscribirse al curso
+    console.log('Subscribirse al curso:', courseId);
+    // Aquí iría la llamada a la API para suscribirse
+  };
 
-      whatYouLearn: [
-        "Fundamentos de React",
-        "Custom Hooks ",
-        "APIs RESTful y bases de datos",
-        "Despliegue y DevOps básico",
-      ],
-      requirements: [
-        "Conocimientos básicos de JavaScript",
-        "Familiaridad con HTML y CSS",
-        "Computadora con conexión a internet"
-      ],
-    },
-    {
-      id: 2,
-      title: "Node.js y Express para Backend",
-      instructor: "Ana García",
-      category: "backend",
-      level: "intermedio",
-      rating: 4.7,
-      students: 892,
-      duration: "32h",
-      price: 79.99,
-      originalPrice: 109.99,
-      image:
-        "https://images.unsplash.com/photo-1555066931-4365d9b73631?w=400&h=250&fit=crop",
-      tags: ["Node.js", "Express", "MongoDB", "API"],
-      description:
-        "Desarrolla APIs robustas y escalables con Node.js y Express. Aprende autenticación, bases de datos y deployment.",
-        whatYouLearn: [
-          "Fundamentos de React",
-          "Custom Hooks ",
-          "APIs RESTful y bases de datos",
-          "Despliegue y DevOps básico",
-        ],
-        requirements: [
-          "Conocimientos básicos de JavaScript",
-        "Familiaridad con HTML y CSS",
-        "Computadora con conexión a internet"
-        ],
-    },
-    {
-      id: 3,
-      title: "Machine Learning con Python",
-      instructor: "David Chen",
-      category: "data",
-      level: "avanzado",
-      rating: 4.9,
-      students: 567,
-      duration: "58h",
-      price: 119.99,
-      originalPrice: 159.99,
-      image:
-        "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=400&h=250&fit=crop",
-      tags: ["Python", "TensorFlow", "Scikit-learn", "Deep Learning"],
-      description:
-        "Domina el Machine Learning con Python. Implementa algoritmos de IA y crea modelos predictivos avanzados.",
-        whatYouLearn: [
-          "Fundamentos de React",
-          "Custom Hooks ",
-          "APIs RESTful y bases de datos",
-          "Despliegue y DevOps básico",
-        ],
-        requirements: [
-          "Python intermedio",
-          "Matemáticas básicas",
-          "Lógica de programación"
-        ],
-    },
-    {
-      id: 4,
-      title: "Diseño UX/UI Avanzado",
-      instructor: "María López",
-      category: "design",
-      level: "intermedio",
-      rating: 4.6,
-      students: 734,
-      duration: "28h",
-      price: 69.99,
-      originalPrice: 99.99,
-      image:
-        "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=250&fit=crop",
-      tags: ["Figma", "UX Research", "Prototyping", "User Testing"],
-      description:
-        "Crea experiencias de usuario excepcionales. Aprende investigación, diseño y testing de interfaces.",
-        whatYouLearn: [
-          "Fundamentos de React",
-          "Custom Hooks ",
-          "APIs RESTful y bases de datos",
-          "Despliegue y DevOps básico",
-        ],
-        requirements: [
-          "Creatividad y sentido estético",
-        "Familiaridad con herramientas digitales",
-        "Interés en experiencia de usuario"
-        ]
-    },
-    {
-      id: 5,
-      title: "DevOps con Docker y Kubernetes",
-      instructor: "Roberto Silva",
-      category: "devops",
-      level: "avanzado",
-      rating: 4.8,
-      students: 445,
-      duration: "38h",
-      price: 94.99,
-      originalPrice: 134.99,
-      image:
-        "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=400&h=250&fit=crop",
-      tags: ["Docker", "Kubernetes", "CI/CD", "AWS"],
-      description:
-        "Automatiza el deployment y escalado de aplicaciones. Domina Docker, Kubernetes y pipelines de CI/CD.",
-        whatYouLearn: [
-          "Fundamentos de React",
-          "Custom Hooks ",
-          "APIs RESTful y bases de datos",
-          "Despliegue y DevOps básico",
-        ],
-        requirements: [
-          "Conocimientos básicos de internet",
-        "Interés en marketing",
-        "Dispositivo con conexión web"
-        ],
-    },
-    {
-      id: 6,
-      title: "Flutter para Desarrollo Móvil",
-      instructor: "Laura Torres",
-      category: "mobile",
-      level: "principiante",
-      rating: 4.5,
-      students: 623,
-      duration: "35h",
-      price: 74.99,
-      originalPrice: 104.99,
-      image:
-        "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&h=250&fit=crop",
-      tags: ["Flutter", "Dart", "Mobile", "Cross-platform"],
-      description:
-        "Desarrolla apps móviles nativas para iOS y Android con Flutter. Una base de código, dos plataformas.",
-        whatYouLearn: [
-          "Fundamentos de React",
-          "Custom Hooks ",
-          "APIs RESTful y bases de datos",
-          "Despliegue y DevOps básico",
-        ],
-        requirements: [
-          "Conocimientos básicos de internet",
-        "Interés en marketing",
-        "Dispositivo con conexión web"
-        ],
-    },
-  ];
+  // Manejar la navegación al detalle del curso
+  const handleCourseAccess = (courseId) => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    navigate(`/cursos/${courseId}`);
+  };
 
+  // Cerrar el modal de autenticación
+  const closeAuthModal = () => {
+    setShowAuthModal(false);
+  };
+
+  // Navegar al login
+  const goToLogin = () => {
+    navigate('/auth/login', { state: { from: window.location.pathname } });
+    closeAuthModal();
+  };
+
+  // Navegar al registro
+  const goToRegister = () => {
+    navigate('/auth/register', { state: { from: window.location.pathname } });
+    closeAuthModal();
+  };
+
+  // Alternar la expansión de un curso
+  const toggleExpanded = (courseId) => {
+    setExpandedCourse(expandedCourse === courseId ? null : courseId);
+  };
+
+  // Obtener el color según el nivel del curso
+  const getLevelColor = (level) => {
+    switch (level) {
+      case 'principiante':
+        return 'bg-green-100 text-green-800';
+      case 'intermedio':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'avanzado':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Obtener el color según la categoría del curso
+  const getCategoryColor = (category) => {
+    switch (category) {
+      case 'frontend':
+        return 'bg-blue-100 text-blue-800';
+      case 'backend':
+        return 'bg-purple-100 text-purple-800';
+      case 'fullstack':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'mobile':
+        return 'bg-pink-100 text-pink-800';
+      case 'data':
+        return 'bg-green-100 text-green-800';
+      case 'design':
+        return 'bg-orange-100 text-orange-800';
+      case 'devops':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Filtrar cursos localmente (opcional, ya que el filtrado se hace en el servidor)
   const filteredCursos = cursos.filter((curso) => {
-    const matchesSearch =
-      curso.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      curso.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      curso.tags.some((tag) =>
+    if (!curso) return false;
+    
+    const matchesSearch = searchTerm === '' || 
+      (curso.title && curso.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (curso.instructor && curso.instructor.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (curso.tags && Array.isArray(curso.tags) && curso.tags.some(tag => 
         tag.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      ));
 
-    const matchesCategory =
-      selectedCategory === "todos" || curso.category === selectedCategory;
-    const matchesLevel =
-      selectedLevel === "todos" || curso.level === selectedLevel;
+    const matchesCategory = selectedCategory === 'todos' || 
+      (curso.category && curso.category === selectedCategory);
+      
+    const matchesLevel = selectedLevel === 'todos' || 
+      (curso.level && curso.level === selectedLevel);
 
     return matchesSearch && matchesCategory && matchesLevel;
   });
 
-  const getLevelColor = (level) => {
-    switch (level) {
-      case "principiante":
-        return "bg-green-100 text-green-800";
-      case "intermedio":
-        return "bg-yellow-100 text-yellow-800";
-      case "avanzado":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case "frontend":
-        return "bg-blue-100 text-blue-800";
-      case "backend":
-        return "bg-purple-100 text-purple-800";
-      case "fullstack":
-        return "bg-indigo-100 text-indigo-800";
-      case "mobile":
-        return "bg-pink-100 text-pink-800";
-      case "data":
-        return "bg-green-100 text-green-800";
-      case "design":
-        return "bg-orange-100 text-orange-800";
-      case "devops":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const toggleExpanded = (cursoId) => {
-    setExpandedCourse(expandedCourse === cursoId ? null : cursoId);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center space-x-4">
               <Link
                 to="/"
-                className="text-gray-600 hover:text-gray-900 transition-colors">
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+                aria-label="Volver al inicio"
+              >
                 <ArrowLeft className="w-6 h-6" />
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 Catálogo de Cursos
               </h1>
             </div>
-            <div className="text-right">
+            <div className="text-left md:text-right">
               <p className="text-sm text-gray-600">Total de cursos</p>
               <p className="text-2xl font-bold text-red-500">
                 {filteredCursos.length}
@@ -291,11 +207,12 @@ export default function CatalogoCursos() {
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filtros y Búsqueda */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      {/* Contenido principal */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filtros y búsqueda */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Búsqueda */}
             <div className="relative">
@@ -303,278 +220,235 @@ export default function CatalogoCursos() {
               <input
                 type="text"
                 placeholder="Buscar cursos..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
               />
             </div>
 
             {/* Filtro por categoría */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent">
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            <div>
+              <select
+                className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none bg-white"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* Filtro por nivel */}
-            <select
-              value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent">
-              {levels.map((level) => (
-                <option key={level.id} value={level.id}>
-                  {level.name}
-                </option>
-              ))}
-            </select>
+            <div>
+              <select
+                className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none bg-white"
+                value={selectedLevel}
+                onChange={(e) => setSelectedLevel(e.target.value)}
+              >
+                {levels.map((level) => (
+                  <option key={level.id} value={level.id}>
+                    {level.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* Botón de limpiar filtros */}
             <button
               onClick={() => {
-                setSearchTerm("");
-                setSelectedCategory("todos");
-                setSelectedLevel("todos");
+                setSearchTerm('');
+                setSelectedCategory('todos');
+                setSelectedLevel('todos');
               }}
-              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium">
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center"
+            >
+              <X className="w-4 h-4 mr-2" />
               Limpiar filtros
             </button>
           </div>
         </div>
 
-        {/* Grid de Cursos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredCursos.map((curso) => {
-            const isExpanded = expandedCourse === curso.id;
-
-            return (
+        {/* Estado de carga */}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-8 h-8 text-red-500 animate-spin mr-3" />
+            <span className="text-gray-600">Cargando cursos...</span>
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+                <button
+                  onClick={fetchCourses}
+                  className="mt-2 text-sm font-medium text-red-600 hover:text-red-500"
+                >
+                  Reintentar
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : filteredCursos.length === 0 ? (
+          <div className="text-center py-12">
+            <Search className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-lg font-medium text-gray-900">No se encontraron cursos</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              No hay cursos que coincidan con tu búsqueda. Intenta con otros filtros.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCursos.map((curso) => (
               <div
                 key={curso.id}
-                className={`"bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 ${
-                  isExpanded ? "shadow-xl scale-[1.02]" : ""
-                } `}>
+                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full"
+                onClick={() => handleCourseAccess(curso.id)}
+              >
                 {/* Imagen del curso */}
-                <div className="relative">
-                  <img
-                    src={curso.image}
-                    alt={curso.title}
-                    className="w-full h-48 object-cover rounded-t-2xl"
-                  />
-                  <div className="absolute top-4 right-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(
-                        curso.level
-                      )}`}>
-                      {levels.find((l) => l.id === curso.level)?.name}
-                    </span>
-                  </div>
-                  {curso.originalPrice > curso.price && (
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                        -
-                        {Math.round(
-                          ((curso.originalPrice - curso.price) /
-                            curso.originalPrice) *
-                            100
-                        )}
-                        %
-                      </span>
+                <div className="relative h-40 bg-gray-200">
+                  {curso.image ? (
+                    <img
+                      src={curso.image}
+                      alt={curso.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/placeholder-course.jpg';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <BookOpen className="h-12 w-12 text-gray-400" />
                     </div>
+                  )}
+                  
+                  {/* Badge de nivel */}
+                  <span className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${getLevelColor(curso.level)}`}>
+                    {levels.find(l => l.id === curso.level)?.name || curso.level}
+                  </span>
+                  
+                  {/* Descuento */}
+                  {curso.originalPrice > curso.price && (
+                    <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      -{Math.round(((curso.originalPrice - curso.price) / curso.originalPrice) * 100)}%
+                    </span>
                   )}
                 </div>
 
                 {/* Contenido del curso */}
-                <div className="p-3">
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(
-                        curso.category
-                      )}`}>
-                      {categories.find((c) => c.id === curso.category)?.name}
+                <div className="p-5 flex-1 flex flex-col">
+                  {/* Categoría */}
+                  <div className="mb-2">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(curso.category)}`}>
+                      {categories.find(c => c.id === curso.category)?.name || curso.category}
                     </span>
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
-                      <span className="text-sm font-medium text-gray-700">
-                        {curso.rating}
-                      </span>
-                    </div>
                   </div>
-
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                  
+                  {/* Título */}
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
                     {curso.title}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  
+                  {/* Descripción */}
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">
                     {curso.description}
                   </p>
-
+                  
+                  {/* Metadatos */}
                   <div className="flex items-center text-sm text-gray-500 mb-4">
-                    <span className="mr-4 flex items-center">
+                    <span className="flex items-center mr-4">
                       <Clock className="w-4 h-4 mr-1" />
-                      {curso.duration}
-                    </span>
-                    <span className="mr-4 flex items-center">
-                      <Users className="w-4 h-4 mr-1" />
-                      {curso.students.toLocaleString()}
+                      {curso.duration || 'N/A'}
                     </span>
                     <span className="flex items-center">
-                      <BookOpen className="w-4 h-4 mr-1" />
-                      {curso.instructor}
+                      <Users className="w-4 h-4 mr-1" />
+                      {(curso.students || 0).toLocaleString()}
                     </span>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {curso.tags.slice(0, 3).map((tag, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                        {tag}
+                    <div className="ml-auto flex items-center">
+                      <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
+                      <span className="font-medium text-gray-900">
+                        {curso.rating || 'Nuevo'}
                       </span>
-                    ))}
+                    </div>
                   </div>
-
-                  {/*Informacion expanda del curso */}
-
-                  {isExpanded && (
-                    <div className="border-gray-100 border-t pt-4 mb-4 space-y-4 animate-inslide-in-from-top-2 duration-300">
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                          Descripción
-                        </h4>
-                        <p className="text-xs text-gray-600 leading-relaxed">
-                          {curso.description}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                          Lo que aprenderás
-                        </h4>
-                        <div className="space-y-1">
-                          {curso.whatYouLearn.map((item, index) => (
-                            <div key={index} className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
-                              <span className="text-xs text-gray-600">
-                                {item}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 mb-2">
-                          Requisitos
-                        </h4>
-                        <div className="space-y-1">
-                          {curso.requirements.map((item, index) => (
-                            <div key={index} className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
-                              <span className="text-xs text-gray-600">
-                                {item}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
-                        <div className="text-center p-2 bg-gray-50 rounded-lg">
-                          <Clock className="w-4 h-4 text-purple-500 mx-auto mb-1" />
-                          <div className="text-xs font-bold text-gray-900">
-                            {curso.duration}
-                          </div>
-                          <div className="text-xs text-gray-500">Duración</div>
-                        </div>
-                        <div className="text-center p-2 bg-gray-50 rounded-lg">
-                          <BookOpen className="w-4 h-4 text-green-500 mx-auto mb-1" />
-                          <div className="text-xs font-bold text-gray-900">
-                            {curso.lessons}
-                          </div>
-                          <div className="text-xs text-gray-500">Lecciones</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
+                  
                   {/* Precio y botón */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      {curso.originalPrice > curso.price ? (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-2xl font-bold text-red-500">
-                            ${curso.price}
-                          </span>
-                          <span className="text-lg text-gray-400 line-through">
-                            ${curso.originalPrice}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-2xl font-bold text-gray-900">
-                          ${curso.price}
+                  <div className="mt-auto pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xl font-bold text-gray-900">
+                          {curso.price ? `$${curso.price.toFixed(2)}` : 'Gratis'}
                         </span>
-                      )}
+                        {curso.originalPrice > curso.price && (
+                          <span className="ml-2 text-sm text-gray-500 line-through">
+                            ${curso.originalPrice?.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => handleSubscribe(curso.id, e)}
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm font-medium"
+                      >
+                        Inscribirse
+                      </button>
                     </div>
-                    <button
-                      onClick={() => toggleExpanded(curso.id)}
-                      className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors flex items-center gap-1">
-                      {isExpanded ? (
-                        <>
-                          <ChevronUp className="w-3 h-3" />
-                          Ocultar
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="w-3 h-3" />
-                          Ver detalles
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
-
-                {isExpanded && (
-                   <div className="pt-3 border-t border-gray-100 animate-in slide-in-from-bottom-2 duration-300">
-                   <div className="flex gap-2">
-                     <button className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-1">
-                       <Play className="w-3 h-3" />
-                       Vista previa
-                     </button>
-                     <button className="flex-1 bg-red-500 text-white py-2 rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-1">
-                       <Award className="w-3 h-3" />
-                       Comprar ahora
-                     </button>
-                   </div>
-                 </div>
-
-                )
-
-
-                }
-
               </div>
-            );
-          })}
-        </div>
-
-        {/* Mensaje si no hay resultados */}
-        {filteredCursos.length === 0 && (
-          <div className="text-center py-16">
-            <div className="text-gray-400 mb-4">
-              <Search className="w-16 h-16 mx-auto" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              No se encontraron cursos
-            </h3>
-            <p className="text-gray-500">
-              Intenta ajustar tusb filtros de búsqueda
-            </p>
+            ))}
           </div>
         )}
-      </div>
+      </main>
+
+      {/* Modal de autenticación */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 relative">
+            <button
+              onClick={closeAuthModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="mt-3 text-lg font-medium text-gray-900">Acceso requerido</h3>
+              <div className="mt-2">
+                <p className="text-sm text-gray-500">
+                  Necesitas iniciar sesión para acceder a este contenido.
+                </p>
+              </div>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-500 text-base font-medium text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={goToLogin}
+                >
+                  Iniciar sesión
+                </button>
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={goToRegister}
+                >
+                  Crear cuenta
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default CatalogoCursos;

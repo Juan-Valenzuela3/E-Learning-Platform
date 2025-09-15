@@ -1,7 +1,8 @@
-import { BookOpen, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import React from "react";
 import { Link } from "react-router-dom";
+import logo from '@/assets/logo.svg';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,8 +14,9 @@ export default function Header() {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <div className="bg-primary-500 p-2  hover:bg-background-dark-gradient transition-shadow  cursor-pointer rounded-lg mr-3">
-              <BookOpen className="w-6 h-6 text-white" />
+            <div className=" hover:bg-background-dark-gradient transition-shadow  cursor-pointer rounded-lg mr-3">
+              <img src={logo} alt="Logo" className="w-10 h-10" />
+              
             </div>
             <a href="/"
             
@@ -32,9 +34,10 @@ export default function Header() {
               className="text-text-primary hover:text-red-500 font-medium transition-colors cursor-pointer"
               onClick={(e) => {
                 e.preventDefault();
-                document
-                  .getElementById("Cursos")
-                  .scrollIntoView({ behavior: "smooth" });
+                const element = document.getElementById("Cursos");
+                if (element) {
+                  element.scrollIntoView({ behavior: "smooth" });
+                }
               }}>
               Cursos
             </a>
@@ -43,9 +46,10 @@ export default function Header() {
               className="text-gray-700 hover:text-red-500 font-medium transition-colors"
               onClick={(e) => {
                 e.preventDefault();
-                document
-                  .getElementById("precios")
-                  .scrollIntoView({ behavior: "smooth" });
+                const element = document.getElementById("precios");
+                if (element) {
+                  element.scrollIntoView({ behavior: "smooth" });
+                }
               }}
               >
               Precios
@@ -55,9 +59,10 @@ export default function Header() {
               className="text-gray-700 hover:text-red-500 font-medium transition-colors"
               onClick={(e) => {
                 e.preventDefault();
-                document
-                  .getElementById("instructores")
-                  .scrollIntoView({ behavior: "smooth" });
+                const element = document.getElementById("instructores");
+                if (element) {
+                  element.scrollIntoView({ behavior: "smooth" });
+                }
                 setIsMenuOpen(false);
               }}
 
@@ -70,22 +75,23 @@ export default function Header() {
                 className="text-gray-700 hover:text-red-500 font-medium transition-colors"
                 onClick={(e) => {
                   e.preventDefault();
-                  document
-                    .getElementById("testimonios")
-                    .scrollIntoView({ behavior: "smooth" });
+                  const element = document.getElementById("testimonios");
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth" });
+                  }
                   setIsMenuOpen(false);
                 }}
                 >
                 Testimonios
               </a>
               <Link
-                to="login"
+                to="/authentication"
                 className="bg-red-500 text-white px-6 py-2.5 rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg hover:shadow-xl">
                 Empezar ahora
               </Link>
             </div>
           </div>
-
+          
           <button
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -105,9 +111,10 @@ export default function Header() {
                 className="block px-3 py-2 text-gray-700 font-medium cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
-                  document
-                    .getElementById("Cursos")
-                    .scrollIntoView({ behavior: "smooth" });
+                  const element = document.getElementById("Cursos");
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth" });
+                  }
                   setIsMenuOpen(false);
                 }}>
                 Cursos
@@ -117,9 +124,10 @@ export default function Header() {
                 className="block px-3 py-2 text-gray-700 font-medium"
                 onClick={(e) => {
                   e.preventDefault();
-                  document
-                    .getElementById("Cursos")
-                    .scrollIntoView({ behavior: "smooth" });
+                  const element = document.getElementById("precios");
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth" });
+                  }
                   setIsMenuOpen(false);
                 }}>
 
@@ -130,9 +138,10 @@ export default function Header() {
                 className="block px-3 py-2 text-gray-700 font-medium"
                 onClick={(e) => {
                   e.preventDefault();
-                  document
-                    .getElementById("Cursos")
-                    .scrollIntoView({ behavior: "smooth" });
+                  const element = document.getElementById("instructores");
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth" });
+                  }
                   setIsMenuOpen(false);
                 }}
                 >
@@ -144,15 +153,16 @@ export default function Header() {
                   className="block text-gray-700 font-medium"
                   onClick={(e) => {
                     e.preventDefault();
-                    document
-                      .getElementById("Cursos")
-                      .scrollIntoView({ behavior: "smooth" });
+                    const element = document.getElementById("testimonios");
+                    if (element) {
+                      element.scrollIntoView({ behavior: "smooth" });
+                    }
                     setIsMenuOpen(false);
                   }}>
                   Testimonios
                 </a>
                 <Link
-                  to="login"
+                  to="authentication"
                   className="block bg-red-500 text-white px-4 py-2 rounded-lg text-center font-semibold">
                   Empezar ahora
                 </Link>

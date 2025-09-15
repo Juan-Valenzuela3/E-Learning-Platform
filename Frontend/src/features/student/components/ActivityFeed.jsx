@@ -1,4 +1,4 @@
-import { Button } from "@/ui/button";
+import { Button } from "@/ui/Button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/ui/card";
 import { CheckCircle2, BookOpen, Bell, Clock, MoreHorizontal } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";

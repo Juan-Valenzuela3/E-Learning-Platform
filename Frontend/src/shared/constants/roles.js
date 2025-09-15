@@ -1,5 +1,5 @@
 
-// src/constants/roles.js
+// src/constants/roles.js - Definición de roles y permisos
 export const ROLES = {
   STUDENT: 'student',
   TEACHER: 'teacher',

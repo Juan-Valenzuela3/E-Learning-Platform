@@ -1,249 +1,514 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
-  BookOpenIcon, 
-  PlusIcon, 
-  PencilIcon, 
-  TrashIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  StarIcon
-} from '@heroicons/react/24/outline';
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Visibility as VisibilityIcon,
+  BarChart as BarChartIcon,
+  Add as AddIcon,
+  Search as SearchIcon,
+  FilterList as FilterListIcon,
+  GridView as GridViewIcon,
+  ViewList as ViewListIcon,
+  Star as StarIcon,
+  People as PeopleIcon,
+  AccessTime as AccessTimeIcon,
+  MoreVert as MoreVertIcon,
+  Book as BookIcon
+} from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardMedia,
+  Chip,
+  Divider,
+  Grid,
+  IconButton,
+  InputAdornment,
+  Menu,
+  MenuItem,
+  Paper,
+  Tab,
+  Tabs,
+  TextField,
+  Tooltip,
+  Typography,
+  useTheme,
+  useMediaQuery,
+  CircularProgress
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  transition: 'transform 0.2s, box-shadow 0.2s',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: theme.shadows[8],
+  },
+}));
+
+const StatusChip = styled(Chip)(({ status, theme }) => ({
+  position: 'absolute',
+  top: 12,
+  right: 12,
+  fontWeight: 600,
+  backgroundColor: status === 'publicado' ? theme.palette.success.light : theme.palette.warning.light,
+  color: status === 'publicado' ? theme.palette.success.dark : theme.palette.warning.dark,
+}));
 
 const Courses = () => {
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [sortConfig, setSortConfig] = useState({ key: 'title', direction: 'asc' });
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
+  
+  // State
+  const [tabValue, setTabValue] = useState('publicados');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [viewMode, setViewMode] = useState('grid');
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [courses, setCourses] = useState([
+    { 
+      id: 1, 
+      title: 'Introducción a la Programación', 
+      description: 'Aprende los fundamentos de la programación desde cero',
+      students: 124, 
+      rating: 4.7, 
+      status: 'publicado',
+      lastUpdated: '2023-05-15',
+      duration: '8 semanas',
+      lessons: 24,
+      category: 'Programación',
+      image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80'
+    },
+    { 
+      id: 2, 
+      title: 'Desarrollo Web Moderno', 
+      description: 'Domina React, Node.js y las tecnologías web más actuales',
+      students: 89, 
+      rating: 4.5, 
+      status: 'publicado',
+      lastUpdated: '2023-06-20',
+      duration: '12 semanas',
+      lessons: 36,
+      category: 'Desarrollo Web',
+      image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1472&q=80'
+    },
+    { 
+      id: 3, 
+      title: 'Machine Learning para Principiantes', 
+      description: 'Introducción práctica al aprendizaje automático y ciencia de datos',
+      students: 56, 
+      rating: 4.8, 
+      status: 'borrador',
+      lastUpdated: '2023-07-10',
+      duration: '10 semanas',
+      lessons: 30,
+      category: 'Ciencia de Datos',
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80'
+    },
+  ]);
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const mockCourses = [
-          { 
-            id: 1, 
-            title: 'Introducción a la Programación con Python', 
-            students: 124, 
-            rating: 4.7, 
-            status: 'publicado',
-            lastUpdated: '2023-05-15',
-            image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1471&q=80'
-          },
-          { 
-            id: 2, 
-            title: 'Desarrollo Web Moderno', 
-            students: 89, 
-            rating: 4.5, 
-            status: 'publicado',
-            lastUpdated: '2023-06-20',
-            image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1472&q=80'
-          },
-          { 
-            id: 3, 
-            title: 'Machine Learning para Principiantes', 
-            students: 56, 
-            rating: 4.8, 
-            status: 'borrador',
-            lastUpdated: '2023-07-10',
-            image: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1374&q=80'
-          }
-        ];
-
-        setCourses(mockCourses);
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCourses();
-  }, []);
-
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const sortedCourses = [...courses].sort((a, b) => {
-    if (a[sortConfig.key] < b[sortConfig.key]) {
-      return sortConfig.direction === 'asc' ? -1 : 1;
-    }
-    if (a[sortConfig.key] > b[sortConfig.key]) {
-      return sortConfig.direction === 'asc' ? 1 : -1;
-    }
-    return 0;
+  // Filter courses based on search and tab
+  const filteredCourses = courses.filter(course => {
+    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         course.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTab = tabValue === 'publicados' ? course.status === 'publicado' : course.status === 'borrador';
+    return matchesSearch && matchesTab;
   });
 
-  const SortIcon = ({ columnKey }) => {
-    if (sortConfig.key !== columnKey) return null;
-    return sortConfig.direction === 'asc' ? (
-      <ArrowUpIcon className="h-4 w-4 ml-1" />
-    ) : (
-      <ArrowDownIcon className="h-4 w-4 ml-1" />
-    );
+  // Handlers
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
   };
 
-  const handleDelete = (id) => {
-    console.log(`Eliminar curso con id ${id}`);
+  const handleMenuOpen = (event, course) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedCourse(course);
   };
 
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedCourse(null);
+  };
+
+  const handleEditCourse = (courseId) => {
+    console.log('Editar curso:', courseId);
+    navigate(`/teacher/courses/${courseId}/edit`);
+    handleMenuClose();
+  };
+
+  const handleDeleteCourse = (courseId) => {
+    console.log('Eliminar curso:', courseId);
+    // TODO: Add delete confirmation and API call
+    handleMenuClose();
+  };
+
+  const toggleViewMode = () => {
+    setViewMode(prevMode => prevMode === 'grid' ? 'list' : 'grid');
+  };
+
+  // Render loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
-  return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 sm:mb-0">Mis Cursos</h2>
-        <Link
-          to="/teacher/courses/new"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-          Nuevo Curso
-        </Link>
-      </div>
+  // Render course card (grid view)
+  const renderCourseCard = (course) => (
+    <Grid item xs={12} sm={6} md={4} lg={3} key={course.id}>
+      <StyledCard>
+        <Box sx={{ position: 'relative' }}>
+          <CardMedia
+            component="img"
+            height="140"
+            image={course.image}
+            alt={course.title}
+          />
+          <StatusChip 
+            label={course.status === 'publicado' ? 'Publicado' : 'Borrador'} 
+            status={course.status}
+            size="small"
+          />
+        </Box>
+        <CardContent sx={{ flexGrow: 1 }}>
+          <Typography gutterBottom variant="h6" component="h3" noWrap>
+            {course.title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            mb: 2,
+            minHeight: '60px'
+          }}>
+            {course.description}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <PeopleIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+            <Typography variant="body2" color="text.secondary">
+              {course.students} estudiantes
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+            <Typography variant="body2" color="text.secondary">
+              {course.duration}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <BookIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+            <Typography variant="body2" color="text.secondary">
+              {course.lessons} lecciones
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <StarIcon fontSize="small" sx={{ color: 'warning.main', mr: 0.5 }} />
+            <Typography variant="body2" sx={{ mr: 1 }}>
+              {course.rating}
+            </Typography>
+          </Box>
+        </CardContent>
+        <CardActions sx={{ justifyContent: 'space-between', p: 2, pt: 0 }}>
+          <Box>
+            <Tooltip title="Ver curso">
+              <IconButton size="small" onClick={() => navigate(`/teacher/courses/${course.id}`)}>
+                <VisibilityIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Editar">
+              <IconButton size="small" onClick={() => handleEditCourse(course.id)}>
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Estadísticas">
+              <IconButton size="small">
+                <BarChartIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+          <IconButton size="small" onClick={(e) => handleMenuOpen(e, course)}>
+            <MoreVertIcon />
+          </IconButton>
+        </CardActions>
+      </StyledCard>
+    </Grid>
+  );
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort('title')}
-                >
-                  <div className="flex items-center">
-                    Título
-                    <SortIcon columnKey="title" />
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort('students')}
-                >
-                  <div className="flex items-center">
-                    Estudiantes
-                    <SortIcon columnKey="students" />
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort('rating')}
-                >
-                  <div className="flex items-center">
-                    Calificación
-                    <SortIcon columnKey="rating" />
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort('status')}
-                >
-                  <div className="flex items-center">
-                    Estado
-                    <SortIcon columnKey="status" />
-                  </div>
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort('lastUpdated')}
-                >
-                  <div className="flex items-center">
-                    Última actualización
-                    <SortIcon columnKey="lastUpdated" />
-                  </div>
-                </th>
-                <th scope="col" className="relative px-6 py-3">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {sortedCourses.map((course) => (
-                <tr key={course.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden">
-                        <img className="h-10 w-10 object-cover" src={course.image} alt={course.title} />
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          <Link to={`/teacher/courses/${course.id}`} className="hover:text-indigo-600">
-                            {course.title}
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{course.students}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className="text-yellow-400">
-                        <StarIcon className="h-4 w-4" />
-                      </span>
-                      <span className="ml-1 text-sm text-gray-900">
-                        {course.rating}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      course.status === 'publicado' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {course.status === 'publicado' ? 'Publicado' : 'Borrador'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(course.lastUpdated).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <Link
-                        to={`/teacher/courses/edit/${course.id}`}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(course.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+  // Render course list item (list view)
+  const renderCourseListItem = (course) => (
+    <Grid item xs={12} key={course.id} sx={{ mb: 2 }}>
+      <Card>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}>
+          <Box sx={{ width: { xs: '100%', sm: 200 }, position: 'relative' }}>
+            <CardMedia
+              component="img"
+              height="140"
+              image={course.image}
+              alt={course.title}
+              sx={{ height: '100%', objectFit: 'cover' }}
+            />
+            <StatusChip 
+              label={course.status === 'publicado' ? 'Publicado' : 'Borrador'} 
+              status={course.status}
+              size="small"
+              sx={{ position: 'absolute', top: 8, right: 8 }}
+            />
+          </Box>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <CardContent sx={{ flex: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Box>
+                  <Typography variant="h6" component="h3">
+                    {course.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {course.category}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <StarIcon fontSize="small" sx={{ color: 'warning.main', mr: 0.5 }} />
+                  <Typography variant="body2" sx={{ mr: 2 }}>
+                    {course.rating}
+                  </Typography>
+                  <IconButton size="small" onClick={(e) => handleMenuOpen(e, course)}>
+                    <MoreVertIcon />
+                  </IconButton>
+                </Box>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {course.description}
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 'auto' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <PeopleIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {course.students} estudiantes
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {course.duration}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <BookIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {course.lessons} lecciones
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+            <CardActions sx={{ justifyContent: 'flex-end', p: 2, pt: 0 }}>
+              <Button 
+                size="small" 
+                startIcon={<VisibilityIcon />}
+                onClick={() => navigate(`/teacher/courses/${course.id}`)}
+              >
+                Ver
+              </Button>
+              <Button 
+                size="small" 
+                startIcon={<EditIcon />}
+                onClick={() => handleEditCourse(course.id)}
+              >
+                Editar
+              </Button>
+              <Button 
+                size="small" 
+                startIcon={<BarChartIcon />}
+              >
+                Estadísticas
+              </Button>
+            </CardActions>
+          </Box>
+        </Box>
+      </Card>
+    </Grid>
+  );
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 4 }}>
+        {/* Header */}
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' }, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' }, 
+          mb: 3,
+          gap: 2
+        }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Mis Cursos
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<AddIcon />}
+            component={Link}
+            to="/teacher/courses/new"
+          >
+            Nuevo Curso
+          </Button>
+        </Box>
+
+        {/* Search and Filters */}
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' }, 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'stretch', sm: 'center' },
+          gap: 2,
+          mb: 3
+        }}>
+          <TextField
+            placeholder="Buscar cursos..."
+            variant="outlined"
+            size="small"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ 
+              flex: 1, 
+              maxWidth: { sm: 400 },
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'background.paper',
+              }
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant={viewMode === 'grid' ? 'contained' : 'outlined'}
+              onClick={() => setViewMode('grid')}
+              size="small"
+              startIcon={<GridViewIcon />}
+            >
+              Cuadrícula
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'contained' : 'outlined'}
+              onClick={() => setViewMode('list')}
+              size="small"
+              startIcon={<ViewListIcon />}
+            >
+              Lista
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange} 
+            aria-label="filtros de cursos"
+            variant="scrollable"
+            scrollButtons="auto"
+          >
+            <Tab label="Publicados" value="publicados" />
+            <Tab label="Borradores" value="borradores" />
+            <Tab label="Todos" value="todos" />
+          </Tabs>
+        </Box>
+      </Box>
+
+      {/* Course List */}
+      {filteredCourses.length === 0 ? (
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          py: 8,
+          textAlign: 'center',
+          backgroundColor: 'background.paper',
+          borderRadius: 2,
+          boxShadow: 1
+        }}>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No se encontraron cursos
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 500 }}>
+            {searchQuery 
+              ? 'No hay cursos que coincidan con tu búsqueda. Intenta con otros términos.'
+              : `No tienes cursos ${tabValue === 'publicados' ? 'publicados' : 'en borrador'} aún.`}
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<AddIcon />}
+            component={Link}
+            to="/teacher/courses/new"
+          >
+            Crear nuevo curso
+          </Button>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredCourses.map(course => 
+            viewMode === 'grid' ? renderCourseCard(course) : renderCourseListItem(course)
+          )}
+        </Grid>
+      )}
+
+      {/* Context Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem onClick={() => {
+          navigate(`/teacher/courses/${selectedCourse?.id}`);
+          handleMenuClose();
+        }}>
+          <VisibilityIcon fontSize="small" sx={{ mr: 1.5 }} />
+          Ver detalles
+        </MenuItem>
+        <MenuItem onClick={() => handleEditCourse(selectedCourse?.id)}>
+          <EditIcon fontSize="small" sx={{ mr: 1.5 }} />
+          Editar
+        </MenuItem>
+        <MenuItem>
+          <BarChartIcon fontSize="small" sx={{ mr: 1.5 }} />
+          Ver estadísticas
+        </MenuItem>
+        <Divider />
+        <MenuItem 
+          onClick={() => handleDeleteCourse(selectedCourse?.id)}
+          sx={{ color: 'error.main' }}
+        >
+          <DeleteIcon fontSize="small" sx={{ mr: 1.5 }} />
+          Eliminar curso
+        </MenuItem>
+      </Menu>
+    </Box>
   );
 };
 

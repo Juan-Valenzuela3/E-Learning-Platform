@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button } from '@/ui/button';
+import { Button } from '@/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Progress } from '@/ui/progress';
 import { ChevronDown, ChevronRight, CheckCircle, Play, Clock, Award, BookOpen } from 'lucide-react';
-import ReactPlayer from 'react-player';
 
-// Mock data for course content
+// Comtenido con datos de la api de prueba mock 
 const courseData = {
   id: 1,
   title: 'Desarrollo Web Moderno',
@@ -128,19 +127,67 @@ const CourseContent = () => {
           </div>
 
           {/* Video Player */}
-          <Card className="mb-6">
-            <div className="aspect-w-16 aspect-h-9 bg-black">
+          <Card className="mb-6 overflow-hidden">
+            <div className="aspect-video relative rounded-lg overflow-hidden">
               {currentVideo ? (
-                <ReactPlayer
-                  url={currentVideo}
-                  width="100%"
-                  height="100%"
-                  controls
-                  onError={(e) => console.error('Error al reproducir el video:', e)}
-                />
+                isYoutubeUrl(currentVideo) ? (
+                  <>
+                    <iframe
+                      src={`${getYoutubeEmbedUrl(currentVideo)}?modestbranding=1&rel=0&showinfo=0&controls=1&color=ef4444&iv_load_policy=3&fs=1&theme=light&color=white`}
+                      title=""
+                      className="w-full h-full youtube-player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                    <style dangerouslySetInnerHTML={{
+                      __html: `
+                        .youtube-player {
+                          background: #f3f4f6;
+                          border-radius: 0.5rem;
+                          overflow: hidden;
+                        }
+                        .youtube-player::before {
+                          content: '';
+                          position: absolute;
+                          top: 0;
+                          left: 0;
+                          right: 0;
+                          bottom: 0;
+                          box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+                          pointer-events: none;
+                          border-radius: 0.5rem;
+                        }
+                        /* Ocultar título de YouTube */
+                        .ytp-title {
+                          display: none !important;
+                        }
+                        /* Personalizar controles */
+                        .ytp-chrome-top {
+                          padding-top: 0 !important;
+                        }
+                        /* Color de la barra de progreso */
+                        .ytp-play-progress {
+                          background: #ef4444 !important;
+                        }
+                        .ytp-scrubber-container {
+                          background: #ef4444 !important;
+                        }
+                      `
+                    }} />
+                  </>
+                ) : (
+                  <video
+                    src={currentVideo}
+                    controls
+                    className="w-full h-full"
+                  >
+                    Tu navegador no soporta la reproducción de videos.
+                  </video>
+                )
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white">
-                  <p>Selecciona una lección para comenzar</p>
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <p className="text-gray-600">Selecciona una lección para comenzar</p>
                 </div>
               )}
             </div>

@@ -24,7 +24,9 @@ public class TestConfig {
     @Bean
     @Primary
     public ObjectStorageClient mockObjectStorageClient() {
-        return Mockito.mock(ObjectStorageClient.class);
+        ObjectStorageClient mock = Mockito.mock(ObjectStorageClient.class);
+        // Configurar comportamiento básico si es necesario
+        return mock;
     }
 
     /**
@@ -33,7 +35,8 @@ public class TestConfig {
     @Bean
     @Primary
     public AuthenticationDetailsProvider mockAuthenticationDetailsProvider() {
-        return Mockito.mock(AuthenticationDetailsProvider.class);
+        AuthenticationDetailsProvider mock = Mockito.mock(AuthenticationDetailsProvider.class);
+        // Configurar comportamiento básico si es necesario
+        return mock;
     }
-
 }

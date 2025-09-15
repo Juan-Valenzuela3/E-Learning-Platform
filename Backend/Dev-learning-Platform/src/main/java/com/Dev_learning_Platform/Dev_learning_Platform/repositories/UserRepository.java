@@ -1,5 +1,6 @@
 package com.Dev_learning_Platform.Dev_learning_Platform.repositories;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,4 +15,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRole(User.Role role);
     Boolean existsByEmail(String email);
     Optional<User> findByUserName(String userName);
+    
+    // Métodos para estadísticas administrativas
+    long countByRole(User.Role role);
+    long countByIsActive(boolean isActive);
+    long countByCreatedAtAfter(Timestamp timestamp);
+    long countByCreatedAtBetween(Timestamp start, Timestamp end);
 }

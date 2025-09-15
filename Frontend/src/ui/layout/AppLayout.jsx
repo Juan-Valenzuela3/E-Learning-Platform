@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import Sidebar from "../common/Sidebar";
 import { useEffect } from "react";
-import useAuth from "@/shared/hooks/useAuth";
+import {useAuth} from "@/shared/hooks/useAuth";
 
 export default function AppLayout() {
   const navigate = useNavigate();

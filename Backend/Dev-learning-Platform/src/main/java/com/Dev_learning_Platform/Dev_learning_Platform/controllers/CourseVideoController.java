@@ -1,7 +1,6 @@
 package com.Dev_learning_Platform.Dev_learning_Platform.controllers;
 
 import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,11 +14,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CourseVideoDto;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.CourseVideo;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.CourseVideoService;
-
+import com.Dev_learning_Platform.Dev_learning_Platform.services.UserService;
 import lombok.RequiredArgsConstructor;
 
 
@@ -27,121 +26,132 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/course-videos")
 @RequiredArgsConstructor
 public class CourseVideoController {
-    
+
     private final CourseVideoService courseVideoService;
+    private final UserService userService;
+
+    /**
+     * Extrae el ID del usuario desde el objeto de autenticación
+     * 
+     * @param authentication Objeto de autenticación de Spring Security
+     * @return ID del usuario o null si no se puede obtener
+     */
+    private Long getUserIdFromAuthentication(Authentication authentication) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            return null;
+        }
+
+        try {
+            Object principal = authentication.getPrincipal();
+
+            // Si el principal es un User, extraer el ID directamente
+            if (principal instanceof User) {
+                return ((User) principal).getId();
+            }
+
+            // Si el principal es un UserDetails personalizado, obtener el ID por email
+            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                String username =
+                        ((org.springframework.security.core.userdetails.UserDetails) principal)
+                                .getUsername();
+                User user = userService.findByEmail(username);
+                return user != null ? user.getId() : null;
+            }
+
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<CourseVideo> addVideoToCourse(@RequestBody CourseVideoDto videoDto) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Long instructorId = Long.parseLong(authentication.getName());
-            
-            CourseVideo video = courseVideoService.addVideoToCourse(videoDto, instructorId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(video);
-        } catch (SecurityException e) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long instructorId = getUserIdFromAuthentication(authentication);
+
+        if (instructorId == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+
+        CourseVideo video = courseVideoService.addVideoToCourse(videoDto, instructorId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(video);
     }
-    
+
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<CourseVideo>> getVideosByCourse(@PathVariable Long courseId) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Long userId = null;
-            
-            if (authentication != null && authentication.isAuthenticated()) {
-                userId = Long.parseLong(authentication.getName());
-            }
-            
-            List<CourseVideo> videos = courseVideoService.getVideosByCourse(courseId, userId);
-            return ResponseEntity.ok(videos);
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = null;
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            userId = getUserIdFromAuthentication(authentication);
         }
+
+        List<CourseVideo> videos = courseVideoService.getVideosByCourse(courseId, userId);
+        return ResponseEntity.ok(videos);
     }
-    
+
     @GetMapping("/{videoId}")
     public ResponseEntity<CourseVideo> getVideoById(@PathVariable Long videoId) {
-        try {
-            CourseVideo video = courseVideoService.getVideoById(videoId);
-            return ResponseEntity.ok(video);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        CourseVideo video = courseVideoService.getVideoById(videoId);
+        return ResponseEntity.ok(video);
     }
-    
+
     @PutMapping("/{videoId}")
     @PreAuthorize("hasRole('INSTRUCTOR')")
-    public ResponseEntity<CourseVideo> updateVideo(@PathVariable Long videoId, @RequestBody CourseVideoDto videoDto) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Long instructorId = Long.parseLong(authentication.getName());
-            
-            CourseVideo video = courseVideoService.updateVideo(videoId, videoDto, instructorId);
-            return ResponseEntity.ok(video);
-        } catch (SecurityException e) {
+    public ResponseEntity<CourseVideo> updateVideo(@PathVariable Long videoId,
+            @RequestBody CourseVideoDto videoDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long instructorId = getUserIdFromAuthentication(authentication);
+
+        if (instructorId == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+
+        CourseVideo video = courseVideoService.updateVideo(videoId, videoDto, instructorId);
+        return ResponseEntity.ok(video);
     }
 
     @DeleteMapping("/{videoId}")
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<Void> deleteVideo(@PathVariable Long videoId) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Long instructorId = Long.parseLong(authentication.getName());
-            
-            courseVideoService.deleteVideo(videoId, instructorId);
-            return ResponseEntity.noContent().build();
-        } catch (SecurityException e) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long instructorId = getUserIdFromAuthentication(authentication);
+
+        if (instructorId == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+
+        courseVideoService.deleteVideo(videoId, instructorId);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/course/{courseId}/reorder")
     @PreAuthorize("hasRole('INSTRUCTOR')")
-    public ResponseEntity<Void> reorderVideos(@PathVariable Long courseId, @RequestBody List<Long> videoIds) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Long instructorId = Long.parseLong(authentication.getName());
-            
-            courseVideoService.reorderVideos(courseId, videoIds, instructorId);
-            return ResponseEntity.ok().build();
-        } catch (SecurityException e) {
+    public ResponseEntity<Void> reorderVideos(@PathVariable Long courseId,
+            @RequestBody List<Long> videoIds) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long instructorId = getUserIdFromAuthentication(authentication);
+
+        if (instructorId == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+
+        courseVideoService.reorderVideos(courseId, videoIds, instructorId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/course/{courseId}/can-manage")
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<Boolean> canManageVideos(@PathVariable Long courseId) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Long userId = Long.parseLong(authentication.getName());
-            
-            boolean canManage = courseVideoService.canManageVideos(courseId, userId);
-            return ResponseEntity.ok(canManage);
-        } catch (Exception e) {
-            return ResponseEntity.ok(false);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = getUserIdFromAuthentication(authentication);
+
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+
+        boolean canManage = courseVideoService.canManageVideos(courseId, userId);
+        return ResponseEntity.ok(canManage);
     }
 }

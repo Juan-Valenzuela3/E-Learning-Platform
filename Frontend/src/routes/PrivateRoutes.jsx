@@ -11,19 +11,11 @@ const DashboardStats = lazy(() => import("@/features/student/components/Dashboar
 const Profile = lazy(() => import("@/features/student/components/StudentProfileEditor"));
 const PurchasedCourses = lazy(() => import("@/features/student/components/PurchasedCourses"));
 const CourseContent = lazy(() => import("@/features/course/components/CourseContent"));
-const PaymentHistory = lazy(() => import("@/features/student/components/PaymentHistory"));
+const CourseDetail = lazy(() => import("@/features/course/components/CourseDetail"));
+// const PaymentHistory = lazy(() => import("@/features/student/components/PaymentHistory"));
 const NotFound = lazy(() => import("@/shared/ui/layout/NotFound"));
 const DataPolicy = lazy(() => import("@/shared/ui/common/DataPolicy"));
 const StudentPage = lazy(() => import("@/features/student/pages/StudentPage"));
-
-// Componentes de profesor
-const TeacherDashboard = lazy(() => import("@/features/teacher/components/TeacherDashboard"));
-const TeacherCourses = lazy(() => import("@/features/teacher/components/TeacherCourses"));
-const CreateCourse = lazy(() => import("@/features/teacher/components/CreateCourse")
-  .catch(() => ({ default: () => <ErrorBoundary>Error al cargar el componente de creación de curso</ErrorBoundary> })));
-const EditCourse = lazy(() => import("@/features/teacher/components/EditCourse"));
-const TeacherStudents = lazy(() => import("@/features/teacher/components/TeacherStudents"));
-const Students = lazy(() => import("@/features/teacher/components/Students"));
 
 // Componente de carga
 const LoadingFallback = () => (
@@ -41,7 +33,7 @@ const privateRoutes = [
   // Rutas de estudiante
   {
     element: (
-      <ProtectedRoute allowedRoles={['student']}>
+      <ProtectedRoute allowedRoles={['STUDENT', 'student']}>
         <AppLayout />
       </ProtectedRoute>
     ),
@@ -62,10 +54,10 @@ const privateRoutes = [
         path: "/curso/:id",
         element: <CourseContent />,
       },
-      {
-        path: "/pagos",
-        element: <PaymentHistory />,
-      },
+      // {
+      //   path: "/pagos",
+      //   element: <PaymentHistory />,
+      // },
       {
         path: "/politica-de-privacidad",
         element: <DataPolicy />,
@@ -76,58 +68,14 @@ const privateRoutes = [
       }
     ]
   },
-  // Rutas de profesor
+  // Redirección para usuarios con rol de profesor
   {
+    path: "/teacher/*",
     element: (
-      <ProtectedRoute allowedRoles={['teacher']}>
-        <AppLayout />
+      <ProtectedRoute allowedRoles={['INSTRUCTOR', 'teacher']}>
+        <Navigate to="/teacher/dashboard" replace />
       </ProtectedRoute>
-    ),
-    children: [
-      {
-        path: "/teacher",
-        element: <TeacherDashboard />,
-      },
-      
-      {
-        path: "/teacher/courses",
-        element: <TeacherCourses />,
-      },
-      {
-        path: "/teacher/courses/new",
-        element: (
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingFallback />}>
-              <CreateCourse />
-            </Suspense>
-          </ErrorBoundary>
-        ),
-      },
-      {
-        path: "/teacher/courses/:id/edit",
-        element: <EditCourse />,
-      },
-      {
-        path: "/teacher/students",
-        element: <Students />,
-      },
-      {
-        path: "/teacher/students/:courseId",
-        element: <TeacherStudents />,
-      },
-      {
-        path: "/teacher/profile",
-        element: <Profile />,
-      },
-      {
-        path: "/teacher/*",
-        element: <Navigate to="/teacher" replace />
-      },
-      {
-        path: "*",
-        element: <NotFound />
-      }
-    ]
+    )
   }
 ];
 

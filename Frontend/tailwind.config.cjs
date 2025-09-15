@@ -1,17 +1,22 @@
 // tailwind.config.js
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
+    darkMode: 'class',
+    content: [
     "./index.html",
-    // Make sure this path covers all your component files
+    // Asegúrate de que esta ruta cubra todos tus archivos de componentes
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
-      // Mapping your custom CSS variables to Tailwind's color system
+      //  Mapping your custom CSS variables to Tailwind's color system
       colors: {
         // Semantic colors from your Figma variables
         'primary': {
+          DEFAULT: 'var(--color-primary-500)',
+          DARK: 'var(--color-primary-900)',
+          LIGHT: 'var(--color-primary-100)',
           50: 'var(--color-primary-50)',
           100: 'var(--color-primary-100)',
           200: 'var(--color-primary-200)',
@@ -22,6 +27,20 @@ module.exports = {
           700: 'var(--color-primary-700)',
           800: 'var(--color-primary-800)',
           900: 'var(--color-primary-900)',
+        },
+        secondary: {
+          DEFAULT: 'var(--color-secondary-500)',
+          light: 'var(--color-secondary-100)',
+          50: 'var(--color-secondary-50)',
+          100: 'var(--color-secondary-100)',
+          200: 'var(--color-secondary-200)',
+          300: 'var(--color-secondary-300)',
+          400: 'var(--color-secondary-400)',
+          500: 'var(--color-secondary-500)',
+          600: 'var(--color-secondary-600)',
+          700: 'var(--color-secondary-700)',
+          800: 'var(--color-secondary-800)',
+          900: 'var(--color-secondary-900)',
         },
         'neutral': {
           50: 'var(--color-neutral-50)',
@@ -89,6 +108,9 @@ module.exports = {
         // Utility colors for background and text
         'background': 'var(--background)',
         'foreground': 'var(--foreground)',
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
       },
       // You can define custom shadows here as well
       boxShadow: {

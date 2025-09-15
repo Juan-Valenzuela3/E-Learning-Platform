@@ -14,7 +14,7 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    // Redirect to the dashboard or the page they were trying to access before being redirected to login
+    // Redirigir a la página que intentaban acceder antes de ser redirigidos a login
     const from = location.state?.from?.pathname || "/dashboard";
     return <Navigate to={from} replace />;
   }

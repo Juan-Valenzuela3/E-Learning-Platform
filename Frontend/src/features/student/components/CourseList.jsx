@@ -1,4 +1,4 @@
-import { Button } from "@/ui/button";
+import { Button } from "@/ui/Button";
 import { Progress } from "@/ui/progress";
 import { Play, Star, Star as StarFilled } from "lucide-react";
 import { Badge } from "@/ui/badge";
@@ -19,7 +19,7 @@ export default function CourseList({ courses, onToggleFavorite }) {
   };
 
   const handleContinueCourse = (course) => {
-    // Navigate to the course page, which will handle the redirection to the appropriate lesson
+    // Navigate to the course page, which will handle the redirection to the appropriate lesson 
     // The course page can use the course's progress to determine which lesson to show
     navigate(`/curso/${course.id}`, {
       state: {
@@ -73,7 +73,7 @@ export default function CourseList({ courses, onToggleFavorite }) {
           <div className="flex-1 w-full">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="cursor-pointer" onClick={() => handleContinueCourse(course)}>
-                <h3 className="font-medium text-gray-900 hover:text-blue-600 flex items-center gap-2">
+                <h3 className="font-medium text-gray-900 hover:text-red-500 flex items-center gap-2">
                   {course.name}
                   {course.isEnrolled && <Badge className="text-[10px]" variant="secondary">Inscrito</Badge>}
                 </h3>

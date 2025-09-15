@@ -1,126 +1,243 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useState, useEffect, useCallback } from "react";
-import mockAuthService from "@/interfaces/api/__mocks__/mockAuthService";
+import React, { createContext, useState, useEffect, useCallback, useContext } from "react";
 import { ROLE_PERMISSIONS } from "@/shared/constants/roles";
+import authService from "@/services/authService";
+import { setupResponseInterceptors } from "@/services/authInterceptor";
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children, onLogout }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [onLogoutCallback, setOnLogoutCallback] = useState(null);
+  const [error, setError] = useState(null);
+  const [onLogoutCallback, setOnLogoutCallback] = useState(() => onLogout);
 
-  // Set a callback to be called on logout
+  // Callback para logout personalizado
   const setLogoutCallback = useCallback((callback) => {
     setOnLogoutCallback(() => callback);
   }, []);
 
+  // Configurar interceptores de respuesta
   useEffect(() => {
-    // Check if user is already authenticated
+    const handleLogout = () => {
+      setUser(null);
+      if (onLogoutCallback) onLogoutCallback();
+    };
+    setupResponseInterceptors(handleLogout);
+  }, [onLogoutCallback]);
+
+  // Verificar autenticación al cargar el contexto
+  useEffect(() => {
+    let isMounted = true;
+
     const checkAuth = async () => {
+      if (!isMounted) return;
+      setLoading(true);
+
       try {
-        if (mockAuthService.isAuthenticated()) {
-          const userData = mockAuthService.getCurrentUser();
-          if (userData) {
-            setUser({
-              token: mockAuthService.getToken(),
-              ...userData,
-              role: userData.role || 'student',
-              name: userData.userName || 'Usuario',
-              lastName: userData.lastName || '',
-              avatar: userData.avatar || '',
-              email: userData.email
-            });
-          }
+        const token = authService.getToken();
+        console.log('Token encontrado en localStorage:', token ? '***' + token.slice(-10) : 'No hay token');
+
+
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        // Validar token con servidor usando la función optimizada
+        const response = await authService.validateToken(token);
+
+        if (!response || !response.valid) {
+          console.log('Token inválido según el servidor, cerrando sesión...');
+          authService.logout();
+          setUser(null);
+        } else {
+          // Token válido, obtener datos del usuario
+          const userData = await authService.getCurrentUser();
+          if (isMounted) setUser(userData);
         }
       } catch (error) {
-        console.error("Auth check failed:", error);
+        console.error('Error al validar token:', error);
+        setError('Error al verificar la sesión');
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     checkAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const login = async (email, password) => {
+  // Login
+  const login = useCallback(async (userData) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      const loggedUser = await mockAuthService.login(email, password);
-      if (loggedUser && loggedUser.token) {
-        const userData = {
-          ...loggedUser,
-          role: loggedUser.role || 'student',
-          name: loggedUser.userName || 'Usuario',
-          lastName: loggedUser.lastName || '',
-          avatar: loggedUser.avatar || '',
-          email: loggedUser.email
-        };
-        setUser(userData);
-        return userData;
-      }
-      throw new Error("Invalid response from authentication service");
+      const { token, user } = userData;
+      if (!token || !user) throw new Error('Datos de usuario inválidos');
+
+      setUser(user);
+      authService.setToken(token);
+
+      // Actualizar headers de axios
+      const api = (await import('@/services/api')).default;
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      return { success: true, data: user, token };
     } catch (error) {
-      console.error("Login error:", error);
-      if (!error.response) {
-        error.response = { data: { message: error.message || "Authentication failed" } };
-      }
-      throw error;
+      console.error('Error al iniciar sesión:', error);
+      setError(error.message || 'Error de autenticación');
+      authService.logout();
+      return { success: false, error: error.message };
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = useCallback(() => {
-    mockAuthService.logout();
-    setUser(null);
-    // llamadas a la funcion de logout para redirigir al login
-    if (onLogoutCallback) {
-      onLogoutCallback();
+  // Logout
+  const logout = useCallback(async (options = {}) => {
+    try {
+      console.log('=== AUTH CONTEXT: Iniciando logout ===');
+      console.log('Options:', options);
+      
+      // authService.logout() no es asíncrono, pero limpia los datos
+      authService.logout();
+      setUser(null);
+      setError(null);
+
+      let redirectTo = '/';
+      if (options.redirectTo) redirectTo = options.redirectTo;
+      else if (onLogoutCallback) {
+        const result = onLogoutCallback();
+        if (result) redirectTo = result;
+      }
+
+      console.log('=== AUTH CONTEXT: Redirigiendo a ===', redirectTo);
+      if (options.redirect !== false && redirectTo) {
+        window.location.href = redirectTo;
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error durante logout:', error);
+      return { success: false, error };
     }
   }, [onLogoutCallback]);
 
+  // Registro
+  const register = useCallback(async (userData) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await authService.register({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: userData.password,
+        role: userData.role || 'STUDENT'
+      });
+
+      // authService.register() hace auto-login, así que response ya contiene datos del usuario
+      if (response && response.id) {
+        // Establecer el usuario como autenticado
+        setUser(response);
+        
+        // Actualizar headers de axios
+        const token = authService.getToken();
+        if (token) {
+          const api = (await import('@/services/api')).default;
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+        
+        return { success: true, data: response, autoLogin: true };
+      }
+      
+      return { success: false, error: 'No se pudo completar el registro' };
+    } catch (error) {
+      console.error('Error de registro:', error);
+      const errorMessage = error.message || 'Error al registrar el usuario';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Permisos
   const hasPermission = (permission) => {
     if (!user) return false;
     return ROLE_PERMISSIONS[user.role]?.[permission] ?? false;
   };
 
-  // contexto para manejar el perfil del usuario con la api de mock se cambia por la api de backend
-  // fetchProfile como funcion se encarga de obtener los datos de los usuarios autenticados
-  const fetchProfile = async () => {
-    const profile = await mockAuthService.getProfile();
-    // actualiza el contexto del usuario
-    setUser((prev) => prev ? { ...prev, name: profile.name, email: profile.email, role: profile.role } : prev);
-    return profile;
-  };
+  // Fetch profile
+  const fetchProfile = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  const updateProfile = async (updates) => {
-    const updated = await mockAuthService.updateProfile(updates);
-    // actualiza el contexto del usuario
-    setUser((prev) => prev ? { ...prev, name: updated.name, email: updated.email } : prev);
-    return updated;
+    try {
+      const profile = await authService.getCurrentUser();
+      setUser(profile);
+      return profile;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setError('Error al cargar perfil');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Update profile
+  const updateProfile = useCallback(async (updates) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const updatedProfile = await authService.updateProfile(updates);
+      setUser(prev => ({ ...prev, ...updatedProfile }));
+      return updatedProfile;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setError('Error al actualizar perfil');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const value = {
+    user,
+    loading,
+    error,
+    isAuthenticated: !!user,
+    role: user?.role || 'guest',
+    login,
+    logout,
+    register,
+    hasPermission,
+    setLogoutCallback,
+    fetchProfile,
+    updateProfile,
+    setError
   };
-  // isAuthenticated es una funcion que retorna true si el usuario esta autenticado
-  const isAuthenticated = !!user;
-  // role es una funcion que retorna el rol del usuario
-  const role = user?.role || 'guest';
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      isAuthenticated,
-      role,
-      login,
-      logout,
-      setLogoutCallback,
-      hasPermission,
-      fetchProfile,
-      updateProfile
-    }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {loading ? <div>Cargando...</div> : children}
     </AuthContext.Provider>
   );
+};
+
+// Hook personalizado para usar AuthContext
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth debe usarse dentro de AuthProvider');
+  return context;
 };
 
 export default AuthContext;

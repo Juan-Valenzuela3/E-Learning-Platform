@@ -1,106 +1,122 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import useAuth from "@/shared/hooks/useAuth";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/ui/Button";
+import { toast } from 'sonner';
 import FormInput from "@/ui/FormInput";
-import Toast from "@/ui/Toast";
+import api from '@/services/api';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [toastInfo, setToastInfo] = useState({ show: false, message: "", type: "info" });
-
-  const { login, isAuthenticated, role } = useAuth();
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname;
-      if (from && from !== '/login') {
-        navigate(from, { replace: true });
-        return;
-      }
-      // Go directly to the correct dashboard to avoid hitting public '/'
-      navigate(role === 'teacher' ? '/teacher/dashboard' : '/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, role, navigate, location.state]);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Por favor ingresa tu correo y contraseña");
-      setToastInfo({ show: true, message: "Por favor ingresa tu correo y contraseña", type: "error" });
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setToastInfo({ show: true, message: "Iniciando sesión...", type: "info" });
+    setError(null);
+    setIsLoading(true);
 
     try {
-      const user = await login(email, password);
-      if (user && user.token) {
-        setToastInfo({ show: true, message: "¡Ingreso exitoso!", type: "success" });
-        // Navigate immediately based on returned role to avoid landing page
-        const target = user.role === 'teacher' ? '/teacher/dashboard' : '/dashboard';
-        navigate(target, { replace: true });
+      // Validación básica
+      if (!email.includes("@")) throw new Error("Correo inválido");
+      if (password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres");
+
+      // Llamada al backend
+      const response = await api.post("/auth/login", { email: email.trim(), password, rememberMe });
+
+      if (!response.data.token) throw new Error("No se recibió el token de autenticación");
+
+      const userData = {
+        token: response.data.token,
+        user: {
+          id: response.data.userId,
+          name: response.data.userName,
+          email: response.data.email,
+          role: response.data.role,
+          isActive: response.data.isActive
+        }
+      };
+
+      // Loguear al usuario mediante AuthContext
+      const loginResult = await login(userData);
+
+      if (loginResult.success) {
+        toast.success("¡Inicio de sesión exitoso!");
+
+        // Redirigir según rol (mapear 'instructor' a 'teacher' para compatibilidad)
+        const role = response.data.role.toLowerCase();
+        if (role === "admin") {
+          navigate("/admin/dashboard");
+        } else if (role === "teacher" || role === "instructor") {
+          navigate("/teacher/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
-        throw new Error("La autenticación falló. Por favor intenta de nuevo.");
+        throw new Error(loginResult.error || "Error al iniciar sesión");
       }
+
     } catch (err) {
-      console.error("Login error:", err);
-      const errorMessage = err.response?.data?.message ||
-        err.message ||
-        "Ocurrió un error al iniciar sesión. Por favor intenta de nuevo.";
-      setError(errorMessage);
-      setToastInfo({ show: true, message: errorMessage, type: "error" });
+      console.error("Error en login:", err);
+      const msg = err.response?.data?.message || err.message || "Error al iniciar sesión";
+      setError(msg);
+      toast.error(msg);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <FormInput
-          label="Correo electrónico"
-          type="email"
-          name="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="tu@correo.com"
-          required
-          disabled={loading}
-        />
-        <FormInput
-          label="Contraseña"
-          type="password"
-          name="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Contraseña"
-          required
-          disabled={loading}
-        />
-
-        <button
-          type="submit"
-          className="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-gray-800 transition-colors duration-200 mt-4"
-
-        >
-          Iniciar Sesión
-        </button>
-      </form>
-
-      <Toast
-        show={toastInfo.show}
-        message={toastInfo.message}
-        type={toastInfo.type}
-        onClose={() => setToastInfo(prev => ({ ...prev, show: false }))}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <FormInput
+        label="Correo electrónico"
+        type="email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="tu@correo.com"
+        disabled={isLoading}
+        autoFocus
+        autoComplete="username"
       />
-    </>
+
+      <FormInput
+        label="Contraseña"
+        type="password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        placeholder="••••••••"
+        disabled={isLoading}
+        autoComplete="current-password"
+      />
+
+      <div className="flex items-center justify-between">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={e => setRememberMe(e.target.checked)}
+            className="h-4 w-4 text-red-500 rounded border-gray-300 focus:ring-red-500"
+          />
+          <span className="ml-2 text-sm text-gray-700">Recordarme</span>
+        </label>
+
+        <a href="/auth/forgot-password" className="text-sm font-medium text-red-500 hover:text-red-600">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full flex justify-center py-3 px-4 text-white bg-red-500 rounded-md hover:bg-red-600"
+        disabled={isLoading}
+      >
+        {isLoading ? <><Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />Iniciando sesión...</> : "Iniciar sesión"}
+      </Button>
+    </form>
   );
 }

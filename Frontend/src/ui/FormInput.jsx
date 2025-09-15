@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
-export default function FormInput({
+const FormInput = forwardRef(({
   label,
   type,
   name,
@@ -11,10 +11,11 @@ export default function FormInput({
   error = false,
   errorMessage = '',
   disabled = false,
-}) {
+  ...rest
+}, ref) => {
   const [showPassword, setShowPassword] = useState(false);
 
-  // Si es password, se cambia el tipo dinámicamente
+  // Cambiar dinámicamente el tipo de input para contraseñas
   const inputType = type === "password" && showPassword ? "text" : type;
 
   return (
@@ -39,6 +40,8 @@ export default function FormInput({
             ${error ? 'border-red-500 focus:ring-2 focus:ring-red-400' : 'focus:ring-2 focus:ring-red-400'}
             ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           required
+          ref={ref}
+          {...rest}
         />
 
         {type === "password" && (
@@ -57,4 +60,8 @@ export default function FormInput({
       )}
     </div>
   );
-}
+});
+
+FormInput.displayName = 'FormInput';
+
+export default FormInput;

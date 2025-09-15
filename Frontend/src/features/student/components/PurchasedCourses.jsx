@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/ui/card';
-import { Button } from '@/ui/button';
+import { Button } from '@/ui/Button';
 import { Progress } from '@/ui/progress';
 import { BookOpen, Clock, Award, Star, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -122,7 +122,7 @@ export default function PurchasedCourses() {
                   <Star className="h-3 w-3 mr-1 fill-current" />
                   {course.rating}
                 </div>
-                <div className="absolute bottom-2 left-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded">
+                <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
                   {course.category}
                 </div>
               </div>

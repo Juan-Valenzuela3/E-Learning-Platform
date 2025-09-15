@@ -288,14 +288,20 @@ export default function CursoDisponible() {
                   {isExpanded && (
                     <div className="pt-3 border-t border-gray-100 animate-in slide-in-from-bottom-2 duration-300">
                       <div className="flex gap-2">
-                        <button className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-1">
+                        <Link 
+                          to={`/curso/${course.id}/detalle`}
+                          className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
+                        >
                           <Play className="w-3 h-3" />
                           Vista previa
-                        </button>
-                        <button className="flex-1 bg-red-500 text-white py-2 rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-1">
+                        </Link>
+                        <Link 
+                          to={`/curso/${course.id}/detalle`}
+                          className="flex-1 bg-red-500 text-white py-2 rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-1"
+                        >
                           <Award className="w-3 h-3" />
-                          Comprar ahora
-                        </button>
+                          Ver curso
+                        </Link>
                       </div>
                     </div>
                   )}

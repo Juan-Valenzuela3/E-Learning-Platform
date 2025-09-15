@@ -267,13 +267,13 @@ class CourseServiceTest {
         Course c = new Course(); c.setId(7L); c.setInstructor(instructor);
 
         when(userService.findById(instructorId)).thenReturn(instructor);
-        when(courseRepository.findByInstructor(instructor)).thenReturn(List.of(c));
+        when(courseRepository.findByInstructorAndIsActive(instructor, true)).thenReturn(List.of(c));
 
         List<Course> list = courseService.getCoursesByInstructor(instructorId);
 
         assertEquals(1, list.size());
         assertEquals(7L, list.get(0).getId());
-        verify(courseRepository).findByInstructor(instructor);
+        verify(courseRepository).findByInstructorAndIsActive(instructor, true);
     }
 
     @Test

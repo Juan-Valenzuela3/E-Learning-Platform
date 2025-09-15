@@ -1,5 +1,6 @@
 package com.Dev_learning_Platform.Dev_learning_Platform.repositories;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,4 +55,13 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     List<Enrollment> findRecentEnrollments(@Param("thirtyDaysAgo") java.time.LocalDateTime thirtyDaysAgo);
 
     List<Enrollment> findByCourse(Course course);
+    
+    // Métodos para estadísticas administrativas
+    long countByStatus(EnrollmentStatus status);
+    long countByCreatedAtAfter(LocalDateTime dateTime);
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    List<Enrollment> findByCreatedAtAfter(LocalDateTime dateTime);
+    List<Enrollment> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    long countByCourseIsPremium(boolean isPremium);
+    List<Enrollment> findByCourseIn(List<Course> courses);
 }

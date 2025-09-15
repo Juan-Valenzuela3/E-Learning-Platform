@@ -8,8 +8,8 @@ export default function AnimatedLoaderToast({ message, type = "info", show, onCl
       setVisible(true);
       const timer = setTimeout(() => {
         setVisible(false);
-        setTimeout(onClose, 300); // esperar fade-out
-      }, 2000); // duración del toast
+        setTimeout(onClose, 300); // esperar desvanecimiento
+      }, 2000); // duración del mensaje emergente
       return () => clearTimeout(timer);
     }
   }, [show, onClose]);

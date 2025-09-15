@@ -32,6 +32,32 @@ const EditCourse = () => {
     price: '',
     level: 'Principiante',
     status: 'Borrador',
+    image: null,
+    urlVideo: '',
+    duration: 0,
+    resources: [],
+    completed: false,
+    instructor: 'Juan Pérez',
+    rating: 0,
+    totalStudents: 0,
+    modules: [
+      {
+        id: Date.now(),
+        title: 'Módulo 1: Introducción',
+        description: '',
+        lessons: [
+          {
+            id: Date.now() + 1,
+            title: 'Bienvenida al curso',
+            type: 'video',
+            video: null,
+            duration: 0,
+            resources: [],
+            completed: false
+          }
+        ]
+      }
+    ],
     students: [],
   });
 
