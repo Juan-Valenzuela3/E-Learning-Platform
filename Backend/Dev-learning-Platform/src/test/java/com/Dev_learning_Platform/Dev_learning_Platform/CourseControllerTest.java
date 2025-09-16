@@ -11,7 +11,6 @@ import com.Dev_learning_Platform.Dev_learning_Platform.services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -24,24 +23,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import java.util.List;
-
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CourseController.class)
 @ActiveProfiles("test")
 @EnableMethodSecurity
-@DisplayName("Pruebas para CourseController")
+@DisplayName("Pruebas para CourseController (Gestión de Cursos)")
 class CourseControllerTest {
 
     private final Long courseOwnerId = 1L;
@@ -130,7 +125,8 @@ class CourseControllerTest {
         // Act & Assert
         mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDto)))
+                        .content(objectMapper.writeValueAsString(createDto))
+                        .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -141,7 +137,8 @@ class CourseControllerTest {
         CourseCreateDto invalidDto = new CourseCreateDto(); // DTO vacío o con datos inválidos
         mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidDto)))
+                        .content(objectMapper.writeValueAsString(invalidDto))
+                        .with(csrf()))
                 .andExpect(status().isBadRequest());
     }
 
@@ -168,7 +165,8 @@ class CourseControllerTest {
         // Act & Assert
         mockMvc.perform(put("/api/courses/{id}", courseId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDto)))
+                        .content(objectMapper.writeValueAsString(updateDto))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Nuevo Título del Curso"));
     }
@@ -190,7 +188,8 @@ class CourseControllerTest {
         // Act & Assert
         mockMvc.perform(put("/api/courses/{id}", courseId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDto)))
+                        .content(objectMapper.writeValueAsString(updateDto))
+                        .with(csrf()))
                 .andExpect(status().isOk());
     }
 
@@ -211,7 +210,8 @@ class CourseControllerTest {
         // Act & Assert
         mockMvc.perform(put("/api/courses/{id}", courseId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDto)))
+                        .content(objectMapper.writeValueAsString(updateDto))
+                        .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -228,7 +228,7 @@ class CourseControllerTest {
         doNothing().when(courseService).deleteCourse(eq(courseId));
 
         // Act & Assert
-        mockMvc.perform(delete("/api/courses/{id}", courseId))
+        mockMvc.perform(delete("/api/courses/{id}", courseId).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -239,7 +239,7 @@ class CourseControllerTest {
         setupMockUser(studentId, "STUDENT");
 
         // Act & Assert
-        mockMvc.perform(delete("/api/courses/{id}", courseId))
+        mockMvc.perform(delete("/api/courses/{id}", courseId).with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -253,80 +253,7 @@ class CourseControllerTest {
                 .when(courseService).deleteCourse(eq(courseId));
 
         // Act & Assert
-        mockMvc.perform(delete("/api/courses/{id}", courseId))
+        mockMvc.perform(delete("/api/courses/{id}", courseId).with(csrf()))
                 .andExpect(status().isConflict());
-    }
-
-    // --- Tests para Acceso al Contenido del Curso (PB-009) ---
-
-    private Course setupCourseWithContent() {
-        Course courseWithContent = new Course();
-        courseWithContent.setId(courseId);
-        courseWithContent.setTitle("Curso de React Avanzado");
-        courseWithContent.setYoutubeUrls(List.of(
-                "https://youtube.com/watch?v=video1",
-                "https://youtube.com/watch?v=video2"
-        ));
-        when(courseService.findById(courseId)).thenReturn(courseWithContent);
-        return courseWithContent;
-    }
-
-    @Test
-    @DisplayName("[PB-009] Estudiante NO inscrito no puede ver contenido (403 Forbidden)")
-    @Disabled("Endpoint GET /api/courses/{id}/content no implementado")
-    void nonEnrolledStudent_isForbidden() throws Exception {
-        setupCourseWithContent();
-        setupMockUser(studentId, "STUDENT");
-        when(enrollmentService.isStudentEnrolled(eq(studentId), eq(courseId))).thenReturn(false);
-
-        mockMvc.perform(get("/api/courses/{id}/content", courseId))
-               .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @DisplayName("[PB-009] Estudiante INSCRITO puede ver contenido (200 OK)")
-    @Disabled("Endpoint GET /api/courses/{id}/content no implementado")
-    void enrolledStudent_canAccessContent() throws Exception {
-        setupCourseWithContent();
-        setupMockUser(studentId, "STUDENT");
-        when(enrollmentService.isStudentEnrolled(eq(studentId), eq(courseId))).thenReturn(true);
-
-        mockMvc.perform(get("/api/courses/{id}/content", courseId))
-               .andExpect(status().isOk())
-               .andExpect(jsonPath("$.title", is("Curso de React Avanzado")))
-               .andExpect(jsonPath("$.youtubeUrls", hasSize(2)));
-    }
-
-    @Test
-    @DisplayName("[PB-009] Instructor puede ver contenido (200 OK)")
-    @Disabled("Endpoint GET /api/courses/{id}/content no implementado")
-    void instructor_canAccessContent() throws Exception {
-        setupCourseWithContent();
-        setupMockUser(courseOwnerId, "INSTRUCTOR");
-
-        mockMvc.perform(get("/api/courses/{id}/content", courseId))
-               .andExpect(status().isOk())
-               .andExpect(jsonPath("$.youtubeUrls", hasSize(2)));
-    }
-
-    @Test
-    @DisplayName("[PB-009] Admin puede ver contenido (200 OK)")
-    @Disabled("Endpoint GET /api/courses/{id}/content no implementado")
-    void admin_canAccessContent() throws Exception {
-        setupCourseWithContent();
-        setupMockUser(adminId, "ADMIN");
-
-        mockMvc.perform(get("/api/courses/{id}/content", courseId))
-               .andExpect(status().isOk())
-               .andExpect(jsonPath("$.youtubeUrls", hasSize(2)));
-    }
-
-    @Test
-    @DisplayName("[PB-009] Usuario anónimo no puede ver contenido (403 Forbidden)")
-    @Disabled("Endpoint GET /api/courses/{id}/content no implementado")
-    void anonymous_isForbidden() throws Exception {
-        setupCourseWithContent();
-        mockMvc.perform(get("/api/courses/{id}/content", courseId))
-               .andExpect(status().isForbidden());
     }
 }

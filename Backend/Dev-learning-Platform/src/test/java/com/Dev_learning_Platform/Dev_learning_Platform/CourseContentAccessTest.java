@@ -5,12 +5,10 @@ import com.Dev_learning_Platform.Dev_learning_Platform.middlewares.JwtAuthentica
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Course;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.CourseService;
-import com.Dev_learning_Platform.Dev_learning_Platform.services.EnrollmentService;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.UserService;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +29,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,7 +44,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CourseController.class) // 1. Enfocamos el test en el controlador correcto
 @ActiveProfiles("test")
 @EnableMethodSecurity // 2. Habilitamos la seguridad a nivel de método para @PreAuthorize
-@Disabled("Deshabilitado hasta que el endpoint GET /api/courses/{id}/content sea implementado en CourseController")
 public class CourseContentAccessTest {
 
     @Autowired
@@ -57,7 +55,7 @@ public class CourseContentAccessTest {
     private CourseService courseService;
 
     @MockBean
-    private EnrollmentService enrollmentService;
+    private CourseSecurityService courseSecurityService;
 
     @MockBean
     private UserService userService;
@@ -95,8 +93,8 @@ public class CourseContentAccessTest {
         // Arrange: Simulamos un estudiante autenticado
         String studentEmail = "student@example.com";
         setupMockUser(studentId, studentEmail, "STUDENT");
-        // Arrange: Simulamos que el método isStudentEnrolled (que usa el ID) devuelve 'false'
-        when(enrollmentService.isStudentEnrolled(eq(studentId), eq(courseId))).thenReturn(false);
+        // Arrange: Simulamos que el servicio de seguridad devuelve 'false' para este usuario y curso
+        when(courseSecurityService.isEnrolled(any(), eq(courseId))).thenReturn(false);
 
         // Act & Assert
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
@@ -109,8 +107,8 @@ public class CourseContentAccessTest {
         // Arrange: Simulamos un estudiante autenticado
         String studentEmail = "student@example.com";
         setupMockUser(studentId, studentEmail, "STUDENT");
-        // Arrange: Simulamos que el método isStudentEnrolled (que usa el ID) devuelve 'true'
-        when(enrollmentService.isStudentEnrolled(eq(studentId), eq(courseId))).thenReturn(true);
+        // Arrange: Simulamos que el servicio de seguridad devuelve 'true'
+        when(courseSecurityService.isEnrolled(any(), eq(courseId))).thenReturn(true);
 
         // Act & Assert
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
@@ -123,6 +121,7 @@ public class CourseContentAccessTest {
     @DisplayName("Instructor puede ver contenido (200 OK)")
     void instructor_canAccessContent() throws Exception {
         setupMockUser(instructorId, "instructor@example.com", "INSTRUCTOR");
+        // Para un instructor, la regla de rol se aplica, por lo que no necesitamos mockear isEnrolled
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
                .andExpect(status().isOk())
                .andExpect(jsonPath("$.youtubeUrls", hasSize(2)));
@@ -132,6 +131,7 @@ public class CourseContentAccessTest {
     @DisplayName("Admin puede ver contenido (200 OK)")
     void admin_canAccessContent() throws Exception {
         setupMockUser(adminId, "admin@example.com", "ADMIN");
+        // Para un admin, la regla de rol se aplica
         mockMvc.perform(get("/api/courses/{id}/content", courseId))
                .andExpect(status().isOk())
                .andExpect(jsonPath("$.youtubeUrls", hasSize(2)));

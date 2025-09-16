@@ -4,6 +4,7 @@ import com.Dev_learning_Platform.Dev_learning_Platform.controllers.CourseVideoCo
 import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CourseVideoDto;
 import com.Dev_learning_Platform.Dev_learning_Platform.middlewares.JwtAuthenticationFilter;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.CourseVideo;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.CourseVideoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,6 +53,9 @@ class CourseVideoControllerTest {
     private CourseVideoService courseVideoService;
 
     @MockBean
+    private com.Dev_learning_Platform.Dev_learning_Platform.services.UserService userService;
+
+    @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     // ---------- HELPERS ----------
@@ -62,6 +67,11 @@ class CourseVideoControllerTest {
                 .password("password")
                 .authorities("ROLE_" + role)
                 .build();
+
+        User appUser = new User();
+        appUser.setId(userId);
+        appUser.setEmail(email);
+        when(userService.findByEmail(email)).thenReturn(appUser);
 
         SecurityContext ctx = SecurityContextHolder.createEmptyContext();
         ctx.setAuthentication(new UsernamePasswordAuthenticationToken(
@@ -103,7 +113,8 @@ class CourseVideoControllerTest {
         // Act & Assert
         mockMvc.perform(post("/api/course-videos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(videoDto)))
+                        .content(objectMapper.writeValueAsString(videoDto))
+                        .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(videoId))
                 .andExpect(jsonPath("$.title").value("Nuevo Video"));
@@ -118,12 +129,13 @@ class CourseVideoControllerTest {
 
         // El servicio lanzará una excepción de seguridad si el ID del instructor no coincide
         when(courseVideoService.addVideoToCourse(any(CourseVideoDto.class), eq(anotherInstructorId)))
-                .thenThrow(new SecurityException("Solo el instructor del curso puede agregar videos"));
+                .thenThrow(new org.springframework.security.access.AccessDeniedException("No eres el propietario de este curso"));
 
         // Act & Assert
         mockMvc.perform(post("/api/course-videos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(videoDto)))
+                        .content(objectMapper.writeValueAsString(videoDto))
+                        .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -138,7 +150,8 @@ class CourseVideoControllerTest {
         // La anotación @PreAuthorize("hasRole('INSTRUCTOR')") en el controlador debe bloquear esto
         mockMvc.perform(post("/api/course-videos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(videoDto)))
+                        .content(objectMapper.writeValueAsString(videoDto))
+                        .with(csrf()))
                 .andExpect(status().isForbidden());
     }
 
@@ -150,12 +163,13 @@ class CourseVideoControllerTest {
         CourseVideoDto videoDto = createVideoDto("https://not-a-youtube-url.com");
 
         when(courseVideoService.addVideoToCourse(any(CourseVideoDto.class), eq(courseOwnerId)))
-                .thenThrow(new IllegalArgumentException("URL de YouTube inválida"));
+                .thenThrow(new IllegalArgumentException("URL de YouTube inválida o video no encontrado"));
 
         // Act & Assert
         mockMvc.perform(post("/api/course-videos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(videoDto)))
+                        .content(objectMapper.writeValueAsString(videoDto))
+                        .with(csrf()))
                 .andExpect(status().isBadRequest());
     }
 
@@ -169,7 +183,7 @@ class CourseVideoControllerTest {
         doNothing().when(courseVideoService).deleteVideo(eq(videoId), eq(courseOwnerId));
 
         // Act & Assert
-        mockMvc.perform(delete("/api/course-videos/{videoId}", videoId))
+        mockMvc.perform(delete("/api/course-videos/{videoId}", videoId).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -178,11 +192,11 @@ class CourseVideoControllerTest {
     void deleteVideo_byAnotherInstructor_shouldBeForbidden() throws Exception {
         // Arrange
         setupMockUser(anotherInstructorId, "INSTRUCTOR");
-        doThrow(new SecurityException("Solo el instructor del curso puede eliminar videos"))
+        doThrow(new org.springframework.security.access.AccessDeniedException("Solo el instructor del curso puede eliminar videos"))
                 .when(courseVideoService).deleteVideo(eq(videoId), eq(anotherInstructorId));
 
         // Act & Assert
-        mockMvc.perform(delete("/api/course-videos/{videoId}", videoId))
+        mockMvc.perform(delete("/api/course-videos/{videoId}", videoId).with(csrf()))
                 .andExpect(status().isForbidden());
     }
 }
