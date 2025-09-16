@@ -112,7 +112,8 @@ class CourseControllerTest {
         // Act & Assert
         mockMvc.perform(post("/api/courses")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDto)))
+                        .content(objectMapper.writeValueAsString(createDto))
+                        .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(courseId))
                 .andExpect(jsonPath("$.title").value("Curso de Introducción a Docker"));
