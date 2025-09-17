@@ -1,121 +1,44 @@
-import React, { useState, useEffect } from 'react';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/ui/card';
 import { Button } from '@/ui/Button';
 import { Input } from '@/ui/Input';
 import { Label } from '@/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import { Pencil, Save, X, Mail } from 'lucide-react';
-import { toast } from 'sonner';
+import { useProfileForm } from '@/shared/hooks/useProfileFrom';
 import profileService from '@/services/profileService';
 
 const TeacherProfileEditor = () => {
-  const [formData, setFormData] = useState({
-    userName: '',
-    lastName: '',
-    email: '',
-    profileImageUrl: '',
-    bio: '',
-    specialty: '',
-    website: '',
-    socialMedia: { twitter: '', linkedin: '', github: '' },
-    avatar: ''
-  });
-  const [originalData, setOriginalData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [errors, setErrors] = useState({});
 
-  // Cargar datos del perfil
-  useEffect(() => {
-    const loadProfile = async () => {
-      setLoading(true);
-      try {
-        const userData = await profileService.getCurrentUser(true);
-        const initialData = {
-          userName: userData.userName || '',
-          lastName: userData.lastName || '',
-          email: userData.email || '',
-          profileImageUrl: userData.profileImageUrl || '',
-          bio: userData.bio || '',
-          specialty: userData.specialty || '',
-          website: userData.website || '',
-          socialMedia: {
-            twitter: userData.twitter || '',
-            linkedin: userData.linkedin || '',
-            github: userData.github || ''
-          },
-          avatar: userData.profileImageUrl || ''
-        };
-        setFormData(initialData);
-        setOriginalData(initialData);
-      } catch (err) {
-        console.error('Error loading profile:', err);
-        setError(err.message || "Error al obtener el perfil del usuario");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProfile();
-  }, []);
+  const {
+    formData,
+    loading,
+    updating,
+    error,
+    isEditing,
+    errors,
+    handleChange,
+    handleSave,
+    handleCancel,
+    setIsEditing
+  } = useProfileForm(profileService);
 
-  // Validación
-  const validate = () => {
-    const newErrors = {};
-    if (!formData.userName?.trim()) newErrors.userName = 'El nombre es obligatorio';
-    else if (formData.userName.trim().length < 2) newErrors.userName = 'Mínimo 2 caracteres';
-    if (!formData.lastName?.trim()) newErrors.lastName = 'El apellido es obligatorio';
-    else if (formData.lastName.trim().length < 2) newErrors.lastName = 'Mínimo 2 caracteres';
-    if (!formData.email?.trim()) newErrors.email = 'El correo es obligatorio';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Formato inválido';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  if (loading){
+    return (
+      <div className="flex items-center justify-center h-full">
+  <div
+    className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-red-500 motion-reduce:animate-[spin_1.5s_linear_infinite]"
+    role="status"
+  >
+    <span
+      className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
+      ></span>
+  </div>
+</div>
+    )
 
-  // Manejar cambios en inputs
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name.includes('socialMedia.')) {
-      const key = name.split('.')[1];
-      setFormData((prev) => ({
-        ...prev,
-        socialMedia: { ...prev.socialMedia, [key]: value }
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  // Guardar perfil
-  const handleSave = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-    setUpdating(true);
-    setError(null);
-    try {
-      const updatedUser = await profileService.updateProfile(formData);
-      setFormData(updatedUser);
-      setOriginalData(updatedUser);
-      toast.success("Perfil actualizado correctamente ✅");
-      setIsEditing(false);
-    } catch (err) {
-      console.error('Error updating profile:', err);
-      setError(err.message || 'Error al actualizar el perfil');
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  // Cancelar edición
-  const handleCancel = () => {
-    setFormData({ ...originalData });
-    setIsEditing(false);
-    setErrors({});
-  };
-
-  if (loading) return <div className="flex items-center justify-center h-64 animate-spin rounded-full border-t-2 border-b-2 border-red-500"></div>;
-  if (error) return <p className="text-red-600 text-center mt-4">{error}</p>;
+  }
+  if (error && !isEditing) return <p className="text-red-600 text-center mt-4">{error}</p>;
 
   return (
     <div className="space-y-6 p-6">

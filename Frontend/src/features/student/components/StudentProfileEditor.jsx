@@ -1,388 +1,343 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/ui/card';
 import { Button } from '@/ui/Button';
 import { Input } from '@/ui/Input';
 import { Label } from '@/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
-import { Pencil, Save, X, User, Mail, Briefcase, RefreshCw, AlertCircle, EyeOff, Eye } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Pencil, Save, X, Mail, Upload } from 'lucide-react';
+import { toast } from 'sonner';
+import profileService from '@/services/profileService';
+import uploadService from '@/services/uploadService';
 
-
-// Componente para editar el perfil con rol de estudiante
-export default function StudentProfileEditor() {
-  // aqui estamos utilizando un contexto de autenticacion para obtener los datos del usuario autenticado
-  const { user, updateProfile } = useAuth();
-
-  //Aqui estamos utilizando el useState para los estado de los componentes
-  const [userData, setUserData] = useState({
+const StudentProfileEditor = () => {
+  const [formData, setFormData] = useState({
     userName: '',
     lastName: '',
     email: '',
-    password: '',
-    occupation: '',
-    avatar: ''
+    profileImageUrl: '',
+    bio: '',
+    specialty: '',
+    website: '',
+    twitter: '',
+    linkedin: '',
+    github: ''
   });
-  const [initialData, setInitialData] = useState(null);
+  const [originalData, setOriginalData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [banner, setBanner] = useState({ type: '', message: '' });
   const [errors, setErrors] = useState({});
-  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
-
-  //Utilizamos un useEffect para poder cargar los datos del usuario autenticado
-
-  const loadProfile = async () => {
-    console.log("Loading profile for user:", user);
-  
-    if (!user) {
-      console.log("No user found in context");
-      setBanner({ type: "error", message: "No hay usuario autenticado" });
-      setLoading(false);
-      return;
-    }
-  
-    try {
+  // Cargar datos del perfil
+  useEffect(() => {
+    const loadProfile = async () => {
       setLoading(true);
-      setBanner({ type: "", message: "" }); // Limpiar errores previos
-  
-      const response = await api.get("/users/profile");
-      console.log("Profile loaded from service:", response.data);
-  
-      // Mapeamos los datos de la API a nuestro state
-      const profileData = {
-        id: response.data.id,
-        userName: response.data.userName,
-        lastName: response.data.lastName,
-        email: response.data.email,
-        role: response.data.role,
-        isActive: response.data.isActive,
-      };
-  
-      setProfile(profileData);
-      console.log("Mapped profile data:", profileData);
-  
-      // Si tienes otros states relacionados
-      setUserData(profileData);
-      setInitialData(profileData);
-  
-    } catch (e) {
-      console.error("Error loading profile:", e);
-      setBanner({
-        type: "error",
-        message:
-          e?.response?.data?.message ||
-          "No se pudo cargar el perfil. Verifica que estés autenticado correctamente.",
-      });
-    } finally {
-      setLoading(false);
+      try {
+        const userData = await profileService.getCurrentUser(true);
+        const initialData = {
+          userName: userData.userName || '',
+          lastName: userData.lastName || '',
+          email: userData.email || '',
+          profileImageUrl: userData.profileImageUrl || null,
+          bio: userData.bio || '',
+          specialty: userData.specialty || '',
+          website: userData.website || '',
+          twitter: userData.twitter || '',
+          linkedin: userData.linkedin || '',
+          github: userData.github || ''
+        };
+        setFormData(initialData);
+        setOriginalData(initialData);
+      } catch (err) {
+        console.error('Error loading profile:', err);
+        setError(err.message || "Error al obtener el perfil del usuario");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
+  }, []);
+
+  // Validación
+  const validate = () => {
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.userName?.trim()) newErrors.userName = 'El nombre es obligatorio.';
+    else if (formData.userName.trim().length < 2 || formData.userName.trim().length > 50) {
+      newErrors.userName = 'El nombre debe tener entre 2 y 50 caracteres.';
     }
+    // Añade la validación de solo letras y espacios si es necesario
+    if (!formData.lastName?.trim()) newErrors.lastName = 'El apellido es obligatorio.';
+    else if (formData.lastName.trim().length < 2 || formData.lastName.trim().length > 50) {
+      newErrors.lastName = 'El apellido debe tener entre 2 y 50 caracteres.';
+    }
+    // Añade la validación de solo letras y espacios si es necesario
+    if (!formData.email?.trim()) newErrors.email = 'El correo es obligatorio.';
+    else if (!emailRegex.test(formData.email.trim())) {
+      newErrors.email = 'El formato del correo es inválido.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
-  
-    
 
-  //Se agregan una funcion de para manejar los cambios en los formularios
-
+  // Manejar cambios en inputs
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserData(prevData => ({ ...prevData, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
-    if (banner.message) setBanner({ type: '', message: '' });
-  };
-
-  const validate = () => {
-    const newErr = {};
-    if (!userData.userName.trim()) newErr.userName = 'El nombre es obligatorio';
-    if (!userData.lastName.trim()) newErr.lastName = 'El apellido es obligatorio';
-    if (!userData.email.trim()) newErr.email = 'El correo es obligatorio';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) newErr.email = 'Correo inválido';
-    // La contraseña es opcional para actualización
-    setErrors(newErr);
-    return Object.keys(newErr).length === 0;
-  };
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-    if (!validate()) {
-      setBanner({ type: 'error', message: 'Corrige los errores del formulario' });
-      return;
+    if (name.includes('socialMedia.')) {
+      const key = name.split('.')[1];
+      setFormData((prev) => ({
+        ...prev,
+        socialMedia: { ...prev.socialMedia, [key]: value }
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  };
 
-    setSaving(true);
-    setBanner({ type: '', message: '' });
+  //manejo el cambio de archivo de la foto de perfil
+  const handleFileChange = async (e) =>{
+    const file = e.target.files[0];
+    if (file){
+      setUploadingImage(true);
+      setError(null);
+      try{
+        const imageUrl = await uploadService.uploadingImage(file);
 
-    try {
-      const updateData = {
-        name: userData.userName,
-        lastName: userData.lastName,
-        email: userData.email,
-        occupation: userData.occupation,
-        avatar: userData.avatar,
-      };
-
-      // Solo incluir contraseña si se proporcionó una nueva
-      if (userData.password && userData.password.trim()) {
-        updateData.password = userData.password;
+        setFormData(prev => ({...prev, profileImageUrl: imageUrl}));
+        setSelectedFile(null);
+        toast.success("Imagen subida correctamente. No olvides guardar los cambios.")
+      }catch (err){
+        console.error('Error uploadingimage:', err);
+        setError(err.message || 'Error al subir la imagen. Por favor intenta nuevamente.');
+      }finally{
+        setUploadingImage(false);
       }
-
-      // Actualizar perfil usando el contexto para que se refleje en el sidebar
-      await updateProfile(updateData);
-      setInitialData(userData);
-      setIsEditing(false);
-      setBanner({ type: 'success', message: 'Perfil actualizado correctamente' });
-    } catch (e) {
-      console.error('Error updating profile:', e);
-      setBanner({ type: 'error', message: e?.response?.data?.message || 'Error al actualizar el perfil' });
-    } finally {
-      setSaving(false);
     }
-  };
-
-  const handleAvatarClick = () => {
-    if (isEditing && !saving) {
-      fileInputRef.current?.click();
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setUserData(prev => ({ ...prev, avatar: event.target.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
-
-  const getFallbackAvatar = (name) => {
-    const initials = name ? name.split('').map(n => n[0]).join('').toUpperCase() : 'U';
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=0D8ABC&color=fff&font-size=0.3&length=2`;
   }
 
-  const titleByRole = user?.role === 'teacher' ? 'Perfil del Instructor' : 'Perfil del Estudiante';
-  const subtitleByRole = isEditing ? 'Actualiza tu información personal' : 'Detalles de tu cuenta';
+  // Guardar perfil
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!validate()){
+      toast.error("Por favor corrige los errores en el formulario.")
+      return;
+    }
+    const dataToSend = {
+      userName: formData.userName,
+      lastName: formData.lastName,
+      email: formData.email,
+     
+      profileImageUrl: formData.profileImageUrl || null,
+      bio: formData.bio || null,
+      specialty: formData.specialty || null,
+      website: formData.website || null,
+      twitter: formData.twitter || null,
+      linkedin: formData.linkedin || null,
+      github: formData.github || null,
+    };
+     
+    setUpdating(true);
+    setError(null);
+    try {
+      const updatedUser = await profileService.updateProfile(dataToSend);
+      setFormData(updatedUser);
+      setOriginalData(updatedUser);
+      toast.success("Perfil actualizado correctamente ✅");
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+
+      const backendMessage = err?.response?.data?.message;
+      if (backendMessage) {
+        toast.error(backendMessage);
+        setError(backendMessage);
+      } else {
+        toast.error('Error al actualizar el perfil');
+        setError('Error al actualizar el perfil');
+      }
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Cancelar edición
+  const handleCancel = () => {
+    setFormData({ ...originalData });
+    setIsEditing(false);
+    setErrors({});
+  };
+
+  if (loading){
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+      </div>
+    ) 
+
+  } 
+  if (error && !isEditing) return <p className="text-red-600 text-center mt-4">{error}</p>;
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-8rem)] p-4">
-      <Card className="w-full max-w-2xl shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-t-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-2xl font-bold">
-                {loading ? 'Cargando…' : (isEditing ? 'Editar Perfil' : titleByRole)}
-              </CardTitle>
-              <CardDescription className="text-red-100">
-                {subtitleByRole}
-              </CardDescription>
-            </div>
-            {!loading && !isEditing && (
-              <Button
-                onClick={() => setIsEditing(true)}
-                variant="outline"
-                className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
-              >
-                <Pencil className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-            )}
+    <div className="space-y-6 p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Mi Perfil</h2>
+          <p className="text-gray-600 text-sm">Gestiona la información de tu perfil de Estudiante</p>
+        </div>
+        {!isEditing ? (
+          <Button onClick={() => setIsEditing(true)} className="bg-red-500 hover:bg-red-600 text-white">
+            <Pencil className="h-4 w-4 mr-2" />
+            Editar Perfil
+          </Button>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={handleCancel} className="w-full sm:w-auto">
+              <X className="h-4 w-4 mr-2" /> Cancelar
+            </Button>
+            <Button onClick={handleSave} className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto">
+              <Save className="h-4 w-4 mr-2" />{updating ? 'Guardando..': 'Guardar Cambios'}
+            </Button>
           </div>
+        )}
+      </div>
+
+      <Card className="overflow-hidden shadow-sm border border-gray-200">
+        <CardHeader className="bg-gray-50 border-b p-4">
+          <CardTitle className="text-base font-semibold text-gray-800">Información Personal</CardTitle>
+          <CardDescription className="text-sm text-gray-500">Actualiza tu información personal y de contacto.</CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
-          {banner.message && (
-            <div className={`mb-4 p-3 rounded-md text-sm ${banner.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
-              {banner.message}
-            </div>
-          )}
-
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <RefreshCw className="h-8 w-8 animate-spin text-red-500 mb-4" />
-              <p className="text-gray-600">Cargando perfil...</p>
-            </div>
-          ) : !user ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <AlertCircle className="h-8 w-8 text-red-500 mb-4" />
-              <p className="text-gray-600">No hay usuario autenticado</p>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col items-center mb-8">
-                <div className="relative group">
-                  <Avatar className="h-32 w-32 border-4 border-red-100 shadow-lg">
-                    <AvatarImage 
-                    src={userData.avatar || getFallbackAvatar(userData.userName)}
-                    alt={userData.userName}
-                    onError={(e) => {e.target.src = getFallbackAvatar(userData.userName)}}
+        <CardContent className="p-4 sm:p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="relative group">
+              <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2 border-gray-100">
+                <AvatarImage src={formData.profileImageUrl || `https://ui-avatars.com/api/?name=${formData.userName}+${formData.lastName}&background=E5E7EB&color=6B7280`} alt={`${formData.userName} ${formData.lastName}`} />
+                <AvatarFallback className="bg-gray-100 text-gray-600">
+                  {formData.userName?.[0]}{formData.lastName?.[0] || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              {isEditing && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <label 
+                  className="p-2 bg-white bg-opacity-80 rounded-full cursor-pointer" 
+                  title="Por el momento no se puede cambiar la foto de perfil">
+                    {uploadingImage ? (
+                      <div className='animate-spin'>
+                        <Upload className='h-4 w-4 text-gray-800'/>
+                      </div>
+                    ) : (
+                      <Pencil className="h-4 w-4 text-gray-800" />
+                    )}
+                    
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      disabled={true}
                     />
-                    <AvatarFallback className="text-3xl bg-red-100 text-red-600">
-                      {getInitials(userData.userName || 'U')}
-                    </AvatarFallback>
-                  </Avatar>
-                  {isEditing && (
-                    <div
-                      className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      onClick={handleAvatarClick}
-                    >
-                      <Pencil className="h-6 w-6 text-white" />
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
-                        className="hidden"
-                        accept="image/*"
-                      />
-                    </div>
-                  )}
+                  </label>
                 </div>
-                <h2 className="mt-4 text-xl font-semibold text-gray-900">
-                  {userData.userName} {userData.lastName}
-                </h2>
-                <p className="text-white bg-red-500 px-3 py-1 rounded-full text-sm mt-2 capitalize font-medium">
-                  {user?.role || 'Estudiante'}
-                </p>
-                <p className="text-gray-600 mt-1">{userData.occupation || 'Sin ocupación especificada'}</p>
-
-              </div>
-
-              {!isEditing ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-red-500">
-                      <div className="flex items-center mb-2">
-                        <Mail className="h-4 w-4 text-red-500 mr-2" />
-                        <h4 className="text-sm font-medium text-gray-700">Correo Electrónico</h4>
-                      </div>
-                      <p className="text-gray-900 break-all">{userData.email || 'No especificado'}</p>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-red-500">
-                      <div className="flex items-center mb-2">
-                        <Briefcase className="h-4 w-4 text-red-500 mr-2" />
-                        <h4 className="text-sm font-medium text-gray-700">Ocupación</h4>
-                      </div>
-                      <p className="text-gray-900">{userData.occupation || 'No especificada'}</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-center pt-4">
-                    <Button
-                      onClick={() => setIsEditing(true)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-6 py-2"
-                    >
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Editar Información
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleSave} className="space-y-6">
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                        Nombres
-                      </Label>
-                      <Input
-                        id="userName"
-                        name="userName"
-                        value={userData.userName || ''}
-                        onChange={handleChange}
-                        disabled={saving}
-                        className={`mt-1 ${errors.userName ? 'border-red-500' : ''}`}
-                      />
-                      {errors.userName && <p className="text-xs text-red-600 mt-1">{errors.userName}</p>}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                        Apellidos
-                      </Label>
-                      <Input
-                        id="lastName"
-                        name="lastName"
-                        value={userData.lastName || ''}
-                        onChange={handleChange}
-                        disabled={saving}
-                        className={`mt-1 ${errors.lastName ? 'border-red-500' : ''}`}
-                      />
-                      {errors.lastName && <p className="text-xs text-red-600 mt-1">{errors.lastName}</p>}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                        Nueva Contraseña
-                      </Label>
-
-
-                      <Input
-
-                        id="password"
-                        name="password"
-                        type="password"
-                        value={userData.password || ''}
-                        onChange={handleChange}
-                        disabled={saving}
-                        className={`mt-1 ${errors.password ? 'border-red-500' : ''}`}
-                      />
-                      {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                        Correo Electrónico
-                      </Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={userData.email || ''}
-                        onChange={handleChange}
-                        disabled={saving}
-                        className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
-                      />
-                      {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
-                    </div>
-                    <div className="space-y-2 sm:col-span-2">
-                      <Label htmlFor="occupation" className="text-sm font-medium text-gray-700">
-                        Ocupación
-                      </Label>
-                      <Input
-                        id="occupation"
-                        name="occupation"
-                        value={userData.occupation || ''}
-                        onChange={handleChange}
-                        disabled={saving}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => { setIsEditing(false); setUserData(initialData || userData); setErrors({}); setBanner({ type: '', message: '' }); }}
-                      className="flex items-center"
-                      disabled={saving}
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Cancelar
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="bg-red-500 hover:bg-red-600 flex items-center disabled:opacity-60"
-                      disabled={saving}
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {saving ? 'Guardando…' : 'Guardar Cambios'}
-                    </Button>
-                  </div>
-                </form>
               )}
-            </>
-          )}
+            </div>
+            <div className="text-center sm:text-left">
+              <h3 className="text-xl font-semibold text-gray-900">{formData.userName} {formData.lastName}</h3>
+              <p className="text-gray-600 text-sm">{formData.specialty || 'Sin especialidad'}</p>
+              <div className="flex justify-center sm:justify-start gap-3 mt-3">
+                <a href={`mailto:${formData.email}`} className="text-gray-500 hover:text-red-500" title="Enviar correo">
+                  <Mail className="h-5 w-5" />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            {/* Nombre */}
+            <div className="mb-4">
+              <Label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">Nombre <span className='text-red-500'>*</span></Label>
+              {isEditing ? (
+                <>
+                  <Input
+                    id="userName"
+                    name="userName"
+                    value={formData.userName}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border ${errors.userName ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm`}
+                  />
+                  {errors.userName && <p className="mt-1 text-xs text-red-600">{errors.userName}</p>}
+                </>
+              ) : (
+                <p className="text-gray-900 py-2 px-3 bg-gray-50 rounded-md border border-gray-200">{formData.userName || 'No especificado'}</p>
+              )}
+            </div>
+
+            {/* Apellidos */}
+            <div className="mb-4">
+              <Label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">Apellidos <span className='text-red-500'>*</span></Label>
+              {isEditing ? (
+                <>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border ${errors.lastName ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm`}
+                  />
+                  {errors.lastName && <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>}
+                </>
+              ) : (
+                <p className="text-gray-900 py-2 px-3 bg-gray-50 rounded-md border border-gray-200">{formData.lastName || 'No especificado'}</p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div className="mb-4">
+              <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico <span className='text-red-500'>*</span></Label>
+              {isEditing ? (
+                <>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm`}
+                  />
+                  {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+                </>
+              ) : (
+                <p className="text-gray-900 py-2 px-3 bg-gray-50 rounded-md border border-gray-200">{formData.email || 'No especificado'}</p>
+              )}
+            </div>
+
+            {/* Especialidad */}
+            <div className="mb-4">
+              <Label htmlFor="specialty" className="block text-sm font-medium text-gray-700 mb-1">Especialidad <span className='text-red-500'>*</span></Label>
+              {isEditing ? (
+                <Input id="specialty" name="specialty" value={formData.specialty} onChange={handleChange} placeholder="Ej: Desarrollo Web" className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
+              ) : (
+                <p className="text-gray-900 py-2 px-3 bg-gray-50 rounded-md border border-gray-200">{formData.specialty || 'No especificado'}</p>
+              )}
+            </div>
+
+            {/* Biografía */}
+            <div className="sm:col-span-2 mb-4">
+              <Label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">Biografía <span className='text-red-500'>*</span></Label>
+              {isEditing ? (
+                <textarea id="bio" name="bio" rows={4} value={formData.bio} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm" placeholder="Cuéntanos sobre ti..." />
+              ) : (
+                <p className="text-gray-900 whitespace-pre-line py-2 px-3 bg-gray-50 rounded-md border border-gray-200 min-h-[100px]">{formData.bio || 'No hay biografía disponible'}</p>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export default StudentProfileEditor;

@@ -6,9 +6,9 @@ export const routeTitles = {
   // Rutas públicas
   '/': 'Inicio',
   '/authentication': 'Iniciar sesión',
-  '/register': 'Registro',
-  '/forgot-password': 'Recuperar contraseña',
-  '/reset-password': 'Restablecer contraseña',
+  '/authentication/register': 'Registro',
+  '/authentication/forgot-password': 'Recuperar contraseña',
+  '/authentication/reset-password': 'Restablecer contraseña',
   '/courses': 'Catálogo de cursos',
   '/courses/:id': 'Detalles del curso',
   '/about': 'Sobre nosotros',
@@ -19,14 +19,14 @@ export const routeTitles = {
   
   // Rutas de estudiante
   '/dashboard': 'Panel de control',
-  '/my-courses': 'Mis cursos',
-  '/my-courses/:id': 'Curso en progreso',
-  '/profile': 'Mi perfil',
-  '/settings': 'Configuración',
+  '/mis-cursos': 'Mis cursos',
+  '/mis-cursos/:id': 'Curso en progreso',
+  '/perfil': 'Mi perfil',
+  '/configuracion': 'Configuración',
   
   // Rutas de profesor
   '/instructor/dashboard': 'Panel del instructor',
-  '/instructor/courses': 'Mis cursos',
+  '/instructor/cursos': 'Mis cursos',
   '/instructor/courses/new': 'Nuevo curso',
   '/instructor/courses/:id': 'Editar curso',
   '/instructor/students': 'Estudiantes',

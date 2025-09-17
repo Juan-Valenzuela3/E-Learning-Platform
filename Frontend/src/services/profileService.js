@@ -39,31 +39,12 @@ const getCurrentUser = async (forceRefresh = false) => {
  */
 const updateProfile = async (userData) => {
   try {
-    const response = await api.put('/api/users/profile', {
-      userName: userData.userName,
-      lastName: userData.lastName,
-      email: userData.email,
-      profileImageUrl: userData.profileImageUrl
-    });
-
-    if (response?.data) {
-      return {
-        id: response.data.id,
-        userName: response.data.userName,
-        lastName: response.data.lastName,
-        email: response.data.email,
-        role: response.data.role,
-        isActive: response.data.isActive,
-        profileImageUrl: response.data.profileImageUrl,
-        createdAt: response.data.createdAt,
-        updatedAt: response.data.updatedAt
-      };
-    }
-
-    throw { message: 'No se pudieron actualizar los datos del usuario' };
+    const response = await api.put('/api/users/profile', userData);
+    
+    return response.data;
   } catch (error) {
     const message = error?.response?.data?.message || error?.message || 'Error al actualizar el perfil';
-    console.error('Error al guardar los cambios del perfil:', message);
+    console.error('Error al actualizar el perfil:', message);
     throw { message };
   }
 };
@@ -84,6 +65,8 @@ const updatePassword = async ({ currentPassword, newPassword }) => {
     throw { message };
   }
 };
+
+
 
 export default {
   getCurrentUser,

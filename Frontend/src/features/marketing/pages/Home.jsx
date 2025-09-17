@@ -1,68 +1,136 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
-import LoadingSpinner from '@/components/LoadingSpinner';
+// src/features/marketing/pages/Home.jsx
+
+import React, { Suspense, lazy, useEffect, useState, useRef } from 'react';
+import LoadingSpinner from '@/shared/components/LoadingSpinner';
+
+// ⚠️ Importa tu servicio de API para obtener los datos
+import { getCourses } from "@/services/courseService";
 
 // Componentes críticos (carga inmediata)
 import HeroSection from "@/features/marketing/components/HeroSection";
 
 // Componentes no críticos (carga diferida)
-const CursoDisponible = lazy(() => import("@/features/marketing/components/CursoCard"));
 const Price = lazy(() => import("@/features/marketing/components/Price"));
-const InstuctoresCard = lazy(() => import("@/features/marketing/components/InstructoresCard"));
-const TestimonioCard = lazy(() => import("@/features/marketing/components/testimonioCard"));
+const InstructoresCard = lazy(() => import("@/features/marketing/components/InstructoresCard"));
+const TestimonioCard = lazy(() => import("@/features/marketing/components/TestimonioCard"));
 const CtaButton = lazy(() => import("@/features/marketing/components/CTAButton"));
+const CursosSugeridos = lazy(() => import("@/features/marketing/pages/CatalogoCursos"));
 
-// Componente de carga personalizado
 const LoadingPlaceholder = ({ height = 'h-96' }) => (
-  <div className={`${height} w-full flex items-center justify-center`}>
+  <div className={`${height} w-full flex items-center justify-center bg-gray-50 rounded-lg`}>
     <LoadingSpinner />
   </div>
 );
 
-export default function Home() {
-  const [isClient, setIsClient] = useState(false);
-  const [isVisible, setIsVisible] = useState([true, false, false, false, false]);
+const LazyLoadWrapper = ({ children, placeholderHeight }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
 
-  // Marcar que el componente se ha montado en el cliente
   useEffect(() => {
-    setIsClient(true);
+    if (isVisible || !ref.current) {
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0.1,
+      }
+    );
+    observer.observe(ref.current);
+    return () => {
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, [isVisible]);
 
-    // Cargar componentes no críticos después de que la página principal esté lista
-    const timer = setTimeout(() => {
-      setIsVisible([true, true, true, true, true]);
-    }, 100);
+  return (
+    <div ref={ref}>
+      <Suspense fallback={<LoadingPlaceholder height={placeholderHeight} />}>
+        {isVisible ? children : <LoadingPlaceholder height={placeholderHeight} />}
+      </Suspense>
+    </div>
+  );
+};
 
-    return () => clearTimeout(timer);
+export default function Home() {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const data = await getCourses();
+        if (Array.isArray(data)) {
+          setCourses(data);
+        } else {
+          setError("El formato de datos de la API es incorrecto.");
+        }
+      } catch (err) {
+        setError("Error al cargar los cursos.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
   }, []);
 
-  if (!isClient) {
-    return <LoadingPlaceholder height="h-screen" />;
+  if (loading) {
+    return (
+      <div className="home-container space-y-16 md:space-y-24">
+        <HeroSection />
+        <div className="text-center py-8">
+            <LoadingSpinner />
+            <p className="mt-2 text-gray-500">Cargando cursos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+        <div className="home-container space-y-16 md:space-y-24">
+          <HeroSection />
+          <div className="text-center py-8 text-red-500">
+              <p>{error}</p>
+          </div>
+        </div>
+    );
   }
 
   return (
-    <div className="space-y-16 md:space-y-24">
-      {/* Hero Section - Carga inmediata */}
+    <div className="home-container space-y-16 md:space-y-24">
       <HeroSection />
-      
-      {/* Secciones con carga diferida */}
-      <Suspense fallback={<LoadingPlaceholder />}>
-        {isVisible[0] && <CursoDisponible />}
-      </Suspense>
-      
-      <Suspense fallback={<LoadingPlaceholder />}>
-        {isVisible[1] && <Price />}
-      </Suspense>
-      
-      <Suspense fallback={<LoadingPlaceholder />}>
-        {isVisible[2] && <InstuctoresCard />}
-      </Suspense>
-      
-      <Suspense fallback={<LoadingPlaceholder />}>
-        {isVisible[3] && <TestimonioCard />}
-      </Suspense>
-      
-      <Suspense fallback={<LoadingPlaceholder />}>
-        {isVisible[4] && <CtaButton />}
-      </Suspense>
+
+      {/* ✅ Pasamos la prop 'courses' al componente CursosSugeridos */}
+      <LazyLoadWrapper placeholderHeight="h-80">
+        <CursosSugeridos courses={courses} />
+      </LazyLoadWrapper>
+
+
+      <LazyLoadWrapper placeholderHeight="h-80">
+        <Price />
+      </LazyLoadWrapper>
+
+      <LazyLoadWrapper placeholderHeight="h-96">
+        <InstructoresCard />
+      </LazyLoadWrapper>
+
+      <LazyLoadWrapper placeholderHeight="h-96">
+        <TestimonioCard />
+      </LazyLoadWrapper>
+
+      <LazyLoadWrapper placeholderHeight="h-64">
+        <CtaButton />
+      </LazyLoadWrapper>
     </div>
   );
 }

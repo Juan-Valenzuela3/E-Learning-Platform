@@ -1,3 +1,5 @@
+// src/components/UpcomingEvents.jsx
+
 import { Button } from "@/ui/Button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/ui/card";
 import { Calendar, Clock, MoreHorizontal, Video } from "lucide-react";
@@ -12,7 +14,8 @@ const getEventDateLabel = (date) => {
 };
 
 export default function UpcomingEvents({ events, onJoinEvent }) {
-  if (events.length === 0) {
+  // ✅ Comprobación defensiva para manejar eventos no definidos o vacíos
+  if (!events || events.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -38,15 +41,18 @@ export default function UpcomingEvents({ events, onJoinEvent }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {events.map((event) => (
-          <div key={event.id} className="group flex items-start">
-            <div className="bg-blue-50 p-2 rounded-lg mr-3">
-              <Calendar className="h-5 w-5 text-blue-600" />
+          <div key={event.id} className="flex items-start">
+            <div className="mr-4 mt-1 flex-shrink-0">
+              <Calendar className="h-5 w-5 text-gray-500" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+              <h3 className="text-base font-semibold text-gray-900 line-clamp-1">
                 {event.title}
+              </h3>
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {event.description}
               </p>
-              <div className="flex flex-col sm:flex-row sm:items-center text-xs text-gray-500 mt-1 space-y-1 sm:space-y-0 sm:space-x-3">
+              <div className="flex items-center text-xs text-gray-500 mt-1 flex-wrap gap-x-2">
                 <div className="flex items-center">
                   <Clock className="h-3 w-3 mr-1" />
                   <span>

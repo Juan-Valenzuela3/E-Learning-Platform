@@ -15,7 +15,7 @@ const Button = forwardRef(({
   ...props
 }, ref) => {
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-60 disabled:pointer-events-none';
-  
+
   const variants = {
     primary: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-400',
@@ -32,7 +32,7 @@ const Button = forwardRef(({
   };
 
   const widthClass = fullWidth ? 'w-full' : '';
-  
+
   return (
     <button
       ref={ref}

@@ -8,6 +8,7 @@ import {
   Instagram,
   Twitter,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
@@ -49,17 +50,11 @@ export default function Footer() {
             <h3 className="font-bold mb-6 text-lg">Plataforma</h3>
             <ul className="space-y-3 text-gray-400">
               <li>
-                <a
-                  href="#Cursos"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document
-                      .getElementById("Cursos")
-                      ?.scrollIntoView({ behavior: "smooth" });
-                  }}
+                <Link
+                  to="Cursos"
                   className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">
                   Explorar cursos
-                </a>
+                </Link>
               </li>
               <li>
                 <a
@@ -107,32 +102,32 @@ export default function Footer() {
             <h3 className="font-bold mb-6 text-lg">Soporte</h3>
             <ul className="space-y-3 text-gray-400">
               <li>
-                <a
-                  href="#"
+                <Link 
+                  to="centro-ayuda"
                   className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">
                   Centro de ayuda
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="contacto"
                   className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">
                   Contacto
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="terminos-de-uso"
                   className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">
                   Términos de uso
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="politica-de-privacidad"
                   className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">
                   Privacidad
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

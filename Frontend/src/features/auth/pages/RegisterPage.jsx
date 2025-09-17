@@ -32,7 +32,7 @@ export default function RegisterPage(){
                         <p className="text-sm text-gray-600">
                             ¿Ya tienes una cuenta?{' '}
                             <button
-                                onClick={() => navigate('/auth')}
+                                onClick={() => navigate('/authentication')}
                                 className="font-medium text-red-500 hover:text-red-600 transition-colors"
                             >
                                 Inicia sesión

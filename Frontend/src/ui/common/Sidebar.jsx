@@ -28,7 +28,7 @@ import { Logout } from "@mui/icons-material";
 const getApprenticeLinks = () => [
   { path: "/dashboard", icon: Home, label: "Panel" },
   { path: "/mis-cursos", icon: BookOpen, label: "Mis Cursos" },
-  { path: "/pagos", icon: CodeXml, label: "Historial de pagos" },
+  //{ path: "/pagos", icon: CodeXml, label: "Historial de pagos" },
   { path: "/perfil", icon: User, label: "Perfil" },
   { path: "/politica-de-privacidad", icon: User, label: "Política de privacidad" },
 ];
@@ -114,9 +114,15 @@ const Sidebar = () => {
 
 
   const handleLogout = async () => {
-    console.log('=== SIDEBAR: Iniciando logout ===');
-    await logout({ redirect: true, redirectTo: "/" });
-    showNotification("¡Hasta luego!", "success");
+    console.log('--- Iniciando cierre de sesión ---');
+    try {
+      await logout({ redirect: true, redirectTo: "/authentication" });
+      console.log('--- Cierre de sesión exitoso ---');
+      showNotification("¡Hasta luego!", "success");
+    } catch (error) {
+      console.error('--- Error en el cierre de sesión ---', error);
+      showNotification("Ocurrió un error al cerrar la sesión.", "error");
+    }
   };
 
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -234,7 +240,7 @@ const Sidebar = () => {
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-sm font-medium truncate">{getUserDisplayName()}</h1>
+                  <h1 className="text-sm font-medium truncate">{getUserDisplayName()}</h1> 
                   <h2 className="text-xs text-gray-500">{formatRole(role)}</h2>
                 </div>
               </div>
@@ -284,7 +290,7 @@ const Sidebar = () => {
           <div className="p-4 border-t border-gray-200 dark:border-gray-800">
             <Button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              className="w-full flex items-center justify-center py-2 px-4 bg-red-500  rounded-lg hover:bg-red-600"
             >
               <Logout className="w-4 h-4 mr-2" />
               Cerrar sesión

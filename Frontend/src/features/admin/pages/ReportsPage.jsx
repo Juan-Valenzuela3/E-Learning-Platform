@@ -285,7 +285,7 @@ const ReportsPage = () => {
 // Wrap the component with Suspense and ErrorBoundary
 export default function ReportsPageWithBoundary() {
   return (
-    <ErrorBoundary>
+    <ErrorPage>
       <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 mx-auto mb-4 text-gray-400 animate-spin" />
@@ -294,6 +294,6 @@ export default function ReportsPageWithBoundary() {
       </div>}>
         <ReportsPage />
       </Suspense>
-    </ErrorBoundary>
+    </ErrorPage>
   );
 }
