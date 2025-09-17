@@ -19,23 +19,32 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        log.info("Configurando CORS para frontend: {}", (Object) allowedOrigins);
+        log.info("Configurando CORS en WebConfig para frontend: {}", (Object) allowedOrigins);
 
+        // Configuración principal para API
         registry.addMapping("/api/**")
-                .allowedOrigins(allowedOrigins)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedOriginPatterns(allowedOrigins) // Usar patterns para wildcards
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
         
         // Configuración específica para endpoints de autenticación
         registry.addMapping("/auth/**")
-                .allowedOrigins(allowedOrigins)
-                .allowedMethods("GET", "POST", "OPTIONS")
+                .allowedOriginPatterns(allowedOrigins)
+                .allowedMethods("GET", "POST", "OPTIONS", "HEAD")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
         
-        log.info("CORS configurado correctamente");
+        // Configuración global para todo (respaldo)
+        registry.addMapping("/**")
+                .allowedOriginPatterns(allowedOrigins)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+        
+        log.info("CORS configurado correctamente en WebConfig");
     }
 }

@@ -3,7 +3,7 @@ import axios from "axios";
 
 // 🌐 Base URL según el entorno
 const API_URL = import.meta.env.DEV 
-  ? "" // En desarrollo usar proxy de Vite (vite.config.js maneja /api y /auth)
+  ? import.meta.env.VITE_API_URL || "" // En desarrollo usar la URL del backend desplegado o proxy de Vite
   : ""; // En producción, usar rutas relativas que Vercel proxy manejará
 
 // ✅ Crear instancia de Axios
@@ -102,7 +102,15 @@ api.interceptors.response.use(
       console.error('Headers:', originalRequest.headers);
       console.error('Data:', data);
       
-      const errorMessage = data?.message || "No tienes permiso para esta acción o hay un problema de configuración CORS";
+      let errorMessage = "No tienes permiso para esta acción";
+      
+      // Verificar si es un error de CORS específicamente
+      if (typeof data === 'string' && data.includes('CORS')) {
+        errorMessage = "Error de configuración CORS. Verifica que el backend esté configurado correctamente.";
+      } else if (typeof data === 'string' && data.includes('Invalid CORS request')) {
+        errorMessage = "Petición CORS inválida. Verifica la configuración del servidor.";
+      }
+      
       return Promise.reject(new Error(errorMessage));
     }
 
