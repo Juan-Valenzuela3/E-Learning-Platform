@@ -12,7 +12,7 @@ import HeroSection from "@/features/marketing/components/HeroSection";
 // Componentes no críticos (carga diferida)
 const Price = lazy(() => import("@/features/marketing/components/Price"));
 const InstructoresCard = lazy(() => import("@/features/marketing/components/InstructoresCard"));
-const TestimonioCard = lazy(() => import("@/features/marketing/components/TestimonioCard"));
+const TestimonioCard = lazy(() => import("@/features/marketing/components/testimonioCard"));
 const CtaButton = lazy(() => import("@/features/marketing/components/CTAButton"));
 const CursosSugeridos = lazy(() => import("@/features/marketing/pages/CatalogoCursos"));
 
