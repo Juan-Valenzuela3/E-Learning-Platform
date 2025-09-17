@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Navigate } from 'react-router-dom';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/shared/components/LoadingSpinner';
 import ProtectedRoute from '@/interfaces/routing/guards/ProtectedRoute';
 
 // Lazy load components for better performance

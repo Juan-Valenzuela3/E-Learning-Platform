@@ -1,45 +1,59 @@
-import React, { useState, useEffect } from 'react';
+// src/components/TeacherStudentsComponent.jsx
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Box, 
-  Typography, 
-  TextField, 
-  InputAdornment, 
-  Button, 
-  Avatar, 
-  Chip, 
-  Grid, 
-  Card, 
-  CardContent, 
-  LinearProgress, 
-  CircularProgress, 
-  FormControl, 
-  InputLabel, 
-  Select, 
-  MenuItem, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  useMediaQuery, 
-  useTheme, 
+import {
+  Box,
+  Typography,
+  TextField,
+  InputAdornment,
+  Button,
+  Avatar,
+  Chip,
+  Grid,
+  Card,
+  CardContent,
+  LinearProgress,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  useMediaQuery,
+  useTheme,
+  Tooltip, // ✅ Se añade Tooltip
+  IconButton, // ✅ Se añade IconButton
 } from '@mui/material';
-import { 
+import {
   Search as SearchIcon,
   Download as DownloadIcon,
   PersonAdd as PersonAddIcon,
   Message as MessageIcon,
   Visibility as VisibilityIcon,
-  Assignment as AssignmentIcon,
-  BarChart as BarChartIcon,
-  CalendarToday as CalendarTodayIcon,
   People as PeopleIcon,
   CheckCircle as CheckCircleIcon,
   PersonOff as PersonOffIcon,
   School as SchoolIcon,
 } from '@mui/icons-material';
+import { getStudentsByCourseId } from '@/services/courseService'; // 🚀 Importación del servicio de API
 
-const TeacherStudentsComponent = () => {
+const getStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'activo':
+      return 'success';
+    case 'inactivo':
+      return 'error';
+    case 'pendiente':
+      return 'warning';
+    default:
+      return 'default';
+  }
+};
+
+export default function TeacherStudentsComponent() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -48,64 +62,57 @@ const TeacherStudentsComponent = () => {
   // Estados
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // ✅ Estado para manejar errores
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
 
-  // Datos de ejemplo (reemplazar con llamada a la API)
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        // Simular carga de datos
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Datos de ejemplo
-        const mockStudents = [
-          {
-            id: 1,
-            name: 'Ana García',
-            email: 'ana@example.com',
-            avatar: '',
-            progress: 75,
-            status: 'activo',
-            lastAccess: 'Hace 2 días',
-            completedLessons: 12,
-            totalLessons: 16,
-            joinDate: '15/03/2023'
-          },
-          // Agregar más estudiantes de ejemplo...
-        ];
-        
-        setStudents(mockStudents);
-      } catch (error) {
-        console.error('Error al cargar estudiantes:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStudents();
+  // 🚀 Lógica de fetch de datos separada
+  const fetchStudents = useCallback(async () => {
+    if (!courseId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      // 🚀 Consumo de la API con el servicio
+      const data = await getStudentsByCourseId(courseId);
+      setStudents(data);
+    } catch (err) {
+      console.error('Error al cargar estudiantes:', err);
+      setError('No se pudo cargar la lista de estudiantes. Intenta de nuevo más tarde.');
+    } finally {
+      setLoading(false);
+    }
   }, [courseId]);
 
-  // Función para obtener el color según el estado del estudiante
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'activo':
-        return 'success';
-      case 'inactivo':
-        return 'error';
-      case 'pendiente':
-        return 'warning';
-      default:
-        return 'default';
-    }
-  };
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  // Función para manejar el filtro y la búsqueda
+  const filteredStudents = students.filter(student => {
+    const matchesSearchTerm = searchTerm === '' ||
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === 'todos' || student.status.toLowerCase() === statusFilter;
+
+    return matchesSearchTerm && matchesStatus;
+  });
 
   if (loading) {
     return (
-      <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, minHeight: '60vh' }}>
+      <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress color="primary" />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, textAlign: 'center', minHeight: '60vh' }}>
+        <Typography color="error" variant="h6">{error}</Typography>
+        <Button onClick={fetchStudents} variant="outlined" sx={{ mt: 2 }}>Reintentar</Button>
       </Box>
     );
   }
@@ -113,9 +120,9 @@ const TeacherStudentsComponent = () => {
   return (
     <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
       {/* Header con título y acciones */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: { xs: 'column', sm: 'row' }, 
+      <Box sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
         justifyContent: 'space-between',
         alignItems: { xs: 'stretch', sm: 'center' },
         mb: 3,
@@ -129,17 +136,17 @@ const TeacherStudentsComponent = () => {
             Gestiona y revisa el progreso de tus estudiantes
           </Typography>
         </Box>
-        
+
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Button 
-            variant="outlined" 
+          <Button
+            variant="outlined"
             startIcon={<DownloadIcon />}
             size={isMobile ? 'small' : 'medium'}
           >
             Exportar Lista
           </Button>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             color="primary"
             startIcon={<PersonAddIcon />}
             size={isMobile ? 'small' : 'medium'}
@@ -150,10 +157,10 @@ const TeacherStudentsComponent = () => {
       </Box>
 
       {/* Filtros y búsqueda */}
-      <Box sx={{ 
-        display: 'flex', 
+      <Box sx={{
+        display: 'flex',
         flexDirection: { xs: 'column', sm: 'row' },
-        gap: 2, 
+        gap: 2,
         mb: 3,
         '& > *': { flex: 1 }
       }}>
@@ -172,7 +179,7 @@ const TeacherStudentsComponent = () => {
             ),
           }}
         />
-        
+
         <FormControl variant="outlined" size="small" fullWidth>
           <InputLabel>Filtrar por estado</InputLabel>
           <Select
@@ -190,17 +197,11 @@ const TeacherStudentsComponent = () => {
 
       {/* Lista de estudiantes */}
       <Grid container spacing={3}>
-        {students
-          .filter(student => 
-            (statusFilter === 'todos' || student.status === statusFilter) &&
-            (searchTerm === '' || 
-             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-             student.email.toLowerCase().includes(searchTerm.toLowerCase()))
-          )
-          .map((student) => (
+        {filteredStudents.length > 0 ? (
+          filteredStudents.map((student) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={student.id}>
-              <Card 
-                sx={{ 
+              <Card
+                sx={{
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
@@ -213,8 +214,8 @@ const TeacherStudentsComponent = () => {
               >
                 <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar 
-                      src={student.avatar} 
+                    <Avatar
+                      src={student.avatar}
                       alt={student.name}
                       sx={{ width: 56, height: 56, mr: 2 }}
                     >
@@ -227,7 +228,7 @@ const TeacherStudentsComponent = () => {
                       <Typography variant="body2" color="text.secondary" noWrap>
                         {student.email}
                       </Typography>
-                      <Chip 
+                      <Chip
                         label={student.status}
                         size="small"
                         color={getStatusColor(student.status)}
@@ -235,7 +236,7 @@ const TeacherStudentsComponent = () => {
                       />
                     </Box>
                   </Box>
-                  
+
                   <Box sx={{ mt: 'auto', pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                     <Box sx={{ mb: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
@@ -246,13 +247,13 @@ const TeacherStudentsComponent = () => {
                           {student.progress}%
                         </Typography>
                       </Box>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={student.progress} 
+                      <LinearProgress
+                        variant="determinate"
+                        value={student.progress}
                         sx={{ height: 6, borderRadius: 3 }}
                       />
                     </Box>
-                    
+
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body2" color="text.secondary">
                         Lecciones
@@ -261,7 +262,7 @@ const TeacherStudentsComponent = () => {
                         {student.completedLessons}/{student.totalLessons}
                       </Typography>
                     </Box>
-                    
+
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body2" color="text.secondary">
                         Último acceso
@@ -270,7 +271,7 @@ const TeacherStudentsComponent = () => {
                         {student.lastAccess}
                       </Typography>
                     </Box>
-                    
+
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body2" color="text.secondary">
                         Se unió el
@@ -281,16 +282,17 @@ const TeacherStudentsComponent = () => {
                     </Box>
                   </Box>
                 </CardContent>
-                
+
                 <Box sx={{ p: 2, pt: 0, display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                  {/* ✅ Tooltips e IconButton añadidos */}
                   <Tooltip title="Enviar mensaje">
                     <IconButton size="small" color="primary">
                       <MessageIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Ver perfil">
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       color="primary"
                       onClick={() => {
                         setSelectedStudent(student);
@@ -303,12 +305,22 @@ const TeacherStudentsComponent = () => {
                 </Box>
               </Card>
             </Grid>
-          ))}
+          ))
+        ) : (
+          <Grid item xs={12}>
+            <Box sx={{ textAlign: 'center', py: 5 }}>
+              <PeopleIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary">
+                No se encontraron estudiantes
+              </Typography>
+            </Box>
+          </Grid>
+        )}
       </Grid>
 
       {/* Diálogo de detalles del estudiante */}
-      <Dialog 
-        open={openDialog} 
+      <Dialog
+        open={openDialog}
         onClose={() => setOpenDialog(false)}
         maxWidth="sm"
         fullWidth
@@ -318,8 +330,8 @@ const TeacherStudentsComponent = () => {
             <DialogTitle>Detalles del Estudiante</DialogTitle>
             <DialogContent>
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 2 }}>
-                <Avatar 
-                  src={selectedStudent.avatar} 
+                <Avatar
+                  src={selectedStudent.avatar}
                   alt={selectedStudent.name}
                   sx={{ width: 80, height: 80, mb: 2 }}
                 >
@@ -331,23 +343,23 @@ const TeacherStudentsComponent = () => {
                 <Typography variant="body2" color="text.secondary" align="center">
                   {selectedStudent.email}
                 </Typography>
-                <Chip 
+                <Chip
                   label={selectedStudent.status}
                   color={getStatusColor(selectedStudent.status)}
                   size="small"
                   sx={{ mt: 1, textTransform: 'capitalize' }}
                 />
               </Box>
-              
+
               <Box sx={{ mt: 3 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   PROGRESO DEL CURSO
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <Box sx={{ width: '100%', mr: 1 }}>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={selectedStudent.progress} 
+                    <LinearProgress
+                      variant="determinate"
+                      value={selectedStudent.progress}
                       sx={{ height: 8, borderRadius: 4 }}
                     />
                   </Box>
@@ -355,7 +367,7 @@ const TeacherStudentsComponent = () => {
                     {selectedStudent.progress}%
                   </Typography>
                 </Box>
-                
+
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                   <Grid item xs={6}>
                     <Typography variant="body2" color="text.secondary">
@@ -385,14 +397,14 @@ const TeacherStudentsComponent = () => {
               </Box>
             </DialogContent>
             <DialogActions sx={{ p: 2 }}>
-              <Button 
+              <Button
                 onClick={() => setOpenDialog(false)}
                 color="inherit"
               >
                 Cerrar
               </Button>
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 color="primary"
                 startIcon={<MessageIcon />}
               >
@@ -404,6 +416,4 @@ const TeacherStudentsComponent = () => {
       </Dialog>
     </Box>
   );
-};
-
-export default TeacherStudentsComponent;
+}

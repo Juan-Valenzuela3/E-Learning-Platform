@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/shared/hooks/useAuth';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/shared/components/LoadingSpinner';
 
 export default function RoleBasedRedirect() {
   const { user, loading } = useAuth();

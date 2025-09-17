@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import courseServiceModule from '@/services/courseService';
+import {createCourse, getCourseById, updateCourse} from '@/services/courseService';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { toast } from 'react-toastify';
@@ -24,23 +24,28 @@ import {
 import { useYoutubePlayer } from '@/shared/hooks/useYoutubePlayer';
 import { YoutubePlayer } from '@/shared/hooks/useYoutubePlayer';
 
-const { courseService } = courseServiceModule;
-
 const CreateCourse = ({ isEditing = false }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [activePlayerId, setActivePlayerId] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [activeModule, setActiveModule] = useState(false)
+
+
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    shortDescription: '',
     category: '',
-    price: '',
+    price: 0.00,
     level: 'beginner',
-    image: null,
+    thumbnailUrl: null,
     preview: null,
-    instructor: 'Juan Pérez', // Nombre del profesor actual
+    instructorId: user.id, // Nombre del profesor actual
     rating: 0,
     totalStudents: 0,
     modules: [
@@ -53,7 +58,7 @@ const CreateCourse = ({ isEditing = false }) => {
             id: Date.now() + 1,
             title: 'Bienvenida al curso',
             type: 'video',
-            video: null,
+            youtubeUrls: [''],
             duration: 0,
             resources: [],
             completed: false
@@ -63,10 +68,7 @@ const CreateCourse = ({ isEditing = false }) => {
     ]
   });
 
-  const [activeModule, setActiveModule] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
+ 
 
   // Cargar datos del curso si estamos en modo edición
   useEffect(() => {
@@ -74,7 +76,7 @@ const CreateCourse = ({ isEditing = false }) => {
       if (!isEditing || !id) return;
       
       try {
-        const courseData = await courseService.getCourseById(id);
+        const courseData = await getCourseById(id);
         setFormData({
           ...courseData,
           // Asegurar que los módulos y lecciones tengan los campos requeridos
@@ -82,7 +84,7 @@ const CreateCourse = ({ isEditing = false }) => {
             ...module,
             lessons: module.lessons?.map(lesson => ({
               ...lesson,
-              video: lesson.video || null,
+              youtubeUrls: lesson.youtubeUrls || [],
               resources: lesson.resources || [],
               completed: false
             })) || []
@@ -105,7 +107,7 @@ const CreateCourse = ({ isEditing = false }) => {
       reader.onloadend = () => {
         setFormData(prev => ({
           ...prev,
-          image: files[0],
+          thumbnailUrl: files[0],
           preview: reader.result
         }));
       };
@@ -203,6 +205,7 @@ const CreateCourse = ({ isEditing = false }) => {
       console.log('Rol del usuario:', user?.role);
       console.log('Email del usuario:', user?.email);
       console.log('=== DATOS DEL CURSO A ENVIAR ===');
+
       console.log('courseData:', JSON.stringify(courseData, null, 2));
       console.log('=== VALIDACIONES ===');
       console.log('Title valid:', !!courseData.title && courseData.title.length <= 200);
@@ -220,10 +223,10 @@ const CreateCourse = ({ isEditing = false }) => {
 
       // Llamada al servicio
       if (isEditing && id) {
-        await courseService.updateCourse(id, courseData);
+        await updateCourse(id, courseData);
         toast.success('¡Curso actualizado exitosamente!');
       } else {
-        await courseService.createCourse(courseData);
+        await createCourse(courseData);
         toast.success('¡Curso creado exitosamente!');
       }
 

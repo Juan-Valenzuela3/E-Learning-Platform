@@ -19,7 +19,7 @@ const useDocumentTitle = (title, options = {}) => {
     notifyOnFocus = false,
     notificationTitle,
     notificationMessage,
-    favicon = '/favicon.ico'
+    favicon = '/logo.svg'
   } = options;
 
   const location = useLocation();

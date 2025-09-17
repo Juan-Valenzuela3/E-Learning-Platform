@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,10 +90,14 @@ public class UserService {
     public User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new UsernameNotFoundException("No hay usuario autenticado.");
+            throw new RuntimeException("Usuario no autenticado");
         }
-        String username = authentication.getName();
-        return userRepository.findByUserName(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+
+        String email = authentication.getName(); // En JWT, el 'subject' es el email
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new RuntimeException("Usuario no encontrado con email: " + email);
+        }
+        return user;
     }
 }

@@ -5,7 +5,7 @@ import privateRoutes from './PrivateRoutes';
 import teacherRoutes from './teacherRoutes';
 import { adminRoutes } from './adminRoutes';
 import ErrorPage from '@/pages/ErrorPage';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/shared/components/LoadingSpinner';
 import ProtectedRoute from '@/interfaces/routing/guards/ProtectedRoute';
 
 // Lazy load admin layout
@@ -29,18 +29,18 @@ export const router = createBrowserRouter([
     children: [
       // Admin routes first to ensure they take precedence
       {
-    path: '/admin/*',
-    element: (
-      <ProtectedRoute allowedRoles={['admin']}>
-        <Suspense fallback={
-          <div className="flex items-center justify-center min-h-screen">
-            <LoadingSpinner text="Cargando panel de administración..." />
-          </div>
-        }>
-          <AdminLayout />
-        </Suspense>
-      </ProtectedRoute>
-    ),
+        path: '/admin/*',
+        element: (
+          <ProtectedRoute allowedRoles={['admin']}>
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-screen">
+                <LoadingSpinner text="Cargando panel de administración..." />
+              </div>
+            }>
+              <AdminLayout />
+            </Suspense>
+          </ProtectedRoute>
+        ),
         children: adminRoutes[0].children
       },
       // Then public routes
@@ -71,7 +71,7 @@ export const AppRouter = () => {
         </div>
       }
     >
-      <RouterProvider 
+      <RouterProvider
         router={router}
         fallbackElement={
           <div className="flex items-center justify-center min-h-screen">

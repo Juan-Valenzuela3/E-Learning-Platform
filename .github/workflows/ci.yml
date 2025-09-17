@@ -31,19 +31,23 @@ jobs:
       env:
         JWT_SECRET_KEY: testSecretKeyForCITestingPurposesOnly123456789
         JWT_EXPIRATION_TIME: 86400000
+        STRIPE_API_KEY: sk_test_dummy_key_for_ci_testing
+        STRIPE_API_PUBLIC_KEY: pk_test_dummy_key_for_ci_testing
+        STRIPE_WEBHOOK_SECRET: whsec_dummy_secret_for_ci_testing
       run: |
         cd Backend/Dev-learning-Platform
         ./mvnw clean test -Dspring.profiles.active=test -q -Dlogging.level.org.springframework.boot.autoconfigure=OFF
     
     - name: Deploy to OCI VM
       if: success()
+      timeout-minutes: 8
       uses: appleboy/ssh-action@v1
       with:
         host: ${{ secrets.VM_HOST }}
         username: ${{ secrets.VM_USER }}
         key: ${{ secrets.VM_SSH_KEY }}
-        timeout: 300s
-        command_timeout: 120s
+        timeout: 400s
+        command_timeout: 180s
         script: |
           set -e
           
@@ -51,27 +55,38 @@ jobs:
           cd /home/opc/Git-Repository/E-Learning-Platform/Backend/Dev-learning-Platform
           
           echo "=== Haciendo git pull ==="
+          git switch main
           git pull origin main
           
           echo "=== Ejecutando tests en producción ==="
           ./mvnw test -Dspring.profiles.active=prod -q
           
           if [ $? -eq 0 ]; then
-            echo "=== Tests exitosos, construyendo aplicación ==="
-            ./mvnw clean package -Dspring.profiles.active=prod -DskipTests -q
-            
-            echo "=== Reiniciando servicio ==="
-            sudo systemctl restart elearning-backend
-            
+            echo "=== Tests exitosos, deteniendo servicio para construcción ==="
+            sudo systemctl stop elearning-backend
+
+            echo "=== Construyendo aplicación ==="
+            mvn clean package -Pprod -DskipTests
+
+            echo "=== Reiniciando daemon ==="
+            sudo systemctl daemon-reload
+
+            echo "=== Iniciando servicio ==="
+            sudo systemctl start elearning-backend
+
             echo "=== Verificando despliegue ==="
-            sleep 15
-            
+            echo "Esperando 30 segundos para que el servicio inicie completamente..."
+            sleep 30
+
+            # Verificar que el servicio está activo
             if sudo systemctl is-active --quiet elearning-backend; then
-              echo "✅ Despliegue exitoso"
-              curl -f http://localhost:8080/actuator/health || echo "Health check no disponible"
+              echo "✅ Despliegue exitoso - Servicio está activo"
+              echo "=== Estado del servicio ==="
+              sudo systemctl status elearning-backend --no-pager -l
             else
-              echo "❌ Error en el despliegue"
-              sudo journalctl -u elearning-backend --no-pager -l -n 20
+              echo "❌ Error: El servicio no está activo"
+              sudo systemctl status elearning-backend --no-pager -l
+              sudo journalctl -u elearning-backend --no-pager -l -n 30
               exit 1
             fi
           else

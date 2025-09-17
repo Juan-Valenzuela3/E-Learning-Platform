@@ -3,6 +3,8 @@ package com.Dev_learning_Platform.Dev_learning_Platform.repositories;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -20,6 +22,9 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findByInstructor(User instructor);
     List<Course> findByIsActive(boolean isActive);
     List<Course> findByIsActiveAndIsPublished(boolean isActive, boolean isPublished);
+    
+    // Método paginado para cursos públicos
+    Page<Course> findByIsActiveAndIsPublished(boolean isActive, boolean isPublished, Pageable pageable);
     
     @Query("SELECT c FROM Course c WHERE c.isActive = true AND c.isPublished = true ORDER BY c.createdAt DESC")
     List<Course> findPublicCoursesOrderByCreatedAtDesc();

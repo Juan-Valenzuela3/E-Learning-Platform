@@ -1,26 +1,53 @@
+
 package com.Dev_learning_Platform.Dev_learning_Platform.services;
 
-import com.Dev_learning_Platform.Dev_learning_Platform.models.*;
-import com.Dev_learning_Platform.Dev_learning_Platform.repositories.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+/*
+ * ARCHIVO COMENTADO - TestDataService solo para desarrollo/testing
+ * 
+ * Para habilitar en desarrollo, descomenta todo el contenido de este archivo.
+ * Este servicio crea datos de prueba automáticamente al iniciar la aplicación.
+ * 
+ * NO debe ejecutarse en producción.
+ */
 
+/*
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.boot.CommandLineRunner;
+// import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
+// import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Category;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Course;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Enrollment;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.Subcategory;
+import com.Dev_learning_Platform.Dev_learning_Platform.models.User;
+import com.Dev_learning_Platform.Dev_learning_Platform.repositories.CategoryRepository;
+import com.Dev_learning_Platform.Dev_learning_Platform.repositories.CourseRepository;
+import com.Dev_learning_Platform.Dev_learning_Platform.repositories.EnrollmentRepository;
+import com.Dev_learning_Platform.Dev_learning_Platform.repositories.SubcategoryRepository;
+import com.Dev_learning_Platform.Dev_learning_Platform.repositories.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Servicio para crear datos de prueba para las estadísticas administrativas
- * Descomentado @Service solo para desarrollo/testing
+ * COMENTADO - Solo para desarrollo/testing - NO se ejecuta en producción
+ * 
+ * Para habilitar en desarrollo, descomenta las anotaciones @Service y @Profile
  */
-// @Service  // Deshabilitado para producción
-@RequiredArgsConstructor
-@Slf4j
+// @Service
+// @Profile({"dev", "test"}) // Solo se ejecuta en perfiles de desarrollo y test
+// @RequiredArgsConstructor
+// @Slf4j
+// CLASE COMENTADA - Solo para desarrollo/testing
+/*
 public class TestDataService implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -67,23 +94,23 @@ public class TestDataService implements CommandLineRunner {
         Subcategory gestion = createSubcategory("Gestión", "Gestión de proyectos", negocios, 2, true);
 
         // Crear usuarios
-        User admin = createUser("admin", "admin", "admin@test.com", "password123", User.Role.ADMIN, true);
-        User instructor1 = createUser("Juan", "Pérez", "juan@instructor.com", "password123", User.Role.INSTRUCTOR, true);
-        User instructor2 = createUser("María", "García", "maria@instructor.com", "password123", User.Role.INSTRUCTOR, true);
-        User instructor3 = createUser("Carlos", "López", "carlos@instructor.com", "password123", User.Role.INSTRUCTOR, true);
+        User admin = createUser("admin", "admin", "admin@test.com", "Password123", User.Role.ADMIN, true);
+        User instructor1 = createUser("Juan", "Pérez", "juan@example.com", "Password123", User.Role.INSTRUCTOR, true);
+        User instructor2 = createUser("María", "García", "maria@example.com", "Password123", User.Role.INSTRUCTOR, true);
+        User instructor3 = createUser("Carlos", "López", "carlos@example.com", "Password123", User.Role.INSTRUCTOR, true);
 
         // Crear estudiantes
         List<User> estudiantes = Arrays.asList(
-            createUser("Ana", "Martínez", "ana@student.com", "password123", User.Role.STUDENT, true),
-            createUser("Luis", "Rodríguez", "luis@student.com", "password123", User.Role.STUDENT, true),
-            createUser("Sofia", "Hernández", "sofia@student.com", "password123", User.Role.STUDENT, true),
-            createUser("Diego", "González", "diego@student.com", "password123", User.Role.STUDENT, true),
-            createUser("Elena", "Morales", "elena@student.com", "password123", User.Role.STUDENT, true),
-            createUser("Roberto", "Jiménez", "roberto@student.com", "password123", User.Role.STUDENT, true),
-            createUser("Carmen", "Ruiz", "carmen@student.com", "password123", User.Role.STUDENT, true),
-            createUser("Fernando", "Díaz", "fernando@student.com", "password123", User.Role.STUDENT, true),
-            createUser("Isabel", "Moreno", "isabel@student.com", "password123", User.Role.STUDENT, true),
-            createUser("Antonio", "Vega", "antonio@student.com", "password123", User.Role.STUDENT, true)
+            createUser("Ana", "Martínez", "ana@student.com", "Password123", User.Role.STUDENT, true),
+            createUser("Luis", "Rodríguez", "luis@student.com", "Password123", User.Role.STUDENT, true),
+            createUser("Sofia", "Hernández", "sofia@student.com", "Password123", User.Role.STUDENT, true),
+            createUser("Diego", "González", "diego@student.com", "Password123", User.Role.STUDENT, true),
+            createUser("Elena", "Morales", "elena@student.com", "Password123", User.Role.STUDENT, true),
+            createUser("Roberto", "Jiménez", "roberto@student.com", "Password123", User.Role.STUDENT, true),
+            createUser("Carmen", "Ruiz", "carmen@student.com", "Password123", User.Role.STUDENT, true),
+            createUser("Fernando", "Díaz", "fernando@student.com", "Password123", User.Role.STUDENT, true),
+            createUser("Isabel", "Moreno", "isabel@student.com", "Password123", User.Role.STUDENT, true),
+            createUser("Antonio", "Vega", "antonio@student.com", "Password123", User.Role.STUDENT, true)
         );
 
         // Crear cursos
@@ -198,3 +225,4 @@ public class TestDataService implements CommandLineRunner {
         }
     }
 }
+*/

@@ -8,8 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, Download, Filter, Calendar, FileText, CheckCircle, XCircle, Clock, ArrowUpDown, RefreshCw, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { mockPaymentService } from '../../../interfaces/api/__mocks__/mockPaymentService';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Mock data for payment history
 const paymentHistory = [

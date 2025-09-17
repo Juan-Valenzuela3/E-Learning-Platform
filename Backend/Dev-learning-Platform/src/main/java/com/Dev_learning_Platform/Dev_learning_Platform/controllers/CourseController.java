@@ -2,6 +2,10 @@ package com.Dev_learning_Platform.Dev_learning_Platform.controllers;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CourseCreateDto;
@@ -38,8 +43,21 @@ public class CourseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Course>> getPublicCourses() {
-        List<Course> courses = courseService.getPublicCourses();
+    public ResponseEntity<Page<Course>> getPublicCourses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        
+        // Limitar el tamaño máximo de página para evitar sobrecarga
+        size = Math.min(size, 100);
+        
+        Sort sort = sortDir.equalsIgnoreCase("desc") 
+            ? Sort.by(sortBy).descending() 
+            : Sort.by(sortBy).ascending();
+            
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Course> courses = courseService.getPublicCourses(pageable);
         return ResponseEntity.ok(courses);
     }
 

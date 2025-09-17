@@ -1,0 +1,95 @@
+name: Java CI
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    
+    - name: Run Tests
+      env:
+        JWT_SECRET_KEY: testSecretKeyForCITestingPurposesOnly123456789
+        JWT_EXPIRATION_TIME: 86400000
+        STRIPE_API_KEY: sk_test_dummy_key_for_ci_testing
+        STRIPE_API_PUBLIC_KEY: pk_test_dummy_key_for_ci_testing
+        STRIPE_WEBHOOK_SECRET: whsec_dummy_secret_for_ci_testing
+      run: |
+        cd Backend/Dev-learning-Platform
+        ./mvnw clean test -Dspring.profiles.active=test -q -Dlogging.level.org.springframework.boot.autoconfigure=OFF
+    
+    - name: Deploy to OCI VM
+      if: success()
+      timeout-minutes: 8
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        timeout: 400s
+        command_timeout: 180s
+        script: |
+          set -e
+          
+          echo "=== Iniciando deployment ==="
+          cd /home/opc/Git-Repository/E-Learning-Platform/Backend/Dev-learning-Platform
+          
+          echo "=== Haciendo git pull ==="
+          git switch develop
+          git pull origin develop
+          
+          echo "=== Ejecutando tests en producción ==="
+          ./mvnw test -Dspring.profiles.active=prod -q
+          
+          if [ $? -eq 0 ]; then
+            echo "=== Tests exitosos, deteniendo servicio para construcción ==="
+            sudo systemctl stop elearning-backend
+
+            echo "=== Construyendo aplicación ==="
+            mvn clean package -Pprod -DskipTests
+
+            echo "=== Reiniciando daemon ==="
+            sudo systemctl daemon-reload
+
+            echo "=== Iniciando servicio ==="
+            sudo systemctl start elearning-backend
+
+            echo "=== Verificando despliegue ==="
+            echo "Esperando 30 segundos para que el servicio inicie completamente..."
+            sleep 30
+
+            # Verificar que el servicio está activo
+            if sudo systemctl is-active --quiet elearning-backend; then
+              echo "✅ Despliegue exitoso - Servicio está activo"
+              echo "=== Estado del servicio ==="
+              sudo systemctl status elearning-backend --no-pager -l
+            else
+              echo "❌ Error: El servicio no está activo"
+              sudo systemctl status elearning-backend --no-pager -l
+              sudo journalctl -u elearning-backend --no-pager -l -n 30
+              exit 1
+            fi
+          else
+            echo "❌ Error en los tests"
+            exit 1
+          fi

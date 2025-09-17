@@ -1,3 +1,5 @@
+// src/features/teacher/components/TeacherCourses.jsx
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -29,47 +31,37 @@ import {
   FilterList as FilterIcon
 } from '@mui/icons-material';
 
+import { useTeacherCourses } from '@/shared/hooks/useTeacherCourses'; // ✅ Importa el nuevo custom hook
+
+// Componentes de estado de carga
+const LoadingState = () => (
+  <Box sx={{ p: 4, textAlign: 'center' }}>
+    <Typography variant="h6" color="text.secondary">
+      Cargando tus cursos...
+    </Typography>
+  </Box>
+);
+
+// Componentes de estado de error
+const ErrorState = ({ message }) => (
+  <Box sx={{ p: 4, textAlign: 'center' }}>
+    <Typography variant="h6" color="error.main">
+      Error: {message}
+    </Typography>
+  </Box>
+);
+
 const TeacherCourses = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
-  
-  // Datos de ejemplo - en una aplicación real, estos vendrían de una API
-  const courses = [
-    { 
-      id: 1, 
-      title: 'Introducción a React', 
-      description: 'Aprende los fundamentos de React y construye aplicaciones modernas',
-      students: 25, 
-      status: 'Activo',
-      progress: 78,
-      image: 'https://source.unsplash.com/random/400x200/?react',
-      category: 'Desarrollo Web',
-      lastUpdated: 'Hace 2 días'
-    },
-    { 
-      id: 2, 
-      title: 'JavaScript Avanzado', 
-      description: 'Domina conceptos avanzados de JavaScript moderno',
-      students: 18, 
-      status: 'Activo',
-      progress: 65,
-      image: 'https://source.unsplash.com/random/400x200/?javascript',
-      category: 'Programación',
-      lastUpdated: 'Hace 1 semana'
-    },
-    { 
-      id: 3, 
-      title: 'Bases de Datos SQL', 
-      description: 'Aprende a diseñar y consultar bases de datos relacionales',
-      students: 0, 
-      status: 'Borrador',
-      progress: 0,
-      image: 'https://source.unsplash.com/random/400x200/?database',
-      category: 'Bases de Datos',
-      lastUpdated: 'Hace 1 mes'
-    },
-  ];
 
+  // ✅ Usa el custom hook para obtener los datos de la API
+  const { courses, loading, error } = useTeacherCourses();
+
+  // Muestra el estado de carga o error si es necesario
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorState message={error} />;
+  
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -87,302 +79,113 @@ const TeacherCourses = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      {/* Header with search and actions */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: { xs: 'column', md: 'row' }, 
-        justifyContent: 'space-between', 
-        alignItems: { xs: 'stretch', md: 'center' }, 
-        gap: 2, 
-        mb: 4 
-      }}>
-        <Box>
-          <Typography variant="h4" component="h1" sx={{ 
-            fontWeight: 700, 
-            color: 'gray.900',
-            mb: 0.5
-          }}>
-            Mis Cursos
-          </Typography>
-          <Typography variant="body2" color="gray.600">
-            Gestiona y crea nuevos cursos para tus estudiantes
-          </Typography>
-        </Box>
-        
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
+    <Box sx={{ p: 4 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
+        <Typography variant="h4" component="h1" fontWeight="bold">
+          Mis Cursos
+        </Typography>
+        <Button 
+          variant="contained" 
+          startIcon={<AddIcon />} 
           component={Link}
-          to="/teacher/courses/new"
-          sx={{
-            bgcolor: 'red.500',
-            '&:hover': {
-              bgcolor: 'red.600'
-            },
-            alignSelf: { xs: 'stretch', md: 'center' },
-            px: 3,
-            py: 1.5,
-            borderRadius: 2,
-            fontWeight: 600,
-            textTransform: 'none',
-            boxShadow: '0 4px 14px 0 rgba(239, 68, 68, 0.25)'
-          }}
+          to="/teacher/courses/create"
         >
-          Crear nuevo curso
+          Nuevo Curso
         </Button>
-      </Box>
-
-      {/* Filters and Search */}
-      <Paper 
-        elevation={0}
-        sx={{ 
-          p: 2, 
-          mb: 4, 
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'gray.200',
-          bgcolor: 'white'
-        }}
-      >
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: 2,
-          alignItems: { xs: 'stretch', sm: 'center' }
-        }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            size="small"
-            placeholder="Buscar cursos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-              sx: { 
-                backgroundColor: 'white',
-                borderRadius: 2,
-                '&:hover fieldset': {
-                  borderColor: 'red.300',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'red.500',
-                },
-              }
-            }}
-          />
-          
-          <FormControl 
-            variant="outlined" 
-            size="small"
-            sx={{ minWidth: 200, width: { xs: '100%', sm: 'auto' } }}
-          >
-            <InputLabel>Filtrar por estado</InputLabel>
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              label="Filtrar por estado"
-              sx={{
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'red.300',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'red.500',
-                },
+      </Stack>
+      
+      {/* Search and filter section */}
+      <Paper sx={{ p: 2, mb: 4 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={6} md={8}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Buscar por título o descripción..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
               }}
-            >
-              <MenuItem value="todos">Todos los estados</MenuItem>
-              <MenuItem value="Activo">Activos</MenuItem>
-              <MenuItem value="Borrador">Borradores</MenuItem>
-              <MenuItem value="Archivado">Archivados</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <FormControl fullWidth>
+              <InputLabel>Estado</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Estado"
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="todos">Todos</MenuItem>
+                <MenuItem value="Activo">Activo</MenuItem>
+                <MenuItem value="Borrador">Borrador</MenuItem>
+                <MenuItem value="Archivado">Archivado</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
       </Paper>
 
       {filteredCourses.length === 0 ? (
-        <Box sx={{ 
-          textAlign: 'center', 
-          p: 6, 
-          bgcolor: 'gray.50', 
-          borderRadius: 2,
-          border: '1px dashed',
-          borderColor: 'gray.200'
-        }}>
-          <Typography variant="h6" color="gray.500" gutterBottom>
-            No se encontraron cursos
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary">
+            No tienes cursos creados o no hay resultados para tu búsqueda.
           </Typography>
-          <Typography variant="body2" color="gray.500" sx={{ mb: 3 }}>
-            {searchTerm || statusFilter !== 'todos' 
-              ? 'Intenta con otros términos de búsqueda o filtros' 
-              : 'Aún no has creado ningún curso'}
-          </Typography>
-          <Button 
-            variant="outlined" 
-            color="error"
-            startIcon={<AddIcon />}
-            href="/teacher/courses/new"
-            sx={{
-              borderColor: 'red.500',
-              color: 'red.500',
-              '&:hover': {
-                borderColor: 'red.600',
-                backgroundColor: 'rgba(239, 68, 68, 0.04)'
-              }
-            }}
-          >
-            Crear mi primer curso
-          </Button>
         </Box>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={4}>
           {filteredCourses.map((course) => (
-            <Grid item xs={12} sm={6} lg={4} key={course.id}>
-              <Card 
-                elevation={0}
-                sx={{ 
-                  height: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  borderRadius: 2,
-                  border: '1px solid',
-                  borderColor: 'gray.200',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
-                  }
-                }}
-              >
+            <Grid item key={course.id} xs={12} sm={6} md={4}>
+              <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', borderRadius: 2, overflow: 'hidden', boxShadow: 3 }}>
                 <CardMedia
                   component="img"
                   height="140"
-                  image={course.image}
-                  alt={course.title}
-                  sx={{ 
-                    borderTopLeftRadius: 8, 
-                    borderTopRightRadius: 8,
-                    objectFit: 'cover'
-                  }}
+                  image={course.image || 'https://via.placeholder.com/400x200?text=Imagen+del+curso'}
+                  alt={`Imagen de ${course.title}`}
                 />
-                <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                <CardContent sx={{ flexGrow: 1, p: 2 }}>
                   <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                    <Chip 
-                      label={course.status}
-                      size="small"
-                      color={getStatusColor(course.status)}
-                      variant={course.status === 'Borrador' ? 'outlined' : 'filled'}
-                      sx={{ 
-                        fontWeight: 500,
-                        '& .MuiChip-label': {
-                          px: 1
-                        }
-                      }}
-                    />
-                    <Chip 
-                      label={course.category}
-                      size="small"
-                      variant="outlined"
-                      sx={{ 
-                        color: 'gray.600',
-                        borderColor: 'gray.300',
-                        '& .MuiChip-label': {
-                          px: 1,
-                          fontSize: '0.7rem'
-                        }
-                      }}
-                    />
+                    <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+                      {course.title}
+                    </Typography>
+                    <Chip label={course.status} color={getStatusColor(course.status)} size="small" sx={{ ml: 1 }} />
                   </Stack>
-                  
-                  <Typography 
-                    variant="h6" 
-                    component="h3" 
-                    sx={{ 
-                      fontWeight: 700, 
-                      mb: 1,
-                      color: 'gray.900',
-                      minHeight: '3.5rem',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {course.title}
-                  </Typography>
-                  
-                  <Typography 
-                    variant="body2" 
-                    color="gray.600" 
-                    sx={{ 
-                      mb: 2,
-                      minHeight: '3em',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                     {course.description}
                   </Typography>
-                  
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="caption" color="gray.500">
-                        Progreso del curso
-                      </Typography>
-                      <Typography variant="caption" color="gray.900" fontWeight={500}>
-                        {course.progress}%
-                      </Typography>
-                    </Box>
-                    <Box sx={{ 
-                      width: '100%', 
-                      height: 6, 
-                      bgcolor: 'gray.100',
-                      borderRadius: 3,
-                      overflow: 'hidden'
-                    }}>
-                      <Box 
-                        sx={{ 
-                          width: `${course.progress}%`, 
-                          height: '100%', 
-                          bgcolor: 'red.500',
-                          borderRadius: 3
-                        }} 
-                      />
-                    </Box>
-                  </Box>
-                  
-                  <Stack 
-                    direction="row" 
-                    justifyContent="space-between" 
-                    alignItems="center"
-                    sx={{ 
-                      mt: 'auto',
-                      pt: 2,
-                      borderTop: '1px solid',
-                      borderColor: 'gray.100'
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PeopleIcon fontSize="small" sx={{ color: 'gray.400' }} />
-                      <Typography variant="body2" color="gray.600">
-                        {course.students} {course.students === 1 ? 'estudiante' : 'estudiantes'}
-                      </Typography>
-                    </Box>
-                    
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Ver estadísticas">
-                        <IconButton 
+                  <Stack direction="row" spacing={1} alignItems="center" mt={2}>
+                    <Typography variant="body2" color="text.secondary">
+                      Estudiantes: {course.students || 0}
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" spacing={1} mt={2}>
+                    <Box>
+                      <Tooltip title="Ver estudiantes">
+                        <IconButton
                           size="small"
-                          sx={{ 
+                          href={`/teacher/courses/${course.id}/students`}
+                          sx={{
+                            color: 'gray.500',
+                            '&:hover': {
+                              color: 'blue.500',
+                              bgcolor: 'rgba(59, 130, 246, 0.1)'
+                            }
+                          }}
+                        >
+                          <PeopleIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Ver estadísticas">
+                        <IconButton
+                          size="small"
+                          href={`/teacher/courses/${course.id}/stats`}
+                          sx={{
                             color: 'gray.500',
                             '&:hover': {
                               color: 'red.500',

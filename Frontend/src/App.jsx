@@ -2,9 +2,11 @@ import { Suspense, useCallback, useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { router } from "@/routes/router";
 import { AuthProvider } from "@/contexts/AuthContext";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import LoadingSpinner from "@/shared/components/LoadingSpinner";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/services/queryClient';
 
 function App() {
   const handleLogout = useCallback(() => {
@@ -13,10 +15,11 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider onLogout={handleLogout}>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider onLogout={handleLogout}>
       <Suspense fallback={<LoadingSpinner />}>
         <RouterProvider router={router} />
-        <ToastContainer 
+        <ToastContainer
           position="top-right"
           autoClose={5000}
           hideProgressBar={false}
@@ -38,6 +41,8 @@ function App() {
         />
       </Suspense>
     </AuthProvider>
+    </QueryClientProvider>
+    
   );
 }
 

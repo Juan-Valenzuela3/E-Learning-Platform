@@ -41,27 +41,23 @@ public class CourseVideoController {
             return null;
         }
 
-        try {
-            Object principal = authentication.getPrincipal();
+        Object principal = authentication.getPrincipal();
 
-            // Si el principal es un User, extraer el ID directamente
-            if (principal instanceof User) {
-                return ((User) principal).getId();
-            }
-
-            // Si el principal es un UserDetails personalizado, obtener el ID por email
-            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
-                String username =
-                        ((org.springframework.security.core.userdetails.UserDetails) principal)
-                                .getUsername();
-                User user = userService.findByEmail(username);
-                return user != null ? user.getId() : null;
-            }
-
-            return null;
-        } catch (Exception e) {
-            return null;
+        // Si el principal es un User, extraer el ID directamente
+        if (principal instanceof User) {
+            return ((User) principal).getId();
         }
+
+        // Si el principal es un UserDetails personalizado, obtener el ID por email
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            String username =
+                    ((org.springframework.security.core.userdetails.UserDetails) principal)
+                            .getUsername();
+            User user = userService.findByEmail(username);
+            return user != null ? user.getId() : null;
+        }
+
+        return null;
     }
 
     @PostMapping

@@ -4,6 +4,19 @@ import { CheckCircle2, BookOpen, Bell, Clock, MoreHorizontal } from "lucide-reac
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
+// ✅ Función de ayuda para formatear la fecha de forma segura
+const formatActivityTime = (dateString) => {
+  // Manejo defensivo: Verifica si la fecha es válida
+  if (!dateString) {
+    return 'Fecha no disponible';
+  }
+  const date = new Date(dateString);
+  if (isNaN(date)) {
+    return 'Fecha no válida';
+  }
+  return formatDistanceToNow(date, { addSuffix: true, locale: es });
+};
+
 export default function ActivityFeed({ activities, onMarkAsRead }) {
   const getActivityIcon = (type) => {
     const iconProps = { className: "h-4 w-4 mt-0.5 flex-shrink-0" };
@@ -33,22 +46,15 @@ export default function ActivityFeed({ activities, onMarkAsRead }) {
     }
   };
 
-  const formatActivityTime = (date) => {
-    return formatDistanceToNow(new Date(date), { 
-      addSuffix: true,
-      locale: es 
-    });
-  };
-
-  if (activities.length === 0) {
+  if (!activities || activities.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Actividad reciente</CardTitle>
+          <CardTitle>Actividad Reciente</CardTitle>
         </CardHeader>
         <CardContent className="text-center py-8">
           <Clock className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-          <p className="text-sm text-gray-500">No hay actividad reciente</p>
+          <p className="text-sm text-gray-500">No hay actividad reciente.</p>
         </CardContent>
       </Card>
     );
@@ -56,9 +62,9 @@ export default function ActivityFeed({ activities, onMarkAsRead }) {
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <CardTitle>Actividad reciente</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <CardTitle className="text-xl">Actividad Reciente</CardTitle>
+        <div className="text-sm text-gray-500">
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
@@ -81,9 +87,10 @@ export default function ActivityFeed({ activities, onMarkAsRead }) {
               </p>
               <div className="flex items-center mt-1">
                 <span className="text-xs text-gray-500">
+                  {/* ✅ Llama a la función segura para formatear la fecha */}
                   {formatActivityTime(activity.time)}
                 </span>
-                <span className="mx-2 text-gray-300">•</span>
+                <span className="mx-2 text-gray-300"> • </span>
                 <span className="text-xs font-medium text-blue-600">
                   {activity.courseName}
                 </span>
@@ -94,7 +101,7 @@ export default function ActivityFeed({ activities, onMarkAsRead }) {
       </CardContent>
       <CardFooter className="border-t px-6 py-3">
         <Button variant="ghost" className="text-blue-600 w-full" size="sm">
-          Ver toda la actividad
+          Ver todas las actividades
         </Button>
       </CardFooter>
     </Card>
