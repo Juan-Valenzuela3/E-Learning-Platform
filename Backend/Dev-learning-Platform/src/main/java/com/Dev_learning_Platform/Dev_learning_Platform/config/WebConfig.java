@@ -28,6 +28,14 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowCredentials(true)
                 .maxAge(3600);
         
+        // Configuración específica para endpoints de autenticación
+        registry.addMapping("/auth/**")
+                .allowedOrigins(allowedOrigins)
+                .allowedMethods("GET", "POST", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+        
         log.info("CORS configurado correctamente");
     }
 }

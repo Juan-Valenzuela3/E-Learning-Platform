@@ -94,9 +94,20 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // 🚫 Error 403 - Forbidden (problemas de permisos/CORS)
+    if (status === 403) {
+      console.error('=== API INTERCEPTOR: Error 403 ===');
+      console.error('URL:', originalRequest.url);
+      console.error('Method:', originalRequest.method);
+      console.error('Headers:', originalRequest.headers);
+      console.error('Data:', data);
+      
+      const errorMessage = data?.message || "No tienes permiso para esta acción o hay un problema de configuración CORS";
+      return Promise.reject(new Error(errorMessage));
+    }
+
     // ⚠️ Otros errores comunes
     let errorMessage = data?.message || "Ocurrió un error inesperado";
-    if (status === 403) errorMessage = "No tienes permiso para esta acción";
     if (status === 404) errorMessage = "Recurso no encontrado";
     if (status === 500)
       errorMessage = "Error interno del servidor. Intenta más tarde.";
