@@ -208,10 +208,17 @@ const validateToken = async () => {
       return { valid: false };
     }
 
-    // Validar con el servidor usando query parameter según API.md
-    const response = await api.get(`/auth/validate?token=${token}`);
+    // CRÍTICO: Validar con el servidor usando query parameter según AuthController.java
+    // NO usar header Authorization, sino query parameter ?token=
+    const response = await api.get(`/auth/validate?token=${encodeURIComponent(token)}`, {
+      // Temporalmente remover el header Authorization para esta llamada específica
+      headers: {
+        Authorization: undefined
+      }
+    });
     return response.data || { valid: false };
   } catch (error) {
+    console.error('Error validando token:', error);
     // Si hay un error en la validación, cerramos sesión
     logout();
     return { valid: false };
@@ -227,11 +234,18 @@ const verifyToken = async (token) => {
   try {
     if (!token) return false;
     
-    // Enviar token como query parameter según documentación API.md
-    const response = await api.get(`/auth/validate?token=${token}`);
+    // CRÍTICO: Enviar token como query parameter según AuthController.java
+    // NO usar header Authorization, sino query parameter ?token=
+    const response = await api.get(`/auth/validate?token=${encodeURIComponent(token)}`, {
+      // Temporalmente remover el header Authorization para esta llamada específica
+      headers: {
+        Authorization: undefined
+      }
+    });
     
     return response.data?.valid || false;
   } catch (error) {
+    console.error('Error verificando token:', error);
     return false;
   }
 };

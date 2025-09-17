@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,6 +64,10 @@ public class CourseService {
 
     public List<Course> getPublicCourses() {
         return courseRepository.findByIsActiveAndIsPublished(true, true);
+    }
+
+    public Page<Course> getPublicCourses(Pageable pageable) {
+        return courseRepository.findByIsActiveAndIsPublished(true, true, pageable);
     }
 
     public Course findById(Long courseId) {
