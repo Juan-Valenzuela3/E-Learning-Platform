@@ -524,14 +524,14 @@ export default function DashboardStudent() {
             />
           </div>
 
-          {/* Información de debugging */}
+          {/* Información de debugging
           <div className="mb-4 text-xs text-gray-500 bg-gray-50 p-2 rounded">
             ID: {enrollment.id} | Inscrito:{" "}
             {enrollment.enrolledAt
               ? format(new Date(enrollment.enrolledAt), "dd/MM/yyyy")
               : "N/A"}
           </div>
-
+*/}
           {/* Acciones */}
           <div className="flex gap-2">
             <Button
@@ -625,6 +625,7 @@ export default function DashboardStudent() {
   );
 
   // === PANEL DE DEBUGGING ===
+  {/*
   const DebugPanel = () => {
     if (!debugInfo) return null;
 
@@ -678,6 +679,8 @@ export default function DashboardStudent() {
       </Card>
     );
   };
+
+  */}
 
   // Estado de carga
   if (loading) {
@@ -757,7 +760,7 @@ export default function DashboardStudent() {
           </div>
         </div>
 
-        {/* === PANEL DE DEBUGGING === */}
+        {/* === PANEL DE DEBUGGING ===
         <DebugPanel />
 
         {/* === ESTADÍSTICAS === */}
@@ -908,7 +911,7 @@ export default function DashboardStudent() {
                       aprendizaje
                     </p>
 
-                    {/* Información adicional si hay debugging data */}
+                    {/* Información adicional si hay debugging data
                     {debugInfo && debugInfo.all && debugInfo.all.length > 0 && (
                       <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <p className="text-sm text-yellow-800">
@@ -919,7 +922,7 @@ export default function DashboardStudent() {
                         </p>
                       </div>
                     )}
-
+*/}
                     <Button
                       asChild
                       className="bg-red-500 hover:bg-red-600 text-white font-semibold px-8 py-3">
