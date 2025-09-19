@@ -156,7 +156,7 @@ const TeacherDashboardHome = () => {
       title: "Crear Nuevo Curso",
       description: "Comienza a crear un curso desde cero",
       icon: Plus,
-      to: "/teacher/courses/new",
+      to: "/teacher/courses/create",
     },
     {
       title: "Ver Mis Cursos",

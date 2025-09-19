@@ -16,7 +16,6 @@ import { getCourseById, deleteCourse } from "@/services/courseService";
 import { getStudentsByCourseId } from "@/services/courseService";
 import { generateCoursePlaceholder } from "@/utils/imageUtils";
 import LoadingSpinner from "@/shared/components/LoadingSpinner";
-import { toast } from "react-toastify";
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -162,11 +161,11 @@ const CourseDetail = () => {
       await deleteCourse(id);
 
       console.log("✅ Curso eliminado exitosamente");
-      toast.success("Curso eliminado exitosamente");
+      alert("Curso eliminado exitosamente");
       navigate("/teacher/courses");
     } catch (error) {
       console.error("❌ Error al eliminar curso:", error);
-      toast.error(`Error al eliminar el curso: ${error.message}`);
+      alert(`Error al eliminar el curso: ${error.message}`);
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
