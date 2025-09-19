@@ -1,135 +1,150 @@
-import React, { lazy, Suspense } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { lazy, Suspense } from "react";
+import { Navigate } from "react-router-dom";
 import LandingLayout from "@/ui/layout/LandingLayout";
-import LoadingSpinner from '@/shared/components/LoadingSpinner';
-import { elements } from 'chart.js';
+import LoadingSpinner from "@/shared/components/LoadingSpinner";
+import LoadingFallback from "@/shared/components/LoadingFallback";
+import ErrorPage from "@/pages/ErrorPage";
 
-
-
-
-
-// importar paginas con lazy 
+// importar paginas con lazy
 const LandingPage = lazy(() => import("@/features/marketing/pages/Home"));
 const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage"));
 const RegisterPage = lazy(() => import("@/features/auth/pages/RegisterPage"));
-const CatalogoCursos = lazy(() => import("@/features/marketing/pages/CatalogoCursos"));
-const CourseDetail = lazy(() => import("@/features/course/components/CourseDetail"));
+const ForgotPasswordPage = lazy(() =>
+  import("@/features/auth/pages/ForgotPasswordPage")
+);
+const ResetPasswordPage = lazy(() =>
+  import("@/features/auth/pages/ResetPasswordPage")
+);
+const CatalogoCursos = lazy(() =>
+  import("@/features/marketing/pages/CatalogoCursos")
+);
+const CourseDetail = lazy(() =>
+  import("@/features/course/components/CourseDetail")
+);
+const PaymentSuccess = lazy(() =>
+  import("@/features/payment/pages/PaymentSuccess")
+);
+const PaymentCancel = lazy(() =>
+  import("@/features/payment/pages/PaymentCancel")
+);
 const NotFoundPage = lazy(() => import("@/shared/ui/layout/NotFound"));
-const ComoFunciona = lazy(() => import("@/features/marketing/pages/comoFunciona"));
+const ComoFunciona = lazy(() =>
+  import("@/features/marketing/pages/comoFunciona")
+);
 const TestConnection = lazy(() => import("@/features/test/TextConnection"));
-const ErrorPage = lazy(() => import("@/pages/ErrorPage"));
-
 
 const CentroAyuda = lazy(() => import("@/pages/CentroAyuda"));
 const Contacto = lazy(() => import("@/pages/Contacto"));
 const TerminosUso = lazy(() => import("@/pages/TerminosUso"));
 const Privacidad = lazy(() => import("@/pages/Privacidad"));
-
-
-
-const LoadingFallback = () => (
-  <div className="min-h-[60vh] flex items-center justify-center">
-    <LoadingSpinner/>
-  </div>
-)
-
+const AuthLoadingScreen = lazy(() => import("@/shared/components/auth/AuthLoadingScreen"));
 const publicRoutes = [
   {
     path: "/",
-    element: 
-    <LandingLayout />
-    ,
+    element: <LandingLayout />,
     children: [
       {
         index: true,
         errorElement: <ErrorPage />,
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
             <LandingPage />
           </Suspense>
         ),
-       
-       
       },
       {
         path: "comoFunciona",
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
-          <ComoFunciona />
+            <ComoFunciona />
           </Suspense>
-        ) ,
+        ),
       },
       {
         path: "centro-ayuda",
-        element:(
-         <Suspense fallback={<LoadingFallback/>}
-        ><CentroAyuda />
-        </Suspense>
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <CentroAyuda />
+          </Suspense>
         ),
       },
       {
         path: "contacto",
         element: (
-           <Suspense fallback={<LoadingFallback/>}>
+          <Suspense fallback={<LoadingFallback />}>
             <Contacto />
-            </Suspense>
-        )
-       ,
+          </Suspense>
+        ),
       },
       {
         path: "terminos-de-uso",
         element: (
           <Suspense fallback={<LoadingFallback />}>
-          <TerminosUso />
+            <TerminosUso />
           </Suspense>
         ),
       },
       {
         path: "politica-de-privacidad",
-        element:(
-           <Suspense fallback={<LoadingFallback/>}>
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
             <Privacidad />
-            </Suspense>
-        )
-        ,
+          </Suspense>
+        ),
       },
       {
         path: "test-connection",
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
-          <TestConnection />
+            <TestConnection />
           </Suspense>
-        ) ,
+        ),
       },
       {
         path: "cursos",
         element: (
           <Suspense fallback={<LoadingFallback />}>
-          <CatalogoCursos />
+            <CatalogoCursos />
+          </Suspense>
+        ),
+      },
+      {
+        path: "payment/success",
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <PaymentSuccess />
+          </Suspense>
+        ),
+      },
+      {
+        path: "payment/cancel",
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <PaymentCancel />
           </Suspense>
         ),
       },
       {
         path: "curso/:courseId",
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
-          <CourseDetail />
+            <CourseDetail />
           </Suspense>
         ),
       },
       {
         path: "not-found",
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
-          <NotFoundPage />
+            <NotFoundPage />
           </Suspense>
         ),
       },
       {
         path: "*",
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
-          <Navigate to="/not-found" replace />
+            <Navigate to="/not-found" replace />
           </Suspense>
         ),
       },
@@ -140,40 +155,62 @@ const publicRoutes = [
     children: [
       {
         index: true,
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
-          <Navigate to="/authentication/login" replace />
+            <Navigate to="/authentication/login" replace />
           </Suspense>
-        )
+        ),
       },
       {
         path: "login",
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
-          <LoginPage />
+            <LoginPage />
           </Suspense>
-        )
+        ),
       },
       {
         path: "register",
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
-          <RegisterPage />
+            <RegisterPage />
           </Suspense>
-        )
+        ),
+      },
+      {
+        path: "forgot-password",
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ForgotPasswordPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "reset-password",
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ResetPasswordPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "auth-loading",
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AuthLoadingScreen />
+          </Suspense>
+        ),
       },
       {
         path: "*",
-        element:(
+        element: (
           <Suspense fallback={<LoadingFallback />}>
-          <Navigate to="/authentication/login" replace />
+            <Navigate to="/authentication/login" replace />
           </Suspense>
-        )
-      }
-    ]
+        ),
+      },
+    ],
   },
-
-
 ];
 
 export default publicRoutes;

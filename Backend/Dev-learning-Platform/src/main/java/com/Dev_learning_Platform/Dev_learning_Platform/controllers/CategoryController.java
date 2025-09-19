@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CategoryPublicDto;
 import com.Dev_learning_Platform.Dev_learning_Platform.models.Category;
 import com.Dev_learning_Platform.Dev_learning_Platform.services.CategoryService;
 
@@ -29,9 +30,9 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<List<Category>> getAllActiveCategories() {
+    public ResponseEntity<List<CategoryPublicDto>> getAllActiveCategories() {
         try {
-            List<Category> categories = categoryService.getAllActiveCategories();
+            List<CategoryPublicDto> categories = categoryService.getAllActiveCategories();
             return ResponseEntity.ok(categories);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

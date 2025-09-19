@@ -1,8 +1,15 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useState, useEffect, useCallback, useContext } from "react";
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+} from "react";
 import { ROLE_PERMISSIONS } from "@/shared/constants/roles";
 import authService from "@/services/authService";
 import { setupResponseInterceptors } from "@/services/authInterceptor";
+import api from "@/services/api";
 
 export const AuthContext = createContext();
 
@@ -36,8 +43,10 @@ export const AuthProvider = ({ children, onLogout }) => {
 
       try {
         const token = authService.getToken();
-        console.log('Token encontrado en localStorage:', token ? '***' + token.slice(-10) : 'No hay token');
-
+        console.log(
+          "Token encontrado en localStorage:",
+          token ? "***" + token.slice(-10) : "No hay token"
+        );
 
         if (!token) {
           setLoading(false);
@@ -48,7 +57,7 @@ export const AuthProvider = ({ children, onLogout }) => {
         const response = await authService.validateToken(token);
 
         if (!response || !response.valid) {
-          console.log('Token inválido según el servidor, cerrando sesión...');
+          console.log("Token inválido según el servidor, cerrando sesión...");
           authService.logout();
           setUser(null);
         } else {
@@ -57,8 +66,8 @@ export const AuthProvider = ({ children, onLogout }) => {
           if (isMounted) setUser(userData);
         }
       } catch (error) {
-        console.error('Error al validar token:', error);
-        setError('Error al verificar la sesión');
+        console.error("Error al validar token:", error);
+        setError("Error al verificar la sesión");
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -78,19 +87,18 @@ export const AuthProvider = ({ children, onLogout }) => {
 
     try {
       const { token, user } = userData;
-      if (!token || !user) throw new Error('Datos de usuario inválidos');
+      if (!token || !user) throw new Error("Datos de usuario inválidos");
 
       setUser(user);
       authService.setToken(token);
 
       // Actualizar headers de axios
-      const api = (await import('@/services/api')).default;
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       return { success: true, data: user, token };
     } catch (error) {
-      console.error('Error al iniciar sesión:', error);
-      setError(error.message || 'Error de autenticación');
+      console.error("Error al iniciar sesión:", error);
+      setError(error.message || "Error de autenticación");
       authService.logout();
       return { success: false, error: error.message };
     } finally {
@@ -99,34 +107,37 @@ export const AuthProvider = ({ children, onLogout }) => {
   }, []);
 
   // Logout
-  const logout = useCallback(async (options = {}) => {
-    try {
-      console.log('=== AUTH CONTEXT: Iniciando logout ===');
-      console.log('Options:', options);
-      
-      // authService.logout() no es asíncrono, pero limpia los datos
-      authService.logout();
-      setUser(null);
-      setError(null);
+  const logout = useCallback(
+    async (options = {}) => {
+      try {
+        console.log("=== AUTH CONTEXT: Iniciando logout ===");
+        console.log("Options:", options);
 
-      let redirectTo = '/';
-      if (options.redirectTo) redirectTo = options.redirectTo;
-      else if (onLogoutCallback) {
-        const result = onLogoutCallback();
-        if (result) redirectTo = result;
-      }
+        // authService.logout() no es asíncrono, pero limpia los datos
+        authService.logout();
+        setUser(null);
+        setError(null);
 
-      console.log('=== AUTH CONTEXT: Redirigiendo a ===', redirectTo);
-      if (options.redirect !== false && redirectTo) {
-        window.location.href = redirectTo;
+        let redirectTo = "/";
+        if (options.redirectTo) redirectTo = options.redirectTo;
+        else if (onLogoutCallback) {
+          const result = onLogoutCallback();
+          if (result) redirectTo = result;
+        }
+
+        console.log("=== AUTH CONTEXT: Redirigiendo a ===", redirectTo);
+        if (options.redirect !== false && redirectTo) {
+          window.location.href = redirectTo;
+        }
+
+        return { success: true };
+      } catch (error) {
+        console.error("Error durante logout:", error);
+        return { success: false, error };
       }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Error durante logout:', error);
-      return { success: false, error };
-    }
-  }, [onLogoutCallback]);
+    },
+    [onLogoutCallback]
+  );
 
   // Registro
   const register = useCallback(async (userData) => {
@@ -139,28 +150,27 @@ export const AuthProvider = ({ children, onLogout }) => {
         lastName: userData.lastName,
         email: userData.email,
         password: userData.password,
-        role: userData.role || 'STUDENT'
+        role: userData.role || "STUDENT",
       });
 
       // authService.register() hace auto-login, así que response ya contiene datos del usuario
       if (response && response.id) {
         // Establecer el usuario como autenticado
         setUser(response);
-        
+
         // Actualizar headers de axios
         const token = authService.getToken();
         if (token) {
-          const api = (await import('@/services/api')).default;
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         }
-        
+
         return { success: true, data: response, autoLogin: true };
       }
-      
-      return { success: false, error: 'No se pudo completar el registro' };
+
+      return { success: false, error: "No se pudo completar el registro" };
     } catch (error) {
-      console.error('Error de registro:', error);
-      const errorMessage = error.message || 'Error al registrar el usuario';
+      console.error("Error de registro:", error);
+      const errorMessage = error.message || "Error al registrar el usuario";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -184,8 +194,8 @@ export const AuthProvider = ({ children, onLogout }) => {
       setUser(profile);
       return profile;
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      setError('Error al cargar perfil');
+      console.error("Error fetching profile:", error);
+      setError("Error al cargar perfil");
       throw error;
     } finally {
       setLoading(false);
@@ -199,11 +209,11 @@ export const AuthProvider = ({ children, onLogout }) => {
 
     try {
       const updatedProfile = await authService.updateProfile(updates);
-      setUser(prev => ({ ...prev, ...updatedProfile }));
+      setUser((prev) => ({ ...prev, ...updatedProfile }));
       return updatedProfile;
     } catch (error) {
-      console.error('Error updating profile:', error);
-      setError('Error al actualizar perfil');
+      console.error("Error updating profile:", error);
+      setError("Error al actualizar perfil");
       throw error;
     } finally {
       setLoading(false);
@@ -215,7 +225,7 @@ export const AuthProvider = ({ children, onLogout }) => {
     loading,
     error,
     isAuthenticated: !!user,
-    role: user?.role || 'guest',
+    role: user?.role || "guest",
     login,
     logout,
     register,
@@ -223,7 +233,7 @@ export const AuthProvider = ({ children, onLogout }) => {
     setLogoutCallback,
     fetchProfile,
     updateProfile,
-    setError
+    setError,
   };
 
   return (
@@ -236,7 +246,7 @@ export const AuthProvider = ({ children, onLogout }) => {
 // Hook personalizado para usar AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth debe usarse dentro de AuthProvider');
+  if (!context) throw new Error("useAuth debe usarse dentro de AuthProvider");
   return context;
 };
 

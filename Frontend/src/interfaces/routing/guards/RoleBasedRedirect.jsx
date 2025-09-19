@@ -1,6 +1,6 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/shared/hooks/useAuth';
-import LoadingSpinner from '@/shared/components/LoadingSpinner';
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/useAuth";
+import LoadingSpinner from "@/shared/components/LoadingSpinner";
 
 export default function RoleBasedRedirect() {
   const { user, loading } = useAuth();
@@ -23,16 +23,16 @@ export default function RoleBasedRedirect() {
   const currentPath = location.pathname;
 
   // Profesor: cualquier ruta que comience con /teacher es considerada válida
-  if (user.role === 'INSTRUCTOR' || user.role === 'teacher') {
-    const isTeacherPath = currentPath.startsWith('/teacher');
+  if (user.role === "INSTRUCTOR" || user.role === "teacher") {
+    const isTeacherPath = currentPath.startsWith("/teacher");
     if (!isTeacherPath) {
       return <Navigate to="/teacher/dashboard" replace />;
     }
   }
 
   // Admin: redirigir a /admin si no está ya en una ruta de admin
-  if (user.role === 'ADMIN' || user.role === 'admin') {
-    const isAdminPath = currentPath.startsWith('/admin');
+  if (user.role === "ADMIN" || user.role === "admin") {
+    const isAdminPath = currentPath.startsWith("/admin");
     if (!isAdminPath) {
       return <Navigate to="/admin" replace />;
     }
@@ -40,14 +40,13 @@ export default function RoleBasedRedirect() {
   }
 
   // Estudiante: cualquier ruta que comience con /student es considerada válida
-  if (user.role === 'STUDENT' || user.role === 'student') {
-    const isStudentPath = (
-      currentPath.startsWith('/dashboard') ||
-      currentPath.startsWith('/mis-cursos') ||
-      currentPath.startsWith('/pagos') ||
-      currentPath.startsWith('/perfil') ||
-      currentPath.startsWith('/curso/')
-    );
+  if (user.role === "STUDENT" || user.role === "student") {
+    const isStudentPath =
+      currentPath.startsWith("/dashboard") ||
+      currentPath.startsWith("/mis-cursos") ||
+      currentPath.startsWith("/pagos") ||
+      currentPath.startsWith("/perfil") ||
+      currentPath.startsWith("/curso/");
     if (!isStudentPath) {
       return <Navigate to="/dashboard" replace />;
     }

@@ -2,61 +2,45 @@
 
 import { useState, useEffect } from 'react';
 import { getCoursesByInstructorId } from '@/services/courseService';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-toastify';
 
 /**
- * Hook personalizado para obtener los cursos del instructor actual autenticado.
+ * Hook personalizado para obtener los cursos de un instructor.
+ * @param {number} instructorId - El ID del instructor.
  * @returns {{ courses: Array, loading: boolean, error: string | null }}
  */
-export const useTeacherCourses = () => {
+export const useTeacherCourses = (instructorId) => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useAuth(); // Obtener usuario autenticado
+
+  const fetchCourses = async () => {
+    if (!instructorId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const fetchedCourses = await getCoursesByInstructorId(instructorId);
+      setCourses(fetchedCourses);
+    } catch (err) {
+      console.error("Error al cargar los cursos:", err);
+      setError("Ocurrió un error al cargar tus cursos.");
+      toast.error("Error al cargar tus cursos.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Si no hay usuario autenticado o no es instructor, no hacemos la llamada
-    if (!user || !user.id) {
-      console.log('=== useTeacherCourses: Sin usuario autenticado ===');
-      setLoading(false);
-      setError('Usuario no autenticado');
-      return;
-    }
-
-    // Verificar que el usuario sea instructor
-    if (user.role !== 'INSTRUCTOR' && user.role !== 'ADMIN') {
-      console.log('=== useTeacherCourses: Usuario no es instructor ===');
-      console.log('Rol del usuario:', user.role);
-      setLoading(false);
-      setError('Acceso no autorizado');
-      return;
-    }
-
-    const fetchCourses = async () => {
-      console.log('=== useTeacherCourses: Iniciando carga de cursos ===');
-      console.log('Instructor ID:', user.id);
-      console.log('Usuario completo:', user);
-      
-      setLoading(true);
-      setError(null);
-      try {
-        const fetchedCourses = await getCoursesByInstructorId(user.id);
-        console.log('=== useTeacherCourses: Cursos obtenidos ===');
-        console.log('Número de cursos:', fetchedCourses?.length);
-        console.log('Cursos:', fetchedCourses);
-        setCourses(fetchedCourses || []);
-      } catch (err) {
-        console.error("=== useTeacherCourses: Error al cargar los cursos ===", err);
-        setError("Ocurrió un error al cargar tus cursos.");
-        toast.error("Error al cargar tus cursos.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCourses();
-  }, [user]); // El efecto se vuelve a ejecutar si el usuario cambia
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instructorId]);
 
-  return { courses, loading, error };
+  const refreshCourses = () => {
+    fetchCourses();
+  };
+
+  return { courses, loading, error, refreshCourses };
 };

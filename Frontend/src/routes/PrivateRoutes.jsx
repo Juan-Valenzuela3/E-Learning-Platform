@@ -51,7 +51,19 @@ const privateRoutes = [
         element: <PurchasedCourses />,
       },
       {
-        path: "/curso/:id",
+        path: "/mis-cursos/en-progreso",
+        element: <PurchasedCourses />,
+      },
+      {
+        path: "/mis-cursos/completados",
+        element: <PurchasedCourses />,
+      },
+      {
+        path: "/mis-cursos/todos",
+        element: <PurchasedCourses />,
+      },
+      {
+        path: "/curso/:id/content",
         element: <CourseContent />,
       },
       // {

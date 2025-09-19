@@ -172,7 +172,7 @@ const Courses = () => {
           <CardMedia
             component="img"
             height="140"
-            image={course.image}
+            image={course.thumbnailUrl || course.image}
             alt={course.title}
           />
           <StatusChip 
@@ -255,7 +255,7 @@ const Courses = () => {
             <CardMedia
               component="img"
               height="140"
-              image={course.image}
+              image={course.thumbnailUrl || course.image}
               alt={course.title}
               sx={{ height: '100%', objectFit: 'cover' }}
             />

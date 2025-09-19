@@ -1,3 +1,4 @@
+
 package com.Dev_learning_Platform.Dev_learning_Platform.services;
 
 import java.io.IOException;
@@ -130,5 +131,31 @@ public class FileUploadService {
             throw new IllegalArgumentException("El archivo debe tener una extensión");
         }
         return filename.substring(lastDotIndex + 1);
+    }
+    /**
+     * Sube una imagen de portada de curso y retorna la URL de acceso.
+     * @param file Archivo de imagen a subir
+     * @param username Nombre de usuario (para trazabilidad)
+     * @return URL completa de la imagen subida
+     * @throws IOException Si hay error en la subida
+     * @throws IllegalArgumentException Si el archivo no es válido
+     */
+    public String uploadCourseImage(MultipartFile file, String username) throws IOException {
+        log.info("Iniciando subida de imagen de portada de curso para usuario: {}", username);
+        validateFile(file); // Reutiliza validación de perfil
+
+        String imageUrl;
+        if ("test".equals(activeProfile)) {
+            log.info("Perfil de test detectado, simulando subida de imagen de curso");
+            imageUrl = String.format("https://mock-storage.example.com/course-thumbnails/%s_%s.jpg", username, UUID.randomUUID());
+        } else if (ociStorageService != null && ociStorageService.isAvailable()) {
+            log.info("Subiendo imagen de portada de curso a OCI Object Storage");
+            imageUrl = ociStorageService.uploadCourseThumbnail(file, username);
+        } else {
+            log.error("OCI Object Storage no está disponible. Verificar configuración.");
+            throw new IOException("Servicio de almacenamiento no disponible. Contactar al administrador.");
+        }
+        log.info("Imagen de portada de curso subida exitosamente: {}", imageUrl);
+        return imageUrl;
     }
 }

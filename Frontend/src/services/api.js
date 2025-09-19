@@ -1,10 +1,13 @@
 // src/lib/api.js
 import axios from "axios";
 
+const isProd = import.meta.env.MODE === 'production' || import.meta.env.VITE_ENV === 'production';
+
 // 🌐 Base URL según el entorno
-const API_URL = import.meta.env.DEV 
-  ? import.meta.env.VITE_API_URL || "" // En desarrollo usar la URL del backend desplegado o proxy de Vite
-  : ""; // En producción, usar rutas relativas que Vercel proxy manejará
+const API_URL = isProd
+  ? ''
+  : import.meta.env.VITE_API_URL;
+
 
 // ✅ Crear instancia de Axios
 const api = axios.create({
@@ -17,10 +20,51 @@ const api = axios.create({
 });
 
 // 🔑 Helpers para tokens
-const STORAGE_KEY={
-  TOKEN : 'token',
-  USER : 'user',
+const STORAGE_KEY = {
+  TOKEN: 'token',
+  USER: 'user',
 }
+
+// 🛠️ Utilidades para validar formato de datos
+const validateApiResponse = (data) => {
+  if (!data) return null;
+
+  // Si es string, intentar parsear como JSON
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch (parseError) {
+      console.warn('⚠️ No se pudo parsear respuesta como JSON:', parseError.message);
+      return { message: data };
+    }
+  }
+
+  // Si ya es objeto, devolverlo tal como está
+  if (typeof data === 'object') {
+    return data;
+  }
+
+  return data;
+};
+
+const cleanApiData = (data) => {
+  // Si ya es un objeto válido, no procesarlo
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(item => {
+      // Solo procesar si el item es string
+      if (typeof item === 'string') {
+        return validateApiResponse(item);
+      }
+      return item;
+    });
+  }
+
+  return validateApiResponse(data);
+};
 
 export const getToken = () => localStorage.getItem(STORAGE_KEY.TOKEN);
 export const setToken = (token) => {
@@ -45,9 +89,21 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 🚨 Interceptor para manejar errores
+// 🚨 Interceptor para manejar respuestas y errores
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // ✅ Solo procesar si la respuesta es string (no ya parseada)
+    if (response.data && typeof response.data === 'string') {
+      try {
+        response.data = JSON.parse(response.data);
+      } catch (error) {
+        console.warn('⚠️ Error parsing JSON response:', error.message);
+        // Mantener la respuesta original si no se puede parsear
+      }
+    }
+
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -73,11 +129,14 @@ api.interceptors.response.use(
 
     const { status, data } = error.response;
 
+    // 🔍 Usar datos de error directamente sin procesar
+    const errorData = data;
+
     // 🔑 Sesión expirada
     if (status === 401) {
       clearAuth();
-      if (window.location.pathname !== "/auth") {
-        window.location.href = "/auth";
+      if (window.location.pathname !== "/authentication") {
+        window.location.href = "/authentication/login";
       }
       return Promise.reject(
         new Error("Tu sesión ha expirado. Inicia sesión nuevamente.")
@@ -87,35 +146,16 @@ api.interceptors.response.use(
     // ⚠️ Error 400 - Bad Request (errores de validación)
     if (status === 400) {
       console.log('=== API INTERCEPTOR: Error 400 ===');
-      console.log('Data:', data);
+      console.log('Data:', errorData);
       console.log('Original Error:', error);
-      
+
       // Preservar el error original para que el service pueda manejarlo
       return Promise.reject(error);
     }
 
-    // 🚫 Error 403 - Forbidden (problemas de permisos/CORS)
-    if (status === 403) {
-      console.error('=== API INTERCEPTOR: Error 403 ===');
-      console.error('URL:', originalRequest.url);
-      console.error('Method:', originalRequest.method);
-      console.error('Headers:', originalRequest.headers);
-      console.error('Data:', data);
-      
-      let errorMessage = "No tienes permiso para esta acción";
-      
-      // Verificar si es un error de CORS específicamente
-      if (typeof data === 'string' && data.includes('CORS')) {
-        errorMessage = "Error de configuración CORS. Verifica que el backend esté configurado correctamente.";
-      } else if (typeof data === 'string' && data.includes('Invalid CORS request')) {
-        errorMessage = "Petición CORS inválida. Verifica la configuración del servidor.";
-      }
-      
-      return Promise.reject(new Error(errorMessage));
-    }
-
     // ⚠️ Otros errores comunes
-    let errorMessage = data?.message || "Ocurrió un error inesperado";
+    let errorMessage = errorData?.message || "Ocurrió un error inesperado";
+    if (status === 403) errorMessage = "No tienes permiso para esta acción";
     if (status === 404) errorMessage = "Recurso no encontrado";
     if (status === 500)
       errorMessage = "Error interno del servidor. Intenta más tarde.";
@@ -126,4 +166,6 @@ api.interceptors.response.use(
 
 
 
+// 📤 Exportar utilidades y API
+export { validateApiResponse, cleanApiData };
 export default api;

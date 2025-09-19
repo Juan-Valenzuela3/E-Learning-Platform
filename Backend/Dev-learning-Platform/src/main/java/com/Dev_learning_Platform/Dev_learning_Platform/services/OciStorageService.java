@@ -1,3 +1,4 @@
+// ...existing code...
 package com.Dev_learning_Platform.Dev_learning_Platform.services;
 
 import java.io.IOException;
@@ -25,6 +26,44 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(name = "oci.enabled", havingValue = "true")
 @Profile("!test")
 public class OciStorageService {
+    /**
+     * Sube una imagen de portada de curso a OCI Object Storage y retorna la URL pública.
+     * @param file Archivo de imagen
+     * @param username Nombre de usuario (para trazabilidad)
+     * @return URL pública de la imagen subida
+     * @throws IOException Si hay error en la subida
+     */
+    public String uploadCourseThumbnail(MultipartFile file, String username) throws IOException {
+        log.info("Subiendo imagen de portada de curso a OCI Object Storage para usuario: {}", username);
+        try {
+            String fileExtension = getFileExtension(file.getOriginalFilename());
+            String objectName = String.format("course-thumbnails/%s_%s.%s",
+                username, UUID.randomUUID().toString(), fileExtension);
+
+            try (InputStream inputStream = file.getInputStream()) {
+                PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .namespaceName(storageProperties.getNamespace())
+                    .bucketName(storageProperties.getBucketName())
+                    .objectName(objectName)
+                    .contentType(file.getContentType())
+                    .contentLength(file.getSize())
+                    .putObjectBody(inputStream)
+                    .build();
+
+                PutObjectResponse response = objectStorageClient.putObject(putObjectRequest);
+                if (response.get__httpStatusCode__() == 200) {
+                    String publicUrl = storageProperties.buildPublicUrl(objectName);
+                    log.info("Imagen de portada de curso subida exitosamente a OCI: {}", publicUrl);
+                    return publicUrl;
+                } else {
+                    throw new IOException("Error al subir archivo a OCI. Código de estado: " + response.get__httpStatusCode__());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error al subir imagen de portada de curso a OCI: {}", e.getMessage(), e);
+            throw new IOException("Falló la subida de portada de curso a OCI: " + e.getMessage(), e);
+        }
+    }
 
     private final ObjectStorageClient objectStorageClient;
     private final StorageProperties storageProperties;

@@ -1,5 +1,7 @@
 package com.Dev_learning_Platform.Dev_learning_Platform.config;
 
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +23,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.Dev_learning_Platform.Dev_learning_Platform.middlewares.JwtAuthenticationFilter;
 
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Arrays;
 
 
 @Configuration
@@ -51,17 +51,17 @@ public class Securityconfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         log.info("Configurando CORS en SecurityConfig con orígenes: {}", Arrays.toString(allowedOrigins));
-        
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins)); // Usar patterns para wildcards
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins)); // Usar solo orígenes explícitos
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        
+
         log.info("CORS configurado en SecurityConfig");
         return source;
     }

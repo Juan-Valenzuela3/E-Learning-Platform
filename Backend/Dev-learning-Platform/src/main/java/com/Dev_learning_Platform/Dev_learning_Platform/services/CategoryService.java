@@ -1,5 +1,7 @@
 package com.Dev_learning_Platform.Dev_learning_Platform.services;
 
+import com.Dev_learning_Platform.Dev_learning_Platform.dtos.CategoryPublicDto;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -18,9 +20,36 @@ public class CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+
     @Transactional(readOnly = true)
-    public List<Category> getAllActiveCategories() {
-        return categoryRepository.findAllActiveOrdered();
+    public List<CategoryPublicDto> getAllActiveCategories() {
+        List<Category> categories = categoryRepository.findAllActiveOrdered();
+        return categories.stream().map(this::toCategoryPublicDto).toList();
+    }
+
+    private CategoryPublicDto toCategoryPublicDto(Category category) {
+        List<CategoryPublicDto.SubcategoryPublicDto> subDtos = category.getSubcategories() != null ?
+            category.getSubcategories().stream().map(sub ->
+                new CategoryPublicDto.SubcategoryPublicDto(
+                    sub.getId(),
+                    sub.getName(),
+                    sub.getDescription(),
+                    sub.getIcon(),
+                    sub.getColor(),
+                    sub.getIsActive(),
+                    sub.getSortOrder()
+                )
+            ).toList() : List.of();
+        return new CategoryPublicDto(
+            category.getId(),
+            category.getName(),
+            category.getDescription(),
+            category.getIcon(),
+            category.getColor(),
+            category.getIsActive(),
+            category.getSortOrder(),
+            subDtos
+        );
     }
 
     @Transactional(readOnly = true)
@@ -41,7 +70,7 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public List<Category> searchCategories(String searchTerm) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
-            return getAllActiveCategories();
+            return categoryRepository.findAllActiveOrdered();
         }
         return categoryRepository.findActiveByNameContaining(searchTerm.trim());
     }

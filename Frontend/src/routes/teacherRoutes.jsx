@@ -103,18 +103,16 @@ const teacherRoutes = [
                 element: <LazyComponent component={TeacherCourses} />
               },
               {
-                path: 'new',
+                path: 'create',
                 element: <LazyComponent component={CreateCourse} />
               },
               {
+                path: ':id/edit',
+                element: <LazyComponent component={EditCourse} />
+              },
+              {
                 path: ':id',
-                element: <LazyComponent component={CourseDetail} />,
-                children: [
-                  {
-                    path: 'edit',
-                    element: <LazyComponent component={EditCourse} />
-                  }
-                ]
+                element: <LazyComponent component={CourseDetail} />
               }
             ]
           },
@@ -182,4 +180,4 @@ const teacherRoutes = [
   }
 ];
 
-export default teacherRoutes;   
+export default teacherRoutes;

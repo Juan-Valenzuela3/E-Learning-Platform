@@ -4,7 +4,7 @@
  */
 export const routeTitles = {
   // Rutas públicas
-  '/': 'Inicio',
+  '/': 'Donde el aprendizaje es una aventura',
   '/authentication': 'Iniciar sesión',
   '/authentication/register': 'Registro',
   '/authentication/forgot-password': 'Recuperar contraseña',
@@ -16,14 +16,14 @@ export const routeTitles = {
   '/privacy': 'Política de privacidad',
   '/terms': 'Términos y condiciones',
   '/404': 'Página no encontrada',
-  
+
   // Rutas de estudiante
   '/dashboard': 'Panel de control',
   '/mis-cursos': 'Mis cursos',
   '/mis-cursos/:id': 'Curso en progreso',
   '/perfil': 'Mi perfil',
   '/configuracion': 'Configuración',
-  
+
   // Rutas de profesor
   '/instructor/dashboard': 'Panel del instructor',
   '/instructor/cursos': 'Mis cursos',
@@ -31,7 +31,7 @@ export const routeTitles = {
   '/instructor/courses/:id': 'Editar curso',
   '/instructor/students': 'Estudiantes',
   '/instructor/analytics': 'Analíticas',
-  
+
   // Rutas de administrador (se manejan en el AdminLayout)
   '/admin': 'Panel de administración',
   '/admin/users': 'Gestión de usuarios',
@@ -49,22 +49,22 @@ export const getPageTitle = (path) => {
   if (routeTitles[path]) {
     return routeTitles[path];
   }
-  
+
   // Buscar coincidencias con parámetros dinámicos (ej: /courses/123)
   const pathSegments = path.split('/').filter(Boolean);
-  
+
   for (const [route, title] of Object.entries(routeTitles)) {
     const routeSegments = route.split('/').filter(Boolean);
-    
+
     if (pathSegments.length !== routeSegments.length) continue;
-    
+
     const isMatch = routeSegments.every((segment, index) => {
       return segment.startsWith(':') || segment === pathSegments[index];
     });
-    
+
     if (isMatch) return title;
   }
-  
+
   // Si no hay coincidencia, devolver un título por defecto
   return 'Página no encontrada';
 };

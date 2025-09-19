@@ -7,471 +7,141 @@
 **Tipo de Autenticación:** JWT (JSON Web Tokens)  
 **Content-Type:** `application/json`  
 
-## Comando para ejecutar backend en entorno de desarrollo
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+## API simplificada - Endpoints principales
 
-## 🔐 Endpoints de Autenticación
+**Base URL:** http://localhost:8080
 
-### 1. Login de Usuario
-**Endpoint:** `POST /auth/login`  
-**Descripción:** Autentica usuario y retorna token JWT  
-**Acceso:** Público  
+### Autenticación
 
-#### Request Body:
-```json
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-```
+POST /auth/login # Login de usuario
+curl -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" -d '{"email":"user@example.com","password":"password123"}'
 
-#### Validaciones:
-- **email:** Requerido, formato email válido, máximo 100 caracteres
-- **password:** Requerido, mínimo 6 caracteres, máximo 100 caracteres
+GET /auth/validate?token=JWT_TOKEN # Validar token JWT
+curl http://localhost:8080/auth/validate?token=JWT_TOKEN
 
-#### Response Exitoso (200 OK):
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "type": "Bearer",
-  "userId": 1,
-  "userName": "Juan",
-  "email": "user@example.com",
-  "role": "STUDENT",
-  "isActive": true
-}
-```
 
-#### Response de Error (401 Unauthorized):
-```json
-{
-  "message": "Credenciales inválidas",
-  "error": "INVALID_CREDENTIALS",
-  "status": 401,
-  "timestamp": "2025-01-01T10:00:00",
-  "path": "/auth/login"
-}
-```
+### Usuarios
 
-#### Response de Usuario Inactivo (403 Forbidden):
-```json
-{
-  "message": "Usuario inactivo",
-  "error": "USER_INACTIVE",
-  "status": 403,
-  "timestamp": "2025-01-01T10:00:00",
-  "path": "/auth/login"
-}
-```
+POST /api/users/register # Registro de usuario
+GET /api/users/{id} # Obtener usuario por ID (ADMIN)
+GET /api/users/role/{role} # Usuarios por rol (ADMIN)
+GET /api/users/all # Todos los usuarios (ADMIN)
+GET /api/users/profile # Perfil usuario autenticado
+PUT /api/users/profile # Actualizar perfil usuario autenticado
+POST /api/users/profile/upload-image # Subir imagen de perfil (local u Object Storage)
 
-### 2. Validación de Token
-**Endpoint:** `GET /auth/validate?token={jwt_token}`  
-**Descripción:** Valida si un token JWT es válido  
-**Acceso:** Público  
+### Object Storage y Local Storage
 
-#### Query Parameters:
-- **token** (requerido): Token JWT a validar
+POST /api/users/profile/upload-image # Subir imagen de perfil (estudiante/instructor)
+curl -X POST http://localhost:8080/api/users/profile/upload-image \
+  -H "Authorization: Bearer TU_JWT_TOKEN" \
+  -F "file=@/ruta/a/tu/imagen.jpg"
 
-#### Response Token Válido (200 OK):
-```json
-{
-  "valid": true,
-  "username": "user@example.com"
-}
-```
+POST /api/courses/upload-image # Subir imagen de portada de curso (instructor/admin)
+curl -X POST http://localhost:8080/api/courses/upload-image \
+  -H "Authorization: Bearer TU_JWT_TOKEN" \
+  -F "file=@/ruta/a/tu/imagen.jpg"
 
-#### Response Token Inválido (401 Unauthorized):
-```json
-{
-  "valid": false,
-  "message": "Token inválido o expirado"
-}
-```
+Ambos endpoints soportan almacenamiento local (desarrollo) y Object Storage (producción OCI). La URL devuelta será pública si está en OCI.
 
-## 👥 Endpoints de Usuarios
 
-### 3. Registro de Usuario
-**Endpoint:** `POST /api/users/register`  
-**Descripción:** Registra un nuevo usuario en el sistema  
-**Acceso:** Público  
+### Cursos
 
-#### Request Body:
-```json
-{
-  "userName": "Juan",
-  "lastName": "Pérez",
-  "email": "juan.perez@example.com",
-  "password": "password123",
-  "role": "STUDENT"
-}
-```
+POST /api/courses # Crear curso (INSTRUCTOR/ADMIN)
+GET /api/courses # Catálogo público de cursos
+GET /api/courses/{id} # Detalle de curso
+GET /api/courses/instructor/{instructorId} # Cursos por instructor (INSTRUCTOR/ADMIN)
+GET /api/courses/admin/active # Cursos activos (ADMIN)
+GET /api/courses/category/{categoryId} # Cursos por categoría
+GET /api/courses/subcategory/{subcategoryId} # Cursos por subcategoría
+GET /api/courses/category/{categoryId}/subcategory/{subcategoryId} # Cursos por categoría y subcategoría
+PUT /api/courses/{courseId} # Actualizar curso (INSTRUCTOR/ADMIN)
+DELETE /api/courses/{courseId} # Eliminar curso (INSTRUCTOR/ADMIN)
+PATCH /api/courses/{courseId}/publish # Publicar/despublicar curso (INSTRUCTOR/ADMIN)
+POST /api/courses/upload-image # Subir imagen de curso (INSTRUCTOR/ADMIN)
 
-#### Campos:
-- **userName:** Nombre del usuario (requerido)
-- **lastName:** Apellido del usuario (requerido)
-- **email:** Email único (requerido, formato email)
-- **password:** Contraseña (requerido, se encripta automáticamente)
-- **role:** Rol del usuario - `STUDENT`, `INSTRUCTOR`, `ADMIN`
+### Videos de Curso
 
-#### Response Exitoso (200 OK):
-```json
-{
-  "id": 1,
-  "userName": "Juan",
-  "lastName": "Pérez",
-  "email": "juan.perez@example.com",
-  "role": "STUDENT",
-  "isActive": true,
-  "createdAt": "2025-01-01T10:00:00.000+00:00",
-  "updatedAt": "2025-01-01T10:00:00.000+00:00"
-}
-```
+POST /api/course-videos # Agregar video a curso (INSTRUCTOR)
+GET /api/course-videos/course/{courseId} # Videos de un curso
+GET /api/course-videos/{videoId} # Detalle de video
+PUT /api/course-videos/{videoId} # Actualizar video (INSTRUCTOR)
+DELETE /api/course-videos/{videoId} # Eliminar video (INSTRUCTOR)
+PUT /api/course-videos/course/{courseId}/reorder # Reordenar videos (INSTRUCTOR)
+GET /api/course-videos/course/{courseId}/can-manage # ¿Puede gestionar videos? (INSTRUCTOR)
 
-#### Response de Error (409 Conflict):
-```json
-{
-  "message": "El email ya está registrado en el sistema",
-  "error": "EMAIL_ALREADY_EXISTS",
-  "status": 409,
-  "timestamp": "2025-01-01T10:00:00",
-  "path": "/api/users/register"
-}
-```
+### Categorías y Subcategorías
 
-### 4. Obtener Usuario por ID
-**Endpoint:** `GET /api/users/{id}`  
-**Descripción:** Obtiene la información de un usuario específico por su ID  
-**Acceso:** ADMIN  
-**Autenticación:** JWT Required  
+GET /api/categories # Categorías activas
+GET /api/categories/all # Todas las categorías (ADMIN)
+GET /api/categories/{id} # Detalle de categoría
+GET /api/categories/search?q= # Buscar categorías
+POST /api/categories # Crear categoría (ADMIN)
+PUT /api/categories/{id} # Actualizar categoría (ADMIN)
+DELETE /api/categories/{id} # Eliminar categoría (ADMIN)
+DELETE /api/categories/{id}/permanent # Eliminar permanente (ADMIN)
+PUT /api/categories/{id}/activate # Activar categoría (ADMIN)
+PUT /api/categories/{id}/deactivate # Desactivar categoría (ADMIN)
 
-#### Path Parameters:
-- **id:** ID del usuario (requerido)
+GET /api/subcategories # Subcategorías activas
+GET /api/subcategories/all # Todas las subcategorías (ADMIN)
+GET /api/subcategories/{id} # Detalle de subcategoría
+GET /api/subcategories/category/{categoryId} # Subcategorías por categoría
+GET /api/subcategories/search?q= # Buscar subcategorías
+POST /api/subcategories # Crear subcategoría (ADMIN)
+PUT /api/subcategories/{id} # Actualizar subcategoría (ADMIN)
+DELETE /api/subcategories/{id} # Eliminar subcategoría (ADMIN)
+DELETE /api/subcategories/{id}/permanent # Eliminar permanente (ADMIN)
+PUT /api/subcategories/{id}/activate # Activar subcategoría (ADMIN)
+PUT /api/subcategories/{id}/deactivate # Desactivar subcategoría (ADMIN)
 
-#### Response Exitoso (200 OK):
-```json
-{
-  "id": 1,
-  "userName": "Juan",
-  "lastName": "Pérez",
-  "email": "juan.perez@example.com",
-  "role": "STUDENT",
-  "isActive": true,
-  "createdAt": "2025-01-01T10:00:00.000+00:00",
-  "updatedAt": "2025-01-01T10:00:00.000+00:00"
-}
-```
+### Inscripciones (Enrollments)
 
-#### Response de Error (404 Not Found):
-```json
-{
-  "message": "Usuario no encontrado con ID: 999",
-  "status": 404,
-  "timestamp": "2025-01-01T10:00:00"
-}
-```
+POST /api/enrollments # Inscribirse a curso (STUDENT)
+GET /api/enrollments/my-courses # Mis inscripciones activas (STUDENT)
+GET /api/enrollments/my-courses/all # Todas mis inscripciones (STUDENT)
+GET /api/enrollments/my-courses/completed # Mis cursos completados (STUDENT)
+GET /api/enrollments/{id} # Detalle inscripción (STUDENT/INSTRUCTOR/ADMIN)
+GET /api/enrollments/check/{courseId} # ¿Estoy inscrito? (STUDENT)
+PUT /api/enrollments/{id}/progress # Actualizar progreso (STUDENT)
+PUT /api/enrollments/{id}/complete # Marcar como completado (STUDENT)
+DELETE /api/enrollments/{id} # Desinscribirse (STUDENT)
+GET /api/enrollments/course/{courseId} # Inscripciones de un curso (INSTRUCTOR/ADMIN)
+GET /api/enrollments/stats # Estadísticas de inscripciones (ADMIN)
+GET /api/enrollments/recent # Inscripciones recientes (ADMIN)
 
-### 5. Obtener Usuarios por Rol
-**Endpoint:** `GET /api/users/role/{role}`  
-**Descripción:** Obtiene todos los usuarios que tienen un rol específico  
-**Acceso:** ADMIN  
-**Autenticación:** JWT Required  
 
-#### Path Parameters:
-- **role:** Rol del usuario - `STUDENT`, `INSTRUCTOR`, `ADMIN` (requerido)
+### Pagos y Stripe
 
-#### Response Exitoso (200 OK):
-```json
-[
-  {
-    "id": 1,
-    "userName": "Juan",
-    "lastName": "Pérez",
-    "email": "juan.perez@example.com",
-    "role": "STUDENT",
-    "isActive": true,
-    "createdAt": "2025-01-01T10:00:00.000+00:00"
-  },
-  {
-    "id": 2,
-    "userName": "María",
-    "lastName": "García",
-    "email": "maria.garcia@example.com",
-    "role": "STUDENT",
-    "isActive": true,
-    "createdAt": "2025-01-01T10:00:00.000+00:00"
-  }
-]
-```
+POST /api/payments # Crear pago
+GET /api/payments/{id} # Detalle de pago
+GET /api/payments/user/{userId} # Pagos por usuario
+GET /api/payments/course/{courseId} # Pagos por curso
+GET /api/payments/status/{status} # Pagos por estado
 
-### 6. Obtener Todos los Usuarios
-**Endpoint:** `GET /api/users/all`  
-**Descripción:** Obtiene la lista completa de todos los usuarios del sistema  
-**Acceso:** ADMIN  
-**Autenticación:** JWT Required  
+POST /api/payment-sessions # Crear sesión de pago
+GET /api/payment-sessions/{id} # Detalle de sesión de pago
+GET /api/payment-sessions/user/{userId} # Sesiones por usuario
+GET /api/payment-sessions/course/{courseId} # Sesiones por curso
+GET /api/payment-sessions/status/{status} # Sesiones por estado
 
-#### Response Exitoso (200 OK):
-```json
-[
-  {
-    "id": 1,
-    "userName": "Juan",
-    "lastName": "Pérez",
-    "email": "juan.perez@example.com",
-    "role": "STUDENT",
-    "isActive": true,
-    "createdAt": "2025-01-01T10:00:00.000+00:00"
-  },
-  {
-    "id": 2,
-    "userName": "María",
-    "lastName": "García",
-    "email": "maria.garcia@example.com",
-    "role": "INSTRUCTOR",
-    "isActive": true,
-    "createdAt": "2025-01-01T10:00:00.000+00:00"
-  },
-  {
-    "id": 3,
-    "userName": "Carlos",
-    "lastName": "López",
-    "email": "carlos.lopez@example.com",
-    "role": "ADMIN",
-    "isActive": true,
-    "createdAt": "2025-01-01T10:00:00.000+00:00"
-  }
-]
-```
+POST /api/stripe/create-checkout-session # Crear sesión de checkout Stripe
+curl -X POST http://localhost:8080/api/stripe/create-checkout-session \
+  -H "Authorization: Bearer TU_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"courseId":1,"userId":2}'
 
-### 7. Obtener Perfil de Usuario
-**Endpoint:** `GET /api/users/profile`  
-**Descripción:** Obtiene el perfil del usuario autenticado  
-**Historia de Usuario:** "Como usuario quiero ver mi perfil"  
-**Acceso:** STUDENT, INSTRUCTOR, ADMIN  
-**Autenticación:** JWT Required  
+POST /api/stripe/webhook # Webhook Stripe
+curl -X POST http://localhost:8080/api/stripe/webhook \
+  -H "Stripe-Signature: TU_SIGNATURE" \
+  -d '{"payload":"..."}'
 
-#### Response Exitoso (200 OK):
-```json
-{
-  "id": 1,
-  "userName": "Juan",
-  "lastName": "Pérez",
-  "email": "juan.perez@example.com",
-  "role": "STUDENT",
-  "isActive": true,
-  "profileImageUrl": null,
-  "createdAt": "2025-01-01T10:00:00.000+00:00",
-  "updatedAt": "2025-01-01T10:00:00.000+00:00"
-}
-```
+GET /api/stripe/health # Health Stripe
+curl -X GET http://localhost:8080/api/stripe/health
 
-#### Response de Error (401 Unauthorized):
-```json
-{
-  "message": "Token ausente, inválido o expirado",
-  "status": 401,
-  "timestamp": "2025-01-01T10:00:00"
-}
-```
+### Admin
 
-#### Response de Error (404 Not Found):
-```json
-{
-  "message": "Usuario no encontrado",
-  "status": 404,
-  "timestamp": "2025-01-01T10:00:00"
-}
-```
-
-### 8. Actualizar Perfil de Usuario
-**Endpoint:** `PUT /api/users/profile`  
-**Descripción:** Actualiza el perfil del usuario autenticado  
-**Historia de Usuario:** "Como usuario quiero editar mi perfil"  
-**Acceso:** STUDENT, INSTRUCTOR, ADMIN  
-**Autenticación:** JWT Required  
-
-#### Request Body:
-```json
-{
-  "userName": "Juan Carlos",
-  "lastName": "Pérez González",
-  "email": "juan.carlos.perez@example.com",
-  "profileImageUrl": "https://example.com/profile-images/user_123.jpg"
-}
-```
-
-#### Validaciones:
-- **userName:** Requerido, 2-20 caracteres, solo letras y espacios
-- **lastName:** Requerido, 2-20 caracteres, solo letras y espacios
-- **email:** Requerido, formato email válido, máximo 100 caracteres, único
-- **profileImageUrl:** Opcional, máximo 500 caracteres, URL válida de imagen
-
-#### Response Exitoso (200 OK):
-```json
-{
-  "id": 1,
-  "userName": "Juan Carlos",
-  "lastName": "Pérez González",
-  "email": "juan.carlos.perez@example.com",
-  "role": "STUDENT",
-  "isActive": true,
-  "profileImageUrl": "https://example.com/profile-images/user_123.jpg",
-  "createdAt": "2025-01-01T10:00:00.000+00:00",
-  "updatedAt": "2025-01-01T12:30:00.000+00:00"
-}
-```
-
-#### Response de Error (400 Bad Request):
-```json
-{
-  "message": "El email ya está en uso por otro usuario",
-  "status": 400,
-  "timestamp": "2025-01-01T10:00:00"
-}
-```
-
-#### Response de Error (422 Unprocessable Entity):
-```json
-{
-  "message": "Datos de entrada inválidos",
-  "errors": [
-    {
-      "field": "userName",
-      "message": "El nombre debe tener entre 2 y 20 caracteres"
-    },
-    {
-      "field": "email",
-      "message": "El formato del email no es válido"
-    }
-  ],
-  "status": 422,
-  "timestamp": "2025-01-01T10:00:00"
-}
-```
-
-## 📚 Endpoints de Cursos
-
-### 9. Crear Curso
-**Endpoint:** `POST /api/courses`  
-**Descripción:** Crea un nuevo curso en la plataforma  
-**Acceso:** INSTRUCTOR, ADMIN  
-**Autenticación:** JWT Required  
-
-#### Request Body:
-```json
-{
-  "title": "Curso de Java Básico",
-  "description": "Aprende Java desde cero con ejemplos prácticos y proyectos reales.",
-  "shortDescription": "Curso introductorio de Java para principiantes",
-  "instructorId": 2,
-  "categoryId": 1,
-  "subcategoryId": 3,
-  "youtubeUrls": [
-    "https://www.youtube.com/watch?v=abc123",
-    "https://www.youtube.com/watch?v=def456"
-  ],
-  "thumbnailUrl": "https://example.com/images/java-course.jpg",
-  "price": 99.99,
-  "isPremium": true,
-  "isPublished": false,
-  "isActive": true,
-  "estimatedHours": 20
-}
-```
-
-#### Validaciones:
-- **title:** Requerido, máximo 200 caracteres
-- **description:** Requerido, máximo 1000 caracteres
-- **shortDescription:** Opcional, máximo 255 caracteres
-- **instructorId:** Requerido, debe existir
-- **categoryId:** Requerido, debe existir
-- **subcategoryId:** Requerido, debe existir y pertenecer a la categoría
-- **youtubeUrls:** Opcional, formato YouTube válido
-- **thumbnailUrl:** Opcional, URL de imagen válida
-- **price:** Requerido, no negativo, máximo 6 dígitos enteros y 2 decimales
-- **estimatedHours:** Opcional, entre 1 y 1000
-
-#### Response Exitoso (201 Created):
-```json
-{
-  "id": 1,
-  "title": "Curso de Java Básico",
-  "description": "Aprende Java desde cero con ejemplos prácticos y proyectos reales.",
-  "shortDescription": "Curso introductorio de Java para principiantes",
-  "instructor": {
-    "id": 2,
-    "userName": "María",
-    "lastName": "García",
-    "email": "maria.garcia@example.com",
-    "role": "INSTRUCTOR"
-  },
-  "category": {
-    "id": 1,
-    "name": "Programación"
-  },
-  "subcategory": {
-    "id": 3,
-    "name": "Backend"
-  },
-  "youtubeUrls": [
-    "https://www.youtube.com/watch?v=abc123",
-    "https://www.youtube.com/watch?v=def456"
-  ],
-  "thumbnailUrl": "https://example.com/images/java-course.jpg",
-  "price": 99.99,
-  "isPremium": true,
-  "isPublished": false,
-  "isActive": true,
-  "estimatedHours": 20,
-  "createdAt": "2025-01-01T10:00:00.000+00:00",
-  "updatedAt": "2025-01-01T10:00:00.000+00:00"
-}
-```
-
-### 10. Catálogo Público de Cursos
-**Endpoint:** `GET /api/courses`  
-**Descripción:** Obtiene todos los cursos activos y publicados  
-**Acceso:** Público  
-
-#### Response Exitoso (200 OK):
-```json
-[
-  {
-    "id": 1,
-    "title": "Curso de Java Básico",
-    "description": "Aprende Java desde cero con ejemplos prácticos.",
-    "shortDescription": "Curso introductorio de Java",
-    "instructor": {
-      "id": 2,
-      "userName": "María",
-      "lastName": "García",
-      "email": "maria.garcia@example.com",
-      "role": "INSTRUCTOR"
-    },
-    "thumbnailUrl": "https://example.com/images/java-course.jpg",
-    "price": 99.99,
-    "isPremium": true,
-    "estimatedHours": 20,
-    "createdAt": "2025-01-01T10:00:00.000+00:00"
-  }
-]
-```
-
-### 11. Detalle de Curso
-**Endpoint:** `GET /api/courses/{id}`  
-**Descripción:** Obtiene el detalle completo de un curso específico  
-**Acceso:** Público  
-
-#### Path Parameters:
-- **id:** ID del curso (requerido)
-
-#### Response Exitoso (200 OK):
-```json
-{
-  "id": 1,
-  "title": "Curso de Java Básico",
-  "description": "Aprende Java desde cero con ejemplos prácticos y proyectos reales.",
-  "shortDescription": "Curso introductorio de Java para principiantes",
-  "instructor": {
+GET /api/admin/stats # Estadísticas generales (ADMIN)
     "id": 2,
     "userName": "María",
     "lastName": "García",
@@ -2284,7 +1954,7 @@ curl -X POST http://localhost:8080/api/courses \
 
 ### 9. Obtener Catálogo de Cursos (cURL)
 ```bash
-curl -X GET http://localhost:8080/api/courses \
+curl -X GET http://149.130.176.157:8080/api/courses \
   -H "Content-Type: application/json"
 ```
 
@@ -2296,8 +1966,8 @@ curl -X GET http://localhost:8080/api/courses/1 \
 
 ### 11. Obtener Cursos por Instructor (cURL)
 ```bash
-curl -X GET http://localhost:8080/api/courses/instructor/2 \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+curl -X GET http://149.130.176.157:8080/api/courses/instructor/2 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjpbeyJhdXRob3JpdHkiOiJST0xFX0lOU1RSVUNUT1IifV0sInN1YiI6InRlc3QuaW5zdHJ1Y3RvckB0ZXN0LmNvbSIsImlhdCI6MTc1ODExNTkxMywiZXhwIjoxNzU4MjAyMzEzfQ.1CZJASYdj-4VX8l7OWOauMho_JeyMdKyFY65-SH6aBU" \
   -H "Content-Type: application/json"
 ```
 

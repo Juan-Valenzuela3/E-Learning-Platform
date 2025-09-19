@@ -64,9 +64,9 @@ public class SubcategoryController {
     }
 
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<Subcategory>> getSubcategoriesByCategoryId(@PathVariable Long categoryId) {
+    public ResponseEntity<List<com.Dev_learning_Platform.Dev_learning_Platform.dtos.CategoryPublicDto.SubcategoryPublicDto>> getSubcategoriesByCategoryId(@PathVariable Long categoryId) {
         try {
-            List<Subcategory> subcategories = subcategoryService.getSubcategoriesByCategoryId(categoryId);
+            List<com.Dev_learning_Platform.Dev_learning_Platform.dtos.CategoryPublicDto.SubcategoryPublicDto> subcategories = subcategoryService.getSubcategoryDtosByCategoryId(categoryId);
             return ResponseEntity.ok(subcategories);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

@@ -6,14 +6,15 @@
       "@/features/*": ["src/features/*"],
       "@/components/*": ["src/shared/components/*"],
       "@/ui/*": ["src/ui/*"],
-      
+      "@/services/*": ["src/services/*"],
+
       "@/shared/*": ["src/shared/*"],
       "@/core/*": ["src/core/*"],
       "@/interfaces/*": ["src/interfaces/*"],
     },
     "checkJs": false,
     "typeRoots": ["./node_modules/@types"]
-    
+
   },
   "exclude": ["node_modules", "dist"],
   "typeAcquisition": {

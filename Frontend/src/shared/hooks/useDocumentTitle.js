@@ -15,7 +15,7 @@ import { useLocation } from 'react-router-dom';
 const useDocumentTitle = (title, options = {}) => {
   const {
     includeAppName = true,
-    appName = 'E-Learning',
+    appName = 'EduPlatform', // Cambiar de 'E-Learning' a 'EduPlatform'
     notifyOnFocus = false,
     notificationTitle,
     notificationMessage,
@@ -29,7 +29,7 @@ const useDocumentTitle = (title, options = {}) => {
   // Actualizar el título del documento
   useEffect(() => {
     const newTitle = includeAppName && title ? `${title} | ${appName}` : title || appName;
-    
+
     // Solo actualizar si el título ha cambiado
     if (document.title !== newTitle) {
       originalTitle.current = document.title;
@@ -60,7 +60,7 @@ const useDocumentTitle = (title, options = {}) => {
             }
           );
         }
-        
+
         // Restaurar el favicon original si se cambió
         if (faviconElement.current) {
           document.head.removeChild(faviconElement.current);
@@ -84,7 +84,7 @@ const useDocumentTitle = (title, options = {}) => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      
+
       // Limpiar el favicon personalizado al desmontar
       if (faviconElement.current) {
         document.head.removeChild(faviconElement.current);
@@ -106,11 +106,11 @@ const useDocumentTitle = (title, options = {}) => {
       includeAppName: includeAppNameOption = includeAppName,
       appName: appNameOption = appName
     } = options;
-    
-    const finalTitle = includeAppNameOption && newTitle 
-      ? `${newTitle} | ${appNameOption}` 
+
+    const finalTitle = includeAppNameOption && newTitle
+      ? `${newTitle} | ${appNameOption}`
       : newTitle || appNameOption;
-      
+
     document.title = finalTitle;
   };
 

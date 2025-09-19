@@ -5,7 +5,7 @@ import api from './api';
  * @param {boolean} forceRefresh - Si es true, fuerza la actualización desde el servidor
  * @returns {Promise<Object>} Datos del usuario autenticado
  */
-const getCurrentUser = async (forceRefresh = false) => {
+const getCurrentUser = async () => {
   try {
     // Llamada relativa, para que el proxy de Vite funcione
     const response = await api.get('/api/users/profile');
@@ -40,7 +40,7 @@ const getCurrentUser = async (forceRefresh = false) => {
 const updateProfile = async (userData) => {
   try {
     const response = await api.put('/api/users/profile', userData);
-    
+
     return response.data;
   } catch (error) {
     const message = error?.response?.data?.message || error?.message || 'Error al actualizar el perfil';
@@ -57,12 +57,30 @@ const updateProfile = async (userData) => {
  */
 const updatePassword = async ({ currentPassword, newPassword }) => {
   try {
-    await api.put('/api/users/me/password', { currentPassword, newPassword });
-    return { success: true, message: 'Contraseña actualizada correctamente' };
+    const response = await api.put('/api/users/me/password', {
+      currentPassword,
+      newPassword
+    });
+    return {
+      success: true,
+      message: 'Contraseña actualizada correctamente',
+      data: response.data
+    };
   } catch (error) {
+    console.error('Error al actualizar la contraseña:', error);
+
+    if (error.response?.status === 400) {
+      throw new Error('La contraseña actual es incorrecta');
+    }
+    if (error.response?.status === 401) {
+      throw new Error('Debes iniciar sesión para cambiar la contraseña');
+    }
+    if (error.response?.status === 403) {
+      throw new Error('No tienes permiso para cambiar la contraseña');
+    }
+
     const message = error?.response?.data?.message || error?.message || 'Error al actualizar la contraseña';
-    console.error('Error al actualizar la contraseña:', message);
-    throw { message };
+    throw new Error(message);
   }
 };
 

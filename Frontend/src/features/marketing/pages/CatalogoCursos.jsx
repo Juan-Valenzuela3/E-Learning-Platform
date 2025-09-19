@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Star, Users, BookOpen, Clock, Award, Play, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Star,
+  Users,
+  BookOpen,
+  Clock,
+  Award,
+  Play,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { getCourses } from "@/services/courseService";
-
 
 export default function CursoDisponible() {
   const [expandedCourse, setExpandedCourse] = useState(null);
@@ -11,29 +19,50 @@ export default function CursoDisponible() {
   const [error, setError] = useState(null); // ✅ Estado de error
 
   //TODO: Cargar los curso desde la api
-useEffect(() => {
-  getCourses()
-    .then(data => {
-      console.log("Datos recibidos de la API:", data);
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        // Agregar timeout para evitar carga infinita
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Timeout: La solicitud tardó demasiado")),
+            10000
+          )
+        );
 
-      // Forzar la conversión a array si tiene forma de array
-      if (data && typeof data === 'object' && data.length >= 0) {
-        setCourses([...data]);
-      } else {
-        console.error("Formato de datos desconocido:", data);
+        const dataPromise = getCourses();
+        const data = await Promise.race([dataPromise, timeoutPromise]);
+
+        console.log("Datos recibidos de la API:", data);
+
+        // Forzar la conversión a array si tiene forma de array
+        if (data && typeof data === "object" && data.length >= 0) {
+          setCourses([...data]);
+        } else {
+          console.error("Formato de datos desconocido:", data);
+          setCourses([]);
+        }
+      } catch (err) {
+        console.error("Error al cargar los cursos:", err);
+        if (err.message.includes("Timeout")) {
+          setError(
+            "El servidor tardó demasiado en responder. Por favor, recarga la página."
+          );
+        } else if (err.message.includes("500")) {
+          setError("Error interno del servidor. Por favor, intenta más tarde.");
+        } else {
+          setError(
+            "Error al cargar los cursos. Por favor, inténtalo de nuevo más tarde."
+          );
+        }
         setCourses([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    })
-    .catch(err => {
-      console.error("Error al cargar los cursos:", err);
-      setError("Error al cargar los cursos. Por favor, inténtalo de nuevo más tarde.");
-      setLoading(false);
-      setCourses([]);
-    });
-}, []);
+    };
 
-
+    fetchCourses();
+  }, []);
 
   const toggleExpanded = (courseId) => {
     setExpandedCourse(expandedCourse === courseId ? null : courseId);
@@ -68,7 +97,8 @@ useEffect(() => {
             Cursos Disponibles
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-            Haz clic en "Ver detalles" para expandir la información completa de cada curso
+            Haz clic en "Ver detalles" para expandir la información completa de
+            cada curso
           </p>
         </div>
 
@@ -80,13 +110,13 @@ useEffect(() => {
               return (
                 <div
                   key={course.id}
-                  className={`group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-500 border border-gray-100 overflow-hidden transform hover:-translate-y-1 ${isExpanded ? 'shadow-xl scale-[1.02]' : ''
-                    }`}>
-
+                  className={`group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-500 border border-gray-100 overflow-hidden transform hover:-translate-y-1 ${
+                    isExpanded ? "shadow-xl scale-[1.02]" : ""
+                  }`}>
                   {/* Imagen y badges */}
                   <div className="relative">
                     <img
-                      src={course.image?.thumbnailUrl}
+                      src={course.thumbnailUrl}
                       alt={course.title}
                       className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -112,7 +142,9 @@ useEffect(() => {
                     <div className="flex items-center mb-3">
                       <div className="w-6 h-6 bg-gray-200 rounded-full mr-2"></div>
                       <span className="text-sm text-gray-600 font-medium">
-                        {course.instructor ? `${course.instructor.userName} ${course.instructor.lastName}` : 'Instructor anónimo'}
+                        {course.instructor
+                          ? `${course.instructor.userName} ${course.instructor.lastName}`
+                          : "Instructor anónimo"}
                       </span>
                     </div>
 
@@ -128,21 +160,21 @@ useEffect(() => {
                           <Users className="w-3 h-3 mr-1" />
                           {course.students?.toLocaleString() ?? 0}
                         </div>
-
                       </div>
                     </div>
 
                     {/* Información expandida */}
                     {isExpanded && (
                       <div className="border-t border-gray-100 pt-4 mb-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
-
                         {/* Descripción */}
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-900 mb-2">Descripción</h4>
+                          <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                            Descripción
+                          </h4>
 
-                            <p className="m-2 text-gray-600 text-sm leading-relaxed break-all whitespace-pre-line ">{course.description}</p>
-
-
+                          <p className="m-2 text-gray-600 text-sm leading-relaxed break-all whitespace-pre-line ">
+                            {course.description}
+                          </p>
                         </div>
 
                         {/* Estadísticas detalladas
@@ -159,14 +191,13 @@ useEffect(() => {
                           </div>
                         </div>*/}
                       </div>
-
                     )}
 
                     {/* Footer con precios y botones */}
                     <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                       <div className="flex items-center space-x-2">
                         <span className="text-lg font-bold text-red-500">
-                          {course.price ? `$${course.price}` : 'Gratis'}
+                          {course.price ? `$${course.price}` : "Gratis"}
                         </span>
                         {course.originalPrice && (
                           <span className="text-sm text-gray-400 line-through">
@@ -176,11 +207,9 @@ useEffect(() => {
                       </div>
 
                       <div className="flex gap-2">
-
                         <button
                           onClick={() => toggleExpanded(course.id)}
-                          className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors flex items-center gap-1"
-                        >
+                          className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors flex items-center gap-1">
                           {isExpanded ? (
                             <>
                               <ChevronUp className="w-3 h-3" />
@@ -202,15 +231,13 @@ useEffect(() => {
                         <div className="flex gap-2">
                           <Link
                             to={`/curso/${course.id}`}
-                            className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
-                          >
+                            className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-1">
                             <Play className="w-3 h-3" />
                             Vista previa
                           </Link>
                           <Link
                             to={`/curso/${course.id}`}
-                            className="flex-1 bg-red-500 text-white py-2 rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-1"
-                          >
+                            className="flex-1 bg-red-500 text-white py-2 rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-1">
                             <Award className="w-3 h-3" />
                             Ver curso
                           </Link>

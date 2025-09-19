@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useLocation, useMatches } from 'react-router-dom';
+import { useEffect } from "react";
+import { useLocation, useMatches } from "react-router-dom";
 
 /**
  * Componente que maneja dinámicamente el título del documento basado en la ruta actual
@@ -11,22 +11,23 @@ import { useLocation, useMatches } from 'react-router-dom';
  */
 const TitleManager = ({
   routeTitles = {},
-  defaultTitle = 'E-Learning Platform',
+  defaultTitle = "Donde el aprendizaje es una aventura",
   includeAppName = true,
-  appName = 'E-Learning',
+  appName = "EduPlatform", 
   ...props
 }) => {
   const location = useLocation();
   const matches = useMatches();
-  
+
   // Get the current path from the last match or use location as fallback
-  const currentPath = matches[matches.length - 1]?.pathname || location.pathname;
+  const currentPath =
+    matches[matches.length - 1]?.pathname || location.pathname;
 
   useEffect(() => {
     try {
       // Buscar el título más específico para la ruta actual
       let title = defaultTitle;
-      
+
       // Primero intentar con las rutas coincidentes
       if (matches && matches.length > 0) {
         for (let i = matches.length - 1; i >= 0; i--) {
@@ -36,7 +37,7 @@ const TitleManager = ({
             break;
           }
         }
-      } 
+      }
       // Si no hay coincidencias, intentar con la ruta actual
       else if (currentPath in routeTitles) {
         title = routeTitles[currentPath];
@@ -47,20 +48,30 @@ const TitleManager = ({
       if (document.title !== newTitle) {
         document.title = newTitle;
       }
-
     } catch (error) {
-      console.error('Error setting document title:', error);
-      document.title = includeAppName ? `${defaultTitle} | ${appName}` : defaultTitle;
+      console.error("Error setting document title:", error);
+      document.title = includeAppName
+        ? `${defaultTitle} | ${appName}`
+        : defaultTitle;
     }
 
     // Restaurar el título original al desmontar
     return () => {
-      document.title = includeAppName ? `${defaultTitle} | ${appName}` : defaultTitle;
+      document.title = includeAppName
+        ? `${defaultTitle} | ${appName}`
+        : defaultTitle;
     };
-  }, [currentPath, matches, routeTitles, defaultTitle, includeAppName, appName]);
+  }, [
+    currentPath,
+    matches,
+    routeTitles,
+    defaultTitle,
+    includeAppName,
+    appName,
+  ]);
 
   // Este componente no renderiza nada
-  return null;
+  return <div {...props} />;
 };
 
 export default TitleManager;

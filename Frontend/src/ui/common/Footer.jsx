@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  BookOpen,
+  GraduationCap,
   MessageCircle,
   Users,
   Star,
@@ -17,8 +17,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center mb-6">
-              <div className="bg-red-500 p-2 rounded-lg mr-3">
-                <BookOpen className="w-6 h-6 text-white" />
+              <div className="bg-gray-900 p-2 rounded-lg mr-3">
+                <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold">EduPlatform</span>
             </div>
@@ -102,7 +102,7 @@ export default function Footer() {
             <h3 className="font-bold mb-6 text-lg">Soporte</h3>
             <ul className="space-y-3 text-gray-400">
               <li>
-                <Link 
+                <Link
                   to="centro-ayuda"
                   className="hover:text-white transition-colors hover:translate-x-1 transform inline-block">
                   Centro de ayuda

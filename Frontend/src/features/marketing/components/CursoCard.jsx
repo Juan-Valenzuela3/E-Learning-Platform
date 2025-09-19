@@ -5,6 +5,10 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Button } from "@/ui/Button";
 import { BookOpen, Users } from "lucide-react";
+import {
+  generateCoursePlaceholder,
+  handleImageError,
+} from "@/utils/imageUtils";
 
 export default function CursoCard({ course, isAuthenticated = false }) {
   if (!course) {
@@ -26,17 +30,15 @@ export default function CursoCard({ course, isAuthenticated = false }) {
     );
   }
 
-  const defaultImageUrl = 'https://via.placeholder.com/400x200/F3F4F6/9CA3AF?text=Curso'; // Imagen por defecto
-
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
       {/* Imagen */}
       <div className="relative h-40 w-full bg-gray-100">
         <img
-          src={course.imageUrl || defaultImageUrl}
+          src={course.imageUrl || generateCoursePlaceholder(course.title)}
           alt={course.title}
           className="w-full h-full object-cover"
-          onError={(e) => { e.target.onerror = null; e.target.src = defaultImageUrl; }}
+          onError={(e) => handleImageError(e, course.title)}
         />
         {course.category && (
           <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
@@ -50,17 +52,15 @@ export default function CursoCard({ course, isAuthenticated = false }) {
         <h3 className="font-bold text-gray-800 text-lg mb-2 line-clamp-2">
           {course.title}
         </h3>
-        
+
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-          {course.description || 'Sin descripción'}
+          {course.description || "Sin descripción"}
         </p>
-        
+
         {course.instructor && (
-          <p className="text-sm text-gray-500 mb-3">
-            Por {course.instructor}
-          </p>
+          <p className="text-sm text-gray-500 mb-3">Por {course.instructor}</p>
         )}
-        
+
         <div className="flex justify-between items-center mt-auto pt-3 border-t border-gray-100">
           <div className="flex items-center space-x-2">
             <Users className="h-4 w-4 text-gray-500" />
@@ -72,21 +72,18 @@ export default function CursoCard({ course, isAuthenticated = false }) {
               {course.sections || 0}
             </span>
           </div>
-          
+
           <span className="font-bold text-gray-900">
-            {course.price === 0 ? 'Gratis' : `$${course.price.toFixed(2)}`}
+            {course.price === 0 ? "Gratis" : `$${course.price.toFixed(2)}`}
           </span>
         </div>
-        
-        <Button 
-          asChild 
-          className="w-full mt-3 bg-red-500 hover:bg-red-600 text-white"
-        >
-          <Link to={`/cursos/${course.id}`}>
-            Ver detalles
-          </Link>
+
+        <Button
+          asChild
+          className="w-full mt-3 bg-red-500 hover:bg-red-600 text-white">
+          <Link to={`/cursos/${course.id}`}>Ver detalles</Link>
         </Button>
       </div>
     </div>
-  )
+  );
 }

@@ -8,7 +8,7 @@ export default function Price(){
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-16">
         <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-          Pago <span className="text-red-500">por curso</span>, no por suscripción
+          Pagas <span className="text-red-500">por curso</span>, no por suscripción
         </h2>
         <p className="text-xl text-gray-600">
           Invierte solo en lo que realmente necesitas aprender

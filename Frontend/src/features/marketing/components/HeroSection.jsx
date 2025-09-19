@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import {
   CheckCircle,
   ArrowRight,
@@ -31,12 +31,9 @@ export default function HeroSection() {
 
   return (
     <section className="relative bg-gradient-to-br from-gray-50 via-white to-gray-100 py-20 overflow-hidden">
-      <div className="absolute top-0 right-0 w-72 h-72 bg-red-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gray-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-700"></div>
+   
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-
-
         {/* Badge de desarrollo */}
         {isDevelopment && (
           <div className="flex justify-center mb-8">
@@ -69,15 +66,13 @@ export default function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start">
               <Link
                 to="/cursos"
-                className="group bg-red-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-red-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center"
-              >
+                className="group bg-red-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-red-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center">
                 Ver cursos disponibles
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 to="/comoFunciona"
-                className="group border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-bold text-lg hover:border-red-500 hover:text-red-500 transition-all duration-300 flex items-center justify-center"
-              >
+                className="group border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-bold text-lg hover:border-red-500 hover:text-red-500 transition-all duration-300 flex items-center justify-center">
                 <Play className="mr-2 w-5 h-5" />
                 Ver cómo funciona
               </Link>

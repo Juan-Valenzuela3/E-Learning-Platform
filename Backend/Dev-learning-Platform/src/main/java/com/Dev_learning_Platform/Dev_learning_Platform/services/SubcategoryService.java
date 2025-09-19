@@ -39,8 +39,19 @@ public class SubcategoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<Subcategory> getSubcategoriesByCategoryId(Long categoryId) {
-        return subcategoryRepository.findActiveByCategoryId(categoryId);
+    public List<com.Dev_learning_Platform.Dev_learning_Platform.dtos.CategoryPublicDto.SubcategoryPublicDto> getSubcategoryDtosByCategoryId(Long categoryId) {
+        List<Subcategory> subcategories = subcategoryRepository.findActiveByCategoryId(categoryId);
+        return subcategories.stream().map(sub ->
+            new com.Dev_learning_Platform.Dev_learning_Platform.dtos.CategoryPublicDto.SubcategoryPublicDto(
+                sub.getId(),
+                sub.getName(),
+                sub.getDescription(),
+                sub.getIcon(),
+                sub.getColor(),
+                sub.getIsActive(),
+                sub.getSortOrder()
+            )
+        ).toList();
     }
 
     @Transactional(readOnly = true)

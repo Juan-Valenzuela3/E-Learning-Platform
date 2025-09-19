@@ -31,9 +31,9 @@ jobs:
       env:
         JWT_SECRET_KEY: testSecretKeyForCITestingPurposesOnly123456789
         JWT_EXPIRATION_TIME: 86400000
-        STRIPE_API_KEY: sk_test_dummy_key_for_ci_testing
-        STRIPE_API_PUBLIC_KEY: pk_test_dummy_key_for_ci_testing
-        STRIPE_WEBHOOK_SECRET: whsec_dummy_secret_for_ci_testing
+        STRIPE_API_KEY: test_stripe_key
+        STRIPE_API_PUBLIC_KEY: test_stripe_public_key
+        STRIPE_WEBHOOK_SECRET: test_stripe_webhook_secret
       run: |
         cd Backend/Dev-learning-Platform
         ./mvnw clean test -Dspring.profiles.active=test -q -Dlogging.level.org.springframework.boot.autoconfigure=OFF
@@ -74,19 +74,14 @@ jobs:
             echo "=== Iniciando servicio ==="
             sudo systemctl start elearning-backend
 
-            echo "=== Verificando despliegue ==="
-            echo "Esperando 30 segundos para que el servicio inicie completamente..."
-            sleep 30
+            echo "=== Esperando a que el servicio se estabilice ==="
+            sleep 20
 
-            # Verificar que el servicio está activo
             if sudo systemctl is-active --quiet elearning-backend; then
-              echo "✅ Despliegue exitoso - Servicio está activo"
-              echo "=== Estado del servicio ==="
-              sudo systemctl status elearning-backend --no-pager -l
+              echo "✅ Despliegue exitoso: el servicio está activo."
             else
-              echo "❌ Error: El servicio no está activo"
-              sudo systemctl status elearning-backend --no-pager -l
-              sudo journalctl -u elearning-backend --no-pager -l -n 30
+              echo "❌ Error en el despliegue: el servicio no está activo."
+              sudo journalctl -u elearning-backend --no-pager -l -n 20
               exit 1
             fi
           else

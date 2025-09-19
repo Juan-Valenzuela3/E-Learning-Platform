@@ -1,26 +1,36 @@
-import { lazy, Suspense } from 'react';
-import { Navigate } from 'react-router-dom';
-import LoadingSpinner from '@/shared/components/LoadingSpinner';
-import ProtectedRoute from '@/interfaces/routing/guards/ProtectedRoute';
+import { lazy, Suspense } from "react";
+import { Navigate } from "react-router-dom";
+import LoadingSpinner from "@/shared/components/LoadingSpinner";
+import ProtectedRoute from "@/interfaces/routing/guards/ProtectedRoute";
 
 // Lazy load components for better performance
-const AdminLayout = lazy(() => import('@/features/admin/pages/AdminLayout'));
-const DashboardPage = lazy(() => import('@/features/admin/pages/DashboardPage'));
-const UsersPage = lazy(() => import('@/features/admin/pages/UsersPage'));
-const CoursesPage = lazy(() => import('@/features/admin/pages/CoursesPage'));
-const ReportsPage = lazy(() => import('@/features/admin/pages/ReportsPage'));
+const AdminLayout = lazy(() => import("@/features/admin/pages/AdminLayout"));
+const DashboardPage = lazy(() =>
+  import("@/features/admin/pages/DashboardPage")
+);
+const UsersPage = lazy(() => import("@/features/admin/pages/UsersPage"));
+const NewUserPage = lazy(() => import("@/features/admin/pages/NewUserPage"));
+const CoursesPage = lazy(() => import("@/features/admin/pages/CoursesPage"));
+const NewCoursePage = lazy(() =>
+  import("@/features/admin/pages/NewCoursePage")
+);
+const ReportsPage = lazy(() => import("@/features/admin/pages/ReportsPage"));
+const AdminProfileEditor = lazy(() =>
+  import("@/features/admin/components/AdminProfileEditor")
+);
 
 // Admin routes
 export const adminRoutes = [
   {
-    path: '/admin',
+    path: "/admin",
     element: (
-      <ProtectedRoute allowedRoles={['admin']}>
-        <Suspense fallback={
-          <div className="flex items-center justify-center min-h-screen">
-            <LoadingSpinner text="Cargando panel de administración..." />
-          </div>
-        }>
+      <ProtectedRoute allowedRoles={["admin"]}>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center min-h-screen">
+              <LoadingSpinner text="Cargando panel de administración..." />
+            </div>
+          }>
           <AdminLayout />
         </Suspense>
       </ProtectedRoute>
@@ -35,7 +45,7 @@ export const adminRoutes = [
         ),
       },
       {
-        path: 'usuarios',
+        path: "usuarios",
         element: (
           <Suspense fallback={<LoadingSpinner />}>
             <UsersPage />
@@ -43,7 +53,15 @@ export const adminRoutes = [
         ),
       },
       {
-        path: 'cursos',
+        path: "usuarios/nuevo",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <NewUserPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "cursos",
         element: (
           <Suspense fallback={<LoadingSpinner />}>
             <CoursesPage />
@@ -51,7 +69,15 @@ export const adminRoutes = [
         ),
       },
       {
-        path: 'reportes',
+        path: "cursos/nuevo",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <NewCoursePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "reportes",
         element: (
           <Suspense fallback={<LoadingSpinner />}>
             <ReportsPage />
@@ -59,7 +85,15 @@ export const adminRoutes = [
         ),
       },
       {
-        path: '*',
+        path: "perfil",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminProfileEditor />
+          </Suspense>
+        ),
+      },
+      {
+        path: "*",
         element: <Navigate to="/admin" replace />,
       },
     ],
